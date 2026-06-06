@@ -1,0 +1,53 @@
+/* Custom line icons — single stroke, rounded, currentColor. */
+const MP_ICON_PATHS = {
+  today:    '<circle cx="12" cy="13" r="7"/><path d="M12 9.5v3.5l2.2 1.3"/><path d="M9 2.5h6"/>',
+  week:     '<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/>',
+  cart:     '<path d="M3 4h2.2l1.5 11.2a1.5 1.5 0 0 0 1.5 1.3h7.6a1.5 1.5 0 0 0 1.45-1.1L20 7H6"/><circle cx="9.5" cy="20" r="1.3"/><circle cx="17" cy="20" r="1.3"/>',
+  book:     '<path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5z"/><path d="M5 19.5A1.5 1.5 0 0 1 6.5 18H19v3H6.5A1.5 1.5 0 0 1 5 19.5z"/>',
+  user:     '<circle cx="12" cy="8" r="3.6"/><path d="M5 20c0-3.6 3.1-5.6 7-5.6s7 2 7 5.6"/>',
+  plus:     '<path d="M12 5v14M5 12h14"/>',
+  check:    '<path d="M4.5 12.5l4.5 4.5 10.5-11"/>',
+  x:        '<path d="M6 6l12 12M18 6L6 18"/>',
+  chevL:    '<path d="M15 5l-7 7 7 7"/>',
+  chevR:    '<path d="M9 5l7 7-7 7"/>',
+  chevD:    '<path d="M5 9l7 7 7-7"/>',
+  chevU:    '<path d="M5 15l7-7 7 7"/>',
+  edit:     '<path d="M4 20h4l10.5-10.5a2 2 0 0 0 0-2.8l-1.2-1.2a2 2 0 0 0-2.8 0L4 16z"/>',
+  swap:     '<path d="M7 8h11l-3-3M17 16H6l3 3"/>',
+  refresh:  '<path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v4h-4"/>',
+  trash:    '<path d="M4 6.5h16M9 6.5V4.5h6v2M6.5 6.5l1 13h9l1-13"/>',
+  spark:    '<path d="M12 3l1.7 5.1L19 9.8l-4.4 3.1L16 18l-4-3-4 3 1.4-5.1L5 9.8l5.3-.7z"/>',
+  search:   '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/>',
+  clock:    '<circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3 1.8"/>',
+  leaf:     '<path d="M5 19C4 11 9 5 19 5c0 10-6 15-14 14z"/><path d="M5 19c3-5 7-8 11-9"/>',
+  milk:     '<path d="M9 3h6M8.5 6.5h7l-.6 13a1.5 1.5 0 0 1-1.5 1.4h-2.8a1.5 1.5 0 0 1-1.5-1.4z"/><path d="M8.1 12h7.8"/>',
+  meat:     '<path d="M14.5 5.5a4.5 4.5 0 0 1 0 9 4 4 0 0 0-5 5 4.5 4.5 0 0 1-3.5-7.5"/><circle cx="8" cy="16" r="1.2"/>',
+  flame:    '<path d="M12 3c1 3-1.5 4-1.5 6.5A4.5 4.5 0 0 0 16 13c0-3-2-4-1.5-7M12 3c-3 2.5-6 5.5-6 9.5a6 6 0 0 0 12 0c0-2-1-3.5-2-4.5"/>',
+  list:     '<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>',
+  grip:     '<path d="M9 6h.01M9 12h.01M9 18h.01M15 6h.01M15 12h.01M15 18h.01"/>',
+  back:     '<path d="M11 5l-7 7 7 7M4 12h16"/>',
+  clipboard:'<rect x="5" y="4.5" width="14" height="16" rx="2"/><path d="M9 4.5a3 3 0 0 1 6 0M9 11h6M9 15h4"/>',
+  info:     '<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 7.8h.01"/>',
+  bell:     '<path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 19a2 2 0 0 0 4 0"/>',
+  copy:     '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V5a1 1 0 0 1 1-1h11"/>',
+  image:    '<rect x="3.5" y="5" width="17" height="14" rx="2.5"/><circle cx="8.8" cy="10" r="1.6"/><path d="M20 16l-4.5-4-6 5"/>',
+  camera:   '<path d="M4 8.5h3l1.5-2h7L17 8.5h3a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.4"/>',
+  dineout:  '<path d="M7 3v7M5 3v4a2 2 0 0 0 4 0V3M7 10v11"/><path d="M17 3c-1.4 0-2.3 2-2.3 4.6 0 2 1 3.4 2.3 3.4s2.3-1.4 2.3-3.4C19.3 5 18.4 3 17 3zM17 11v10"/>',
+  ban:      '<circle cx="12" cy="12" r="8.5"/><path d="M6.2 6.2l11.6 11.6"/>',
+  note:     '<path d="M5 4.5h14v10l-4 4H5z"/><path d="M19 14.5h-4v4"/><path d="M8 9h8M8 12.5h5"/>',
+  chat:     '<path d="M4 11.5a7 7 0 1 1 3.2 5.9L4 18.5l1-3a7 7 0 0 1-1-4z"/>',
+  share:    '<circle cx="6" cy="12" r="2.2"/><circle cx="17.5" cy="6" r="2.2"/><circle cx="17.5" cy="18" r="2.2"/><path d="M8 11l7.5-4M8 13l7.5 4"/>',
+  filter:   '<path d="M3.5 5.5h17l-6.5 8v5l-4 2v-7z"/>',
+};
+
+function Icon({ name, size = 20, stroke = 1.7, fill = false, style, className }) {
+  return React.createElement("svg", {
+    width: size, height: size, viewBox: "0 0 24 24",
+    fill: fill ? "currentColor" : "none",
+    stroke: fill ? "none" : "currentColor",
+    strokeWidth: stroke, strokeLinecap: "round", strokeLinejoin: "round",
+    className, style: { display: "block", flexShrink: 0, ...style },
+    dangerouslySetInnerHTML: { __html: MP_ICON_PATHS[name] || "" },
+  });
+}
+window.Icon = Icon;

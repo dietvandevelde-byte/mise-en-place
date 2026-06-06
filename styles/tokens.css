@@ -1,0 +1,141 @@
+/* =========================================================================
+   MISE EN PLACE — design tokens
+   A calm, organised editorial-kitchen aesthetic for a weekly meal planner.
+   Warm off-white paper, kitchen-garden green accent, six meal-type hues.
+   Type: Bricolage Grotesque (display) + Hanken Grotesk (UI/body).
+   ========================================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap');
+
+:root {
+  /* ---------- Surfaces & ink ---------- */
+  --paper:        #FBF7F0;   /* app background — warm off-white */
+  --paper-2:      #F3EDE2;   /* sunken panels, alt rows */
+  --surface:      #FFFFFF;   /* cards */
+  --surface-2:    #FCFAF6;   /* subtle raised */
+  --ink:          #211E1A;   /* primary text — warm near-black */
+  --ink-2:        #5C554B;   /* secondary */
+  --ink-3:        #938A7C;   /* tertiary / captions */
+  --ink-4:        #C4BBA9;   /* faint */
+  --line:         #E9E1D3;   /* hairline border */
+  --line-2:       #DCD2C0;   /* stronger border */
+
+  /* ---------- Brand accent — kitchen-garden green ---------- */
+  --brand:        #2F7D4F;
+  --brand-deep:   #235E3C;
+  --brand-soft:   #E6F0E8;
+  --brand-ink:    #1C4A30;
+
+  /* ---------- Meal-type hues (6 slots) ---------- */
+  --honey:        #D99A2B;   --honey-soft:  #FBF0D8;  --honey-ink:  #8A5E12;
+  --sage:         #6F9462;   --sage-soft:   #E9F0E4;  --sage-ink:   #43603A;
+  --terra:        #CF6238;   --terra-soft:  #FAE6DC;  --terra-ink:  #8E3C1C;
+  --teal:         #2E8F8A;   --teal-soft:   #DCF0EE;  --teal-ink:   #1B5C58;
+  --berry:        #AC3F62;   --berry-soft:  #F7E2E9;  --berry-ink:  #74263F;
+  --indigo:       #515F9C;   --indigo-soft: #E4E7F4;  --indigo-ink: #313C6B;
+
+  /* ---------- Recipe category hues (extra, for “soort” coloring) ---------- */
+  --wine:         #8E3B34;   --wine-soft:   #F1E1DE;  --wine-ink:   #6A2A25;
+  --plum:         #7E5293;   --plum-soft:   #ECE3F2;  --plum-ink:   #543569;
+  --olive:        #7E8A33;   --olive-soft:  #EEF0DC;  --olive-ink:  #515A1F;
+  --mustard:      #B68A1F;   --mustard-soft:#F6ECCF;  --mustard-ink:#7A5A10;
+  --rose:         #C45B7C;   --rose-soft:   #F8E4EB;  --rose-ink:   #8C3354;
+  --charcoal:     #4B4742;   --charcoal-soft:#E5E1D9; --charcoal-ink:#322F2B;
+  --jade:         #2F7D5A;   --jade-soft:   #DCEFE5;  --jade-ink:   #1E5A40;
+  --copper:       #9C5A2C;   --copper-soft: #F0E2D2;  --copper-ink: #6E3E1C;
+  --aubergine:    #6E4A6B;   --aubergine-soft:#ECE2EC;--aubergine-ink:#4A2F48;
+
+  /* ---------- Status ---------- */
+  --ok:           #2F7D4F;   --ok-soft:   #E6F0E8;
+  --warn:         #D99A2B;   --warn-soft: #FBF0D8;
+  --danger:       #C8452F;   --danger-soft:#FAE2DD;
+
+  /* macro colors (carbs / protein / fat) */
+  --macro-carb:   #D99A2B;
+  --macro-prot:   #2E8F8A;
+  --macro-fat:    #CF6238;
+
+  /* ---------- Spacing (4px base) ---------- */
+  --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px; --s-5: 20px;
+  --s-6: 24px; --s-7: 32px; --s-8: 40px; --s-9: 56px; --s-10: 72px;
+
+  /* ---------- Radius ---------- */
+  --r-1: 6px;  --r-2: 10px; --r-3: 14px; --r-4: 20px; --r-pill: 999px;
+
+  /* ---------- Shadows (soft, warm) ---------- */
+  --sh-1: 0 1px 2px rgba(33,30,26,0.04), 0 1px 3px rgba(33,30,26,0.05);
+  --sh-2: 0 2px 4px rgba(33,30,26,0.04), 0 6px 16px -8px rgba(33,30,26,0.12);
+  --sh-3: 0 12px 32px -12px rgba(33,30,26,0.22), 0 2px 6px rgba(33,30,26,0.06);
+  --sh-pop: 0 24px 60px -18px rgba(33,30,26,0.34);
+
+  /* ---------- Type ---------- */
+  --ff-display: "Bricolage Grotesque", "Hanken Grotesk", sans-serif;
+  --ff-body:    "Hanken Grotesk", system-ui, -apple-system, sans-serif;
+
+  --fs-11: 11px; --fs-12: 12px; --fs-13: 13px; --fs-14: 14px; --fs-15: 15px;
+  --fs-16: 16px; --fs-18: 18px; --fs-20: 20px; --fs-22: 22px; --fs-24: 24px; --fs-28: 28px;
+  --fs-34: 34px; --fs-42: 42px; --fs-52: 52px; --fs-64: 64px;
+
+  --lh-tight: 1.02; --lh-snug: 1.18; --lh-default: 1.5;
+  --tr-tight: -0.02em; --tr-snug: -0.01em; --tr-wide: 0.04em; --tr-caps: 0.1em;
+}
+
+/* =========================================================================
+   Base
+   ========================================================================= */
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--ff-body);
+  font-size: var(--fs-14);
+  line-height: var(--lh-default);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---------- Type helpers ---------- */
+.t-eyebrow {
+  font-family: var(--ff-body);
+  font-weight: 700;
+  font-size: var(--fs-11);
+  letter-spacing: var(--tr-caps);
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.t-display {
+  font-family: var(--ff-display);
+  font-weight: 700;
+  letter-spacing: var(--tr-tight);
+  line-height: var(--lh-tight);
+}
+.t-num {
+  font-family: var(--ff-display);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tr-tight);
+  line-height: 1;
+}
+
+/* meal-type color binding: element with data-c="honey" etc. exposes --c / --c-soft / --c-ink */
+[data-c="honey"]  { --c: var(--honey);  --c-soft: var(--honey-soft);  --c-ink: var(--honey-ink);  }
+[data-c="sage"]   { --c: var(--sage);   --c-soft: var(--sage-soft);   --c-ink: var(--sage-ink);   }
+[data-c="terra"]  { --c: var(--terra);  --c-soft: var(--terra-soft);  --c-ink: var(--terra-ink);  }
+[data-c="teal"]   { --c: var(--teal);   --c-soft: var(--teal-soft);   --c-ink: var(--teal-ink);   }
+[data-c="berry"]  { --c: var(--berry);  --c-soft: var(--berry-soft);  --c-ink: var(--berry-ink);  }
+[data-c="indigo"] { --c: var(--indigo); --c-soft: var(--indigo-soft); --c-ink: var(--indigo-ink); }
+[data-c="brand"]  { --c: var(--brand);  --c-soft: var(--brand-soft);  --c-ink: var(--brand-ink);  }
+[data-c="wine"]   { --c: var(--wine);   --c-soft: var(--wine-soft);   --c-ink: var(--wine-ink);   }
+[data-c="plum"]   { --c: var(--plum);   --c-soft: var(--plum-soft);   --c-ink: var(--plum-ink);   }
+[data-c="olive"]  { --c: var(--olive);  --c-soft: var(--olive-soft);  --c-ink: var(--olive-ink);  }
+[data-c="mustard"]{ --c: var(--mustard);--c-soft: var(--mustard-soft);--c-ink: var(--mustard-ink);}
+[data-c="rose"]   { --c: var(--rose);   --c-soft: var(--rose-soft);   --c-ink: var(--rose-ink);   }
+[data-c="charcoal"]{ --c: var(--charcoal);--c-soft: var(--charcoal-soft);--c-ink: var(--charcoal-ink);}
+[data-c="jade"]   { --c: var(--jade);   --c-soft: var(--jade-soft);   --c-ink: var(--jade-ink);   }
+[data-c="copper"] { --c: var(--copper); --c-soft: var(--copper-soft); --c-ink: var(--copper-ink); }
+[data-c="aubergine"]{ --c: var(--aubergine);--c-soft: var(--aubergine-soft);--c-ink: var(--aubergine-ink);}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 999px; border: 3px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: var(--ink-4); background-clip: padding-box; border: 3px solid transparent; }

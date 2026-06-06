@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mise en Place — Weekmenu Planner</title>
+<link rel="stylesheet" href="styles/tokens.css?v=57">
+<link rel="stylesheet" href="styles/app.css?v=57">
+<link rel="stylesheet" href="styles/screens.css?v=57">
+<style>
+  html, body { height: 100%; }
+  body {
+    margin: 0; background: #E7E1D5;
+    background-image:
+      radial-gradient(circle at 12% 0%, rgba(47,125,79,0.06), transparent 38%),
+      radial-gradient(circle at 90% 100%, rgba(207,98,56,0.05), transparent 42%);
+    min-height: 100%;
+    overflow-x: auto;
+    font-family: "Hanken Grotesk", sans-serif;
+  }
+  .showtop {
+    display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    padding: 20px 32px; flex-wrap: wrap;
+  }
+  .showtop__brand { display: flex; align-items: center; gap: 13px; }
+  .showtop__logo { width: 42px; height: 42px; border-radius: 12px; background: #2F7D4F; color: #fff; display: grid; place-items: center; box-shadow: 0 4px 14px -4px rgba(47,125,79,0.6); }
+  .showtop__logo svg { width: 24px; height: 24px; }
+  .showtop__t1 { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -0.02em; line-height: 1; color: #211E1A; }
+  .showtop__t1 span { color: #2F7D4F; }
+  .showtop__t2 { font-size: 13px; color: #6B655C; font-weight: 600; margin-top: 2px; }
+  .showtop__note { font-size: 13px; color: #5C554B; font-weight: 600; display: flex; align-items: center; gap: 9px; background: #fff; padding: 9px 15px; border-radius: 999px; box-shadow: 0 2px 10px -4px rgba(33,30,26,0.18); }
+  .showtop__note b { color: #2F7D4F; }
+  .showtop__dot { width: 9px; height: 9px; border-radius: 50%; background: #2F7D4F; box-shadow: 0 0 0 4px rgba(47,125,79,0.18); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+
+  .stage-scaler { transform-origin: top left; margin: 0 auto; }
+  .stage { display: flex; gap: 52px; align-items: flex-start; padding: 8px 40px 56px; width: max-content; }
+  .frame { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .frame__cap { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 14px; color: #3A352D; }
+  .frame__cap svg { width: 18px; height: 18px; color: #6B655C; }
+  .frame__cap span { font-size: 12px; color: #938A7C; font-weight: 600; }
+
+  /* phone */
+  .phone {
+    width: 392px; height: 830px; background: #1c1a17; border-radius: 52px;
+    padding: 13px; box-shadow: 0 40px 90px -30px rgba(33,30,26,0.55), 0 0 0 2px rgba(0,0,0,0.2) inset;
+    position: relative;
+  }
+  .phone__screen { width: 100%; height: 100%; border-radius: 40px; overflow: hidden; position: relative; background: #FBF7F0; }
+  .phone__notch { position: absolute; top: 13px; left: 50%; transform: translateX(-50%); width: 122px; height: 30px; background: #1c1a17; border-radius: 0 0 18px 18px; z-index: 80; }
+  .phone__status { position: absolute; top: 0; left: 0; right: 0; height: 40px; display: flex; align-items: center; justify-content: space-between; padding: 0 26px; font-size: 13px; font-weight: 700; color: #211E1A; z-index: 70; pointer-events: none; }
+  .phone__status .bat { display: flex; align-items: center; gap: 5px; }
+  .phone .app { padding-top: 40px; }
+
+  /* browser */
+  .browser {
+    width: 1280px; height: 824px; background: #fff; border-radius: 16px; overflow: hidden;
+    box-shadow: 0 44px 100px -34px rgba(33,30,26,0.5), 0 0 0 1px rgba(33,30,26,0.06);
+  }
+  .browser__bar { height: 46px; background: #EDE7DC; display: flex; align-items: center; gap: 14px; padding: 0 16px; border-bottom: 1px solid #DCD2C0; }
+  .browser__lights { display: flex; gap: 8px; }
+  .browser__lights i { width: 12px; height: 12px; border-radius: 50%; display: block; }
+  .browser__url { flex: 1; max-width: 460px; background: #fff; border-radius: 8px; height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 12px; font-size: 13px; color: #6B655C; border: 1px solid #DCD2C0; }
+  .browser__url svg { width: 13px; height: 13px; }
+  .browser__view { height: calc(100% - 46px); position: relative; background: #FBF7F0; }
+</style>
+<style>
+/* ── Auth overlay ─────────────────────────────────────────────────── */
+#mp-auth {
+  position: fixed; inset: 0; z-index: 9999;
+  background: #E7E1D5;
+  background-image:
+    radial-gradient(circle at 12% 0%, rgba(47,125,79,0.10), transparent 40%),
+    radial-gradient(circle at 90% 100%, rgba(207,98,56,0.08), transparent 40%);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+  font-family: "Hanken Grotesk", sans-serif;
+}
+#mp-auth.hidden { display: none; }
+.auth-box {
+  background: #fff; border-radius: 20px;
+  box-shadow: 0 8px 40px -8px rgba(33,30,26,.18);
+  width: 100%; max-width: 400px; padding: 36px;
+}
+.auth-logo {
+  width: 48px; height: 48px; border-radius: 14px;
+  background: #2F7D4F; color: #fff; display: grid;
+  place-items: center; margin-bottom: 16px;
+  box-shadow: 0 4px 14px -4px rgba(47,125,79,0.5);
+}
+.auth-logo svg { width: 26px; height: 26px; }
+.auth-title {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-weight: 800; font-size: 24px; color: #211E1A;
+  letter-spacing: -0.02em; margin-bottom: 4px;
+}
+.auth-title span { color: #2F7D4F; }
+.auth-sub { font-size: 13px; color: #6B655C; margin-bottom: 24px; font-weight: 500; }
+.auth-tabs { display: flex; border-bottom: 2px solid #EDE7DC; margin-bottom: 22px; }
+.auth-tab {
+  flex: 1; padding: 8px; text-align: center;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  color: #938A7C; border-bottom: 2px solid transparent; margin-bottom: -2px;
+  background: none; border-top: none; border-left: none; border-right: none;
+  transition: color .15s;
+}
+.auth-tab.active { color: #2F7D4F; border-bottom-color: #2F7D4F; }
+.auth-label { display: block; font-size: 12px; font-weight: 700; color: #5C554B; margin-bottom: 5px; }
+.auth-input {
+  width: 100%; padding: 10px 13px; border: 1.5px solid #DDD7CC;
+  border-radius: 10px; font-size: 14px; font-family: inherit;
+  color: #211E1A; background: #FDFBF8; box-sizing: border-box;
+  transition: border-color .15s; margin-bottom: 14px;
+}
+.auth-input:focus { outline: none; border-color: #2F7D4F; }
+.auth-btn {
+  width: 100%; padding: 11px; border-radius: 10px; border: none;
+  background: #2F7D4F; color: #fff; font-size: 15px; font-weight: 700;
+  font-family: inherit; cursor: pointer; margin-top: 4px;
+  transition: background .15s;
+}
+.auth-btn:hover { background: #256640; }
+.auth-btn:disabled { background: #A8C8B7; cursor: default; }
+.auth-err { color: #C0392B; font-size: 13px; margin-bottom: 10px; min-height: 18px; }
+</style>
+</head>
+<body>
+<!-- ══ Auth screen ══════════════════════════════════════════════════════════ -->
+<div id="mp-auth">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 19C4 11 9 5 19 5c0 10-6 15-14 14z"/></svg>
+    </div>
+    <div class="auth-title">Mise <span>en Place</span></div>
+    <div class="auth-sub">Jouw persoonlijke weekmenu-planner</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="authTab('login')">Inloggen</button>
+      <button class="auth-tab"        onclick="authTab('register')">Registreren</button>
+    </div>
+    <div id="auth-panel-login">
+      <label class="auth-label">E-mailadres</label>
+      <input class="auth-input" id="auth-email" type="email" placeholder="jij@voorbeeld.nl" />
+      <label class="auth-label">Wachtwoord</label>
+      <input class="auth-input" id="auth-pw" type="password" placeholder="••••••••"
+             onkeydown="if(event.key==='Enter') authSubmit()" />
+      <div class="auth-err" id="auth-err"></div>
+      <button class="auth-btn" id="auth-btn" onclick="authSubmit()">Inloggen</button>
+    </div>
+    <div id="auth-panel-register" style="display:none">
+      <label class="auth-label">Naam</label>
+      <input class="auth-input" id="auth-name" type="text" placeholder="Marie Janssen" />
+      <label class="auth-label">E-mailadres</label>
+      <input class="auth-input" id="auth-email2" type="email" placeholder="jij@voorbeeld.nl" />
+      <label class="auth-label">Wachtwoord <span style="font-weight:400;color:#938A7C">(min. 8 tekens)</span></label>
+      <input class="auth-input" id="auth-pw2" type="password" placeholder="••••••••"
+             onkeydown="if(event.key==='Enter') authSubmit()" />
+      <div class="auth-err" id="auth-err2"></div>
+      <button class="auth-btn" id="auth-btn2" onclick="authSubmit()">Account aanmaken</button>
+    </div>
+  </div>
+</div>
+<div id="mp-app" style="display:none">
+  <template id="__bundler_thumbnail">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100" height="100" fill="#2F7D4F"/>
+      <path d="M50 26c-4 12 6 16 6 26a13 13 0 0 1-26 0c0-9 7-15 12-22 4 6 8 9 8 15" fill="none" stroke="#FBF7F0" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </template>
+
+  <div class="showtop">
+    <div class="showtop__brand">
+      <div class="showtop__logo">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 19C4 11 9 5 19 5c0 10-6 15-14 14z"/></svg>
+      </div>
+      <div>
+        <div class="showtop__t1">Mise <span>en Place</span></div>
+        <div class="showtop__t2">Weekmenu &amp; boodschappen — interactief prototype</div>
+      </div>
+    </div>
+    <div class="showtop__note">
+      <span class="showtop__dot"></span>
+      Mobiel &amp; desktop delen <b>dezelfde live data</b> — plan links, zie het rechts updaten
+    </div>
+  </div>
+
+  <div class="stage-scaler" id="scaler">
+    <div class="stage" id="stage">
+      <div class="frame">
+        <div class="frame__cap">Mobiel <span>· 390 px</span></div>
+        <div class="phone">
+          <div class="phone__notch"></div>
+          <div class="phone__screen">
+            <div class="phone__status">
+              <span>9:41</span>
+              <span class="bat">5G ▮▮▮ <svg width="22" height="12" viewBox="0 0 22 12" fill="none"><rect x="1" y="1.5" width="17" height="9" rx="2.5" stroke="#211E1A" stroke-width="1.3"/><rect x="2.6" y="3" width="12" height="6" rx="1.2" fill="#211E1A"/><rect x="19" y="4" width="2" height="4" rx="1" fill="#211E1A"/></svg></span>
+            </div>
+            <div id="mount-mobile" style="width:100%;height:100%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="frame">
+        <div class="frame__cap">Desktop <span>· 1280 px</span></div>
+        <div class="browser">
+          <div class="browser__bar">
+            <div class="browser__lights"><i style="background:#E8705B"></i><i style="background:#E6B23C"></i><i style="background:#5BB36E"></i></div>
+            <div class="browser__url">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#938A7C" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+              miseenplace.app/vandaag
+            </div>
+          </div>
+          <div class="browser__view">
+            <div id="mount-desktop" style="width:100%;height:100%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /mp-app -->
+
+  <!-- API bridge (before React) -->
+  <script src="js/api.js"></script>
+  <script>
+    // ── Auth tab toggle ─────────────────────────────────────────────────────
+    let _authMode = "login";
+    function authTab(mode) {
+      _authMode = mode;
+      document.querySelectorAll(".auth-tab").forEach((t, i) =>
+        t.classList.toggle("active", (i === 0) === (mode === "login"))
+      );
+      document.getElementById("auth-panel-login").style.display    = mode === "login"    ? "" : "none";
+      document.getElementById("auth-panel-register").style.display = mode === "register" ? "" : "none";
+    }
+
+    function _setAuthBusy(busy) {
+      document.getElementById("auth-btn").disabled  = busy;
+      document.getElementById("auth-btn2").disabled = busy;
+    }
+
+    async function authSubmit() {
+      _setAuthBusy(true);
+      document.getElementById("auth-err").textContent  = "";
+      document.getElementById("auth-err2").textContent = "";
+      try {
+        if (_authMode === "login") {
+          const email = document.getElementById("auth-email").value.trim();
+          const pw    = document.getElementById("auth-pw").value;
+          await window.MPAPI.login(email, pw);
+        } else {
+          const name  = document.getElementById("auth-name").value.trim();
+          const email = document.getElementById("auth-email2").value.trim();
+          const pw    = document.getElementById("auth-pw2").value;
+          await window.MPAPI.register(name, email, pw);
+        }
+        await onAuthSuccess();
+      } catch (e) {
+        const errEl = _authMode === "login" ? "auth-err" : "auth-err2";
+        document.getElementById(errEl).textContent = e.message;
+      } finally {
+        _setAuthBusy(false);
+      }
+    }
+
+    async function onAuthSuccess() {
+      // Load user's recipes from database into the store before mounting React
+      await window.MPAPI.loadUserRecipes();
+
+      // Patch store.createRecipe to also save to backend
+      const orig = window.MPStore.actions.createRecipe;
+      window.MPStore.actions.createRecipe = function(obj) {
+        const r = orig(obj);
+        window.MPAPI.saveNewRecipe(r);
+        return r;
+      };
+      const origImp = window.MPStore.actions.importRecipe;
+      window.MPStore.actions.importRecipe = function(obj) {
+        const r = origImp(obj);
+        window.MPAPI.saveNewRecipe(r);
+        return r;
+      };
+
+      // Update header to show logged-in user
+      const user = window.MPAPI.user;
+      if (user) {
+        const note = document.querySelector(".showtop__note");
+        if (note) note.innerHTML = `<span class="showtop__dot"></span> Ingelogd als <b>${user.name}</b>&nbsp;&nbsp;<button onclick="doLogout()" style="background:none;border:1px solid #DDD7CC;border-radius:6px;padding:3px 10px;cursor:pointer;font-size:12px;color:#5C554B">Uitloggen</button>`;
+      }
+
+      document.getElementById("mp-auth").classList.add("hidden");
+      document.getElementById("mp-app").style.display = "";
+    }
+
+    function doLogout() {
+      window.MPAPI.logout();
+      location.reload();
+    }
+
+    // ── Auto-login if token exists ──────────────────────────────────────────
+    window.MPAPI.me().then(user => {
+      if (user) onAuthSuccess();
+    });
+  </script>
+
+  <!-- React + Babel (pinned) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- data + store (plain JS) -->
+  <script src="js/data.js?v=57"></script>
+  <script src="js/store.js?v=57"></script>
+
+  <!-- app (JSX via babel) -->
+  <script type="text/babel" src="js/icons.jsx?v=57"></script>
+  <script type="text/babel" src="js/components.jsx?v=57"></script>
+  <script type="text/babel" src="js/slot-editor.jsx?v=57"></script>
+  <script type="text/babel" src="js/screens-today.jsx?v=57"></script>
+  <script type="text/babel" src="js/screens-week.jsx?v=57"></script>
+  <script type="text/babel" src="js/screens-groceries.jsx?v=57"></script>
+  <script type="text/babel" src="js/screens-recipes.jsx?v=57"></script>
+  <script type="text/babel" src="js/screens-profile.jsx?v=57"></script>
+  <script type="text/babel" src="js/share.jsx?v=57"></script>
+  <script type="text/babel" src="js/app.jsx?v=57"></script>
+
+  <script type="text/babel" data-presets="react">
+    window.mountMP(document.getElementById("mount-mobile"), "mobile");
+    window.mountMP(document.getElementById("mount-desktop"), "desktop");
+
+    // fit-to-width scaling
+    function fit() {
+      const stage = document.getElementById("stage");
+      const scaler = document.getElementById("scaler");
+      const w = stage.offsetWidth, h = stage.offsetHeight;
+      const avail = window.innerWidth;
+      const scale = Math.min(1, (avail - 8) / w);
+      scaler.style.transform = "scale(" + scale + ")";
+      scaler.style.width = (w * scale) + "px";
+      scaler.style.height = (h * scale) + "px";
+    }
+    window.addEventListener("resize", fit);
+    setTimeout(fit, 80);
+    setTimeout(fit, 600);
+  </script>
+</body>
+</html>

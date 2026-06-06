@@ -1,0 +1,16 @@
+# Python
+backend/venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.pyc
+backend/.env
+
+# Design export (niet nodig in repo)
+design_export/
+
+# Screenshots
+screenshots/
+
+# OS
+.DS_Store
+Thumbs.db

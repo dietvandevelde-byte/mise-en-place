@@ -1,0 +1,153 @@
+/* =========================================================================
+   MEAL PLANNER — Profile / diet targets
+   ========================================================================= */
+
+/* Configurable grocery shop order (drag or use the arrows) */
+function ShopOrderCard({ toast }) {
+  useStore();
+  const seq = S.sel.aisleOrder();
+  const [dragKey, setDragKey] = useState(null);
+  const [overKey, setOverKey] = useState(null);
+  const isCustom = Array.isArray(S.getState().aisleOrder);
+
+  function drop(targetKey) {
+    if (!dragKey || dragKey === targetKey) { setDragKey(null); setOverKey(null); return; }
+    const next = seq.filter((k) => k !== dragKey);
+    const ti = next.indexOf(targetKey);
+    next.splice(ti, 0, dragKey);
+    S.actions.setAisleOrder(next);
+    setDragKey(null); setOverKey(null);
+  }
+
+  return React.createElement("div", { className: "profcard" },
+    React.createElement("div", { className: "profcard__head" }, React.createElement(Icon, { name: "cart", size: 22 }), React.createElement("h3", null, "Winkelvolgorde")),
+    React.createElement("div", { className: "field__hint", style: { marginBottom: 12 } }, "De volgorde waarin je boodschappenlijst de schappen toont \u2014 ingesteld op de looproute van jouw winkel. Sleep een schap of gebruik de pijltjes."),
+    React.createElement("div", { className: "shoporder" },
+      seq.map((key, i) => {
+        const meta = S.sel.aisleMeta(key);
+        return React.createElement("div", {
+          key,
+          className: "shoprow" + (dragKey === key ? " shoprow--drag" : "") + (overKey === key && dragKey && dragKey !== key ? " shoprow--over" : ""),
+          draggable: true,
+          onDragStart: () => setDragKey(key),
+          onDragEnter: () => setOverKey(key),
+          onDragOver: (e) => e.preventDefault(),
+          onDrop: () => drop(key),
+          onDragEnd: () => { setDragKey(null); setOverKey(null); },
+        },
+          React.createElement("span", { className: "shoprow__num" }, i + 1),
+          React.createElement("span", { className: "shoprow__grip" }, React.createElement(Icon, { name: "grip", size: 16 })),
+          React.createElement("span", { className: "shoprow__name" }, meta ? meta.name : key),
+          React.createElement("span", { className: "shoprow__arrows" },
+            React.createElement("button", { className: "shoprow__arrow", disabled: i === 0, title: "Omhoog", onClick: () => S.actions.moveAisle(key, -1) }, React.createElement(Icon, { name: "chevU", size: 16 })),
+            React.createElement("button", { className: "shoprow__arrow", disabled: i === seq.length - 1, title: "Omlaag", onClick: () => S.actions.moveAisle(key, 1) }, React.createElement(Icon, { name: "chevD", size: 16 }))));
+      })),
+    isCustom && React.createElement("button", { className: "btn btn--ghost btn--sm", style: { marginTop: 12 }, onClick: () => { S.actions.resetAisleOrder(); toast("Standaardvolgorde hersteld"); } },
+      React.createElement(Icon, { name: "swap", size: 15 }), "Standaardvolgorde herstellen")
+  );
+}
+window.ShopOrderCard = ShopOrderCard;
+
+function ProfileScreen({ toast }) {
+  const state = useStore();
+  const t = state.targets;
+  const macroSum = t.carbsPct + t.proteinPct + t.fatPct;
+
+  function setMacro(key, val) {
+    S.actions.setTarget(key, val);
+  }
+
+  const MAC = [
+    ["carbsPct", "Koolhydraten", "var(--macro-carb)"],
+    ["proteinPct", "Eiwitten", "var(--macro-prot)"],
+    ["fatPct", "Vetten", "var(--macro-fat)"],
+  ];
+
+  // gram targets at max kcal
+  const gCarb = Math.round(t.maxKcal * t.carbsPct / 100 / 4);
+  const gProt = Math.round(t.maxKcal * t.proteinPct / 100 / 4);
+  const gFat = Math.round(t.maxKcal * t.fatPct / 100 / 9);
+
+  return React.createElement("div", { className: "wrap screen-anim" },
+    React.createElement("div", { className: "shead" },
+      React.createElement("div", null,
+        React.createElement("h1", { className: "shead__title" }, "Profiel"),
+        React.createElement("div", { className: "shead__sub" }, "Je dieetdoelen — pas ze aan wanneer je dieet verandert"))),
+    React.createElement("div", { className: "prof" },
+      // week start
+      React.createElement("div", { className: "profcard" },
+        React.createElement("div", { className: "profcard__head" }, React.createElement(Icon, { name: "week", size: 22 }), React.createElement("h3", null, "Begin van de week")),
+        React.createElement("div", { className: "field__hint", style: { marginBottom: 12 } }, "Bepaalt de eerste kolom in de weekplanner en hoe de boodschappen per week gebundeld worden."),
+        React.createElement("div", { style: { display: "flex", gap: 7, flexWrap: "wrap" } },
+          [[1, "Maandag"], [2, "Dinsdag"], [3, "Woensdag"], [4, "Donderdag"], [5, "Vrijdag"], [6, "Zaterdag"], [0, "Zondag"]].map(([d, label]) =>
+            React.createElement("button", { key: d, className: "chip", "data-active": state.weekStartDow === d ? 1 : 0, onClick: () => { S.actions.setWeekStartDow(d); toast(`Week begint nu op ${label.toLowerCase()}`); } }, label)))),
+      // calories
+      React.createElement("div", { className: "profcard" },
+        React.createElement("div", { className: "profcard__head" }, React.createElement(Icon, { name: "flame", size: 22 }), React.createElement("h3", null, "Caloriedoel")),
+        React.createElement("div", { className: "field__row", style: { marginBottom: 16 } },
+          React.createElement("div", null,
+            React.createElement("div", { className: "field__label" }, "Maximaal per dag"),
+            React.createElement("div", { className: "field__hint" }, "Standaard 1900 kcal")),
+          React.createElement("div", { className: "bigreadout" }, t.maxKcal.toLocaleString("nl-NL"), React.createElement("span", null, " kcal"))),
+        React.createElement("input", { className: "slider", type: "range", min: 1200, max: 3000, step: 50, value: t.maxKcal, onChange: (e) => setMacro("maxKcal", Number(e.target.value)) }),
+        React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 11, fontWeight: 700, color: "var(--ink-3)", marginTop: 6 } },
+          React.createElement("span", null, "1200"), React.createElement("span", null, "3000"))),
+      // macros
+      React.createElement("div", { className: "profcard" },
+        React.createElement("div", { className: "profcard__head" }, React.createElement(Icon, { name: "today", size: 22 }), React.createElement("h3", null, "Macroverdeling")),
+        React.createElement("div", { className: "macrobars" },
+          MAC.map(([key, name, c]) => React.createElement("div", { key, className: "macroctl" },
+            React.createElement("div", { className: "macroctl__name" }, React.createElement("span", { className: "sw", style: { background: c } }), name),
+            React.createElement("input", { className: "slider", type: "range", min: 0, max: 100, step: 5, value: t[key], onChange: (e) => setMacro(key, Number(e.target.value)), style: { accentColor: c } }),
+            React.createElement("div", { className: "macroctl__val" }, t[key], "%"))) ),
+        React.createElement("div", { className: "macrosum", "data-bad": macroSum !== 100 ? 1 : 0, style: { marginTop: 16 } },
+          React.createElement("span", null, macroSum === 100 ? "Verdeling klopt" : "Som moet 100% zijn"),
+          React.createElement("b", null, macroSum, "%")),
+        macroSum !== 100 && React.createElement("button", { className: "btn btn--soft btn--sm", style: { marginTop: 10 }, onClick: () => {
+          // normalise to 100 proportionally
+          const s = macroSum || 1;
+          const c = Math.round(t.carbsPct / s * 100), p = Math.round(t.proteinPct / s * 100);
+          S.actions.setMacros(c, p, 100 - c - p); toast("Verdeling rechtgetrokken");
+        } }, "Normaliseer naar 100%"),
+        React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10, marginTop: 16 } },
+          [["Koolh.", gCarb, "carb"], ["Eiwit", gProt, "prot"], ["Vet", gFat, "fat"]].map(([l, v, k]) =>
+            React.createElement("div", { key: k, className: "rmacro", "data-k": k }, React.createElement("b", null, v, "g"), React.createElement("span", null, l, " /dag"))))),
+      // food limits (vlees / vis / gevogelte / zuivel / eieren)
+      React.createElement("div", { className: "profcard" },
+        React.createElement("div", { className: "profcard__head" }, React.createElement(Icon, { name: "meat", size: 22 }), React.createElement("h3", null, "Voedingslimieten")),
+        React.createElement("div", { className: "field__hint", style: { marginBottom: 6 } }, "Stel per voedingsmiddel een maximum in per dag en per week. Zet op 0 voor geen limiet. Gerechten én snacks tellen mee."),
+        React.createElement("div", { className: "limitgrid" },
+          React.createElement("div", { className: "limithead" },
+            React.createElement("span", null, "Voedingsmiddel"),
+            React.createElement("span", null, "Per dag"),
+            React.createElement("span", null, "Per week")),
+          window.MP.FOOD_LIMITS.map((f) => {
+            const perWeek = S.sel.foodCountWeek(f.key);
+            const perDayMax = S.sel.foodDayMax(f.key);
+            const dayLim = t[f.day] || 0, weekLim = t[f.week] || 0;
+            const overDay = dayLim > 0 && perDayMax > dayLim;
+            const overWeek = weekLim > 0 && perWeek > weekLim;
+            return React.createElement("div", { key: f.key, className: "limitrow" },
+              React.createElement("div", { className: "limitrow__l" },
+                React.createElement("div", { className: "limitrow__name" }, React.createElement("span", { className: "dot", style: { background: `var(--${f.color})` } }), f.name),
+                React.createElement("div", { className: "limitrow__hint" },
+                  "Deze week: ", React.createElement("b", { "data-over": overWeek ? 1 : 0 }, perWeek, "×"),
+                  " · piek/dag ", React.createElement("b", { "data-over": overDay ? 1 : 0 }, perDayMax, "×"))),
+              React.createElement("div", { className: "limitctl" },
+                React.createElement(Stepper, { value: dayLim, onChange: (v) => setMacro(f.day, v), min: 0, max: 10 })),
+              React.createElement("div", { className: "limitctl" },
+                React.createElement(Stepper, { value: weekLim, onChange: (v) => setMacro(f.week, v), min: 0, max: 21 })));
+          })),
+        React.createElement("div", { className: "field__hint", style: { marginTop: 12, display: "flex", gap: 7, alignItems: "flex-start" } },
+          React.createElement(Icon, { name: "leaf", size: 14 }),
+          React.createElement("span", null, "Fruitregel: bevat het ontbijt al fruit, dan blijft er die dag nog max. 1 fruitsnack over."))),
+      // shop order
+      React.createElement(ShopOrderCard, { toast }),
+      // reset
+      React.createElement("div", { style: { display: "flex", gap: 10 } },
+        React.createElement("button", { className: "btn btn--danger", onClick: () => { if (confirm("Alles terugzetten naar de standaardweek?")) { S.actions.reset(); toast("Hersteld"); } } },
+          React.createElement(Icon, { name: "trash", size: 18 }), "Reset demo-data"))
+    )
+  );
+}
+window.ProfileScreen = ProfileScreen;
