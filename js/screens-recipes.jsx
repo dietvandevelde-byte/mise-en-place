@@ -188,7 +188,7 @@ function ImportSheet({ onClose, toast }) {
   const [txt, setTxt] = useState("");
   const [url, setUrl] = useState("");
   const [img, setImg] = useState(null);
-  const [fileRef] = useState({ current: null });
+  const fileRef = React.useRef(null);
   const [err, setErr] = useState(null);
   const [busy, setBusy] = useState(false);
 
@@ -240,7 +240,7 @@ function ImportSheet({ onClose, toast }) {
   }
 
   async function doScreenshot() {
-    const file = fileRef.current && fileRef.current.files && fileRef.current.files[0];
+    const file = fileRef.current && fileRef.current.files[0];
     if (!file) { setErr("Kies een afbeelding"); return; }
     setErr(null); setBusy(true);
     try {
@@ -299,7 +299,7 @@ function ImportSheet({ onClose, toast }) {
     },
       seg,
       React.createElement("div", { className: "import__hint" }, "Maak een screenshot van een recept en upload het hier. De AI herkent automatisch alle informatie."),
-      React.createElement("input", { type: "file", accept: "image/*", ref: (el) => { fileRef.current = el; }, onChange: () => setErr(null), style: { marginTop: 12, width: "100%" } }),
+      React.createElement("input", { type: "file", accept: "image/*", ref: fileRef, onChange: () => setErr(null), style: { marginTop: 12, width: "100%" } }),
       err && React.createElement("div", { className: "import__err" }, err)
     );
   }
