@@ -139,6 +139,9 @@
 
     await window.MPAPI.loadUserRecipes();
 
+    // Laad het weekmenu van de backend (vereist dat recepten al geladen zijn)
+    await window.MPAPI.loadWeekPlan();
+
     // Patch store om nieuwe recepten ook naar backend te sturen
     const origCreate = window.MPStore.actions.createRecipe;
     window.MPStore.actions.createRecipe = function (obj) {
@@ -155,6 +158,13 @@
 
     document.getElementById("mp-auth").style.display = "none";
     if (typeof window._mpMountApp === "function") window._mpMountApp();
+
+    // Auto-sync: sla het weekmenu op bij elke wijziging (debounced 2s)
+    let _pushTimer = null;
+    window.MPStore.subscribe(() => {
+      clearTimeout(_pushTimer);
+      _pushTimer = setTimeout(() => window.MPAPI.pushAllPlans(), 2000);
+    });
   }
 
   window._authLogout = function () {

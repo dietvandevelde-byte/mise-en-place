@@ -133,6 +133,61 @@ window.MPAPI = (function () {
     }
   }
 
+  // ── Load meal plan from backend → inject into store ───────────────────────
+  const DAY_OFFSETS = { monday:0, tuesday:1, wednesday:2, thursday:3, friday:4, saturday:5, sunday:6 };
+  const MEAL_TO_SLOT = { breakfast:0, lunch:2, dinner:4 };
+
+  async function loadWeekPlan() {
+    if (!_token) return;
+    try {
+      const plans = await req("GET", "/meal-plans/");
+      const state = window.MPStore.getState();
+      plans.forEach(plan => {
+        (plan.entries || []).forEach(entry => {
+          const offset = DAY_OFFSETS[entry.day];
+          if (offset === undefined || !entry.recipe) return;
+          const d = new Date(plan.week_start + "T12:00:00");
+          d.setDate(d.getDate() + offset);
+          const date = d.toISOString().slice(0, 10);
+          const slot = MEAL_TO_SLOT[entry.meal_type];
+          if (slot === undefined) return;
+          // Find recipe in store by backend UUID
+          const storeRecipe = window.MP.RECIPES.find(r => r._backendId === entry.recipe.id);
+          if (!storeRecipe) return;
+          state.plan[`${date}|${slot}`] = {
+            recipeId: storeRecipe.id,
+            portions: slot === 4 ? 2 : 1,
+            eaten: false,
+            manualName: null,
+            status: null,
+            note: null,
+          };
+        });
+      });
+    } catch (e) {
+      console.warn("Kon weekmenu niet laden:", e.message);
+    }
+  }
+
+  // Push ALL weeks that have plan entries to backend
+  async function pushAllPlans() {
+    if (!_token) return;
+    const state = window.MPStore.getState();
+    const mondays = new Set();
+    Object.keys(state.plan).forEach(key => {
+      const [date] = key.split("|");
+      mondays.add(_isoMonday(date));
+    });
+    for (const mon of mondays) {
+      const dates = Array.from({length: 7}, (_, i) => {
+        const d = new Date(mon + "T12:00:00");
+        d.setDate(d.getDate() + i);
+        return d.toISOString().slice(0, 10);
+      });
+      pushWeekPlan(dates);
+    }
+  }
+
   // ── Convert backend recipe → store recipe format ───────────────────────────
   function _toStoreRecipe(r, storeId) {
     return {
@@ -229,6 +284,6 @@ window.MPAPI = (function () {
     register, login, logout, me,
     getRecipes, createRecipe, updateRecipe, deleteRecipe,
     scrapeUrl, scrapeScreenshot, scrapeText, calculateNutrition,
-    loadUserRecipes, saveNewRecipe, pushWeekPlan,
+    loadUserRecipes, saveNewRecipe, pushWeekPlan, pushAllPlans, loadWeekPlan,
   };
 })();
