@@ -205,7 +205,7 @@ window.MPAPI = (function () {
             if (slot === undefined) return;
             state.plan[`${date}|${slot}`] = {
               recipeId: storeRecipe.id,
-              portions: slot === 4 ? 2 : 1,
+              portions: 1,
               eaten: false,
               manualName: null,
               status: null,

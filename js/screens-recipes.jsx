@@ -343,7 +343,7 @@ const MP_UNITS = [
 function CreateRecipeForm({ slot, onCancel, onSave, initialRecipe }) {
   const init = initialRecipe;
   const [f, setF] = useState(init ? {
-    title: init.title || "", portions: init.portions || 2,
+    title: init.title || "", portions: init.portions || 1,
     prepTime: init.prepTime || 0, kcal: init.kcal || 0,
     carbs: init.carbs || 0, protein: init.protein || 0, fat: init.fat || 0,
     meatDish: !!init.meatDish, instructions: init.instructions || "",
@@ -351,7 +351,7 @@ function CreateRecipeForm({ slot, onCancel, onSave, initialRecipe }) {
     suits: init.suits || [2],
     cats: init.cats || [],
   } : {
-    title: "", portions: 2, prepTime: 20, kcal: 0, carbs: 0, protein: 0, fat: 0,
+    title: "", portions: 1, prepTime: 20, kcal: 0, carbs: 0, protein: 0, fat: 0,
     meatDish: false, instructions: "", image: null,
     suits: slot != null ? [slot] : [2],
     cats: [],

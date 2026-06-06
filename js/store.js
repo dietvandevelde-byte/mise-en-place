@@ -64,7 +64,7 @@
         const isTodayEaten = di === 4 && slot <= 2; // wo: ontbijt+lunch eaten
         plan[`${date}|${slot}`] = {
           recipeId: rid,
-          portions: slot === 4 ? 2 : 1,        // cook dinner for 2
+          portions: 1,
           eaten: isPast || isTodayEaten,
           manualName: null,
         };
@@ -809,7 +809,7 @@
             const pick = fits[0];
             if (pick) {
               used[pick.id] = (used[pick.id] || 0) + 1;
-              st.plan[k] = { recipeId: pick.id, portions: s === 4 ? 2 : 1, eaten: false, manualName: null, auto: true };
+              st.plan[k] = { recipeId: pick.id, portions: 1, eaten: false, manualName: null, auto: true };
             }
           });
           // ensure at least one snack on empty days
