@@ -121,22 +121,38 @@ window.MPAPI = (function () {
     for (const [mon, dates] of Object.entries(byMon)) {
       const entries = [];
       for (const date of dates) {
+        // Hoofdmaaltijden (ontbijt, lunch, diner)
         for (const slot of [0, 2, 4]) {
           const e = state.plan[`${date}|${slot}`];
           if (e && e.recipeId) {
             let backendId = _idMap[e.recipeId];
-            // Recept nog niet in backend? Sla het eerst op (ook ingebouwde recepten).
             if (!backendId) {
               const recipe = window.MP.RECIPES.find(r => r.id === e.recipeId);
-              if (recipe) {
-                await saveNewRecipe(recipe);
-                backendId = _idMap[e.recipeId];
-              }
+              if (recipe) { await saveNewRecipe(recipe); backendId = _idMap[e.recipeId]; }
             }
             if (backendId) {
               entries.push({
                 day: DAY_NAMES[new Date(date + "T12:00:00").getDay()],
                 meal_type: SLOT_TO_MEAL[slot],
+                recipe_id: backendId,
+              });
+            }
+          }
+        }
+        // Snacks
+        const snacks = state.snacks && state.snacks[date];
+        if (snacks) {
+          for (const snack of snacks) {
+            if (!snack.recipeId) continue;
+            let backendId = _idMap[snack.recipeId];
+            if (!backendId) {
+              const recipe = window.MP.RECIPES.find(r => r.id === snack.recipeId);
+              if (recipe) { await saveNewRecipe(recipe); backendId = _idMap[snack.recipeId]; }
+            }
+            if (backendId) {
+              entries.push({
+                day: DAY_NAMES[new Date(date + "T12:00:00").getDay()],
+                meal_type: "snack",
                 recipe_id: backendId,
               });
             }
@@ -163,19 +179,39 @@ window.MPAPI = (function () {
           const d = new Date(plan.week_start + "T12:00:00");
           d.setDate(d.getDate() + offset);
           const date = d.toISOString().slice(0, 10);
-          const slot = MEAL_TO_SLOT[entry.meal_type];
-          if (slot === undefined) return;
           // Find recipe in store by backend UUID
           const storeRecipe = window.MP.RECIPES.find(r => r._backendId === entry.recipe.id);
           if (!storeRecipe) return;
-          state.plan[`${date}|${slot}`] = {
-            recipeId: storeRecipe.id,
-            portions: slot === 4 ? 2 : 1,
-            eaten: false,
-            manualName: null,
-            status: null,
-            note: null,
-          };
+
+          if (entry.meal_type === "snack") {
+            // Snacks herstellen
+            if (!state.snacks) state.snacks = {};
+            if (!state.snacks[date]) state.snacks[date] = [];
+            const alreadyHas = state.snacks[date].some(s => s.recipeId === storeRecipe.id);
+            if (!alreadyHas) {
+              state.snacks[date].push({
+                id: "bs_" + Math.random().toString(36).slice(2),
+                recipeId: storeRecipe.id,
+                portions: 1,
+                eaten: false,
+                manualName: null,
+                status: null,
+                note: null,
+              });
+            }
+          } else {
+            // Hoofdmaaltijden herstellen
+            const slot = MEAL_TO_SLOT[entry.meal_type];
+            if (slot === undefined) return;
+            state.plan[`${date}|${slot}`] = {
+              recipeId: storeRecipe.id,
+              portions: slot === 4 ? 2 : 1,
+              eaten: false,
+              manualName: null,
+              status: null,
+              note: null,
+            };
+          }
         });
       });
     } catch (e) {
