@@ -279,7 +279,7 @@ function ImportSheet({ onClose, toast }) {
   if (tab === "url") {
     return React.createElement(Sheet, {
       eyebrow: "Recept importeren", eyebrowColor: "teal", title: "Via URL", onClose, wide: true,
-      foot: React.createElement("button", { className: "btn btn--block", onClick: doUrl, disabled: busy || !url.trim() },
+      foot: React.createElement("button", { className: "btn btn--block", onClick: doUrl, disabled: busy },
         busy ? React.createElement(React.Fragment, null, React.createElement("span", { className: "spinner" }), "Bezig…")
              : React.createElement(React.Fragment, null, React.createElement(Icon, { name: "spark", size: 18 }), "Importeren met AI")),
     },
@@ -307,7 +307,7 @@ function ImportSheet({ onClose, toast }) {
   if (tab === "tekst") {
     return React.createElement(Sheet, {
       eyebrow: "Recept importeren", eyebrowColor: "teal", title: "Via tekst", onClose, wide: true,
-      foot: React.createElement("button", { className: "btn btn--block", onClick: doTekst, disabled: busy || !txt.trim() },
+      foot: React.createElement("button", { className: "btn btn--block", onClick: doTekst, disabled: busy },
         busy ? React.createElement(React.Fragment, null, React.createElement("span", { className: "spinner" }), "Bezig…")
              : React.createElement(React.Fragment, null, React.createElement(Icon, { name: "spark", size: 18 }), "Vul in met AI")),
     },

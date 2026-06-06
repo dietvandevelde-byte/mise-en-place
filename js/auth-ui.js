@@ -116,6 +116,27 @@
   };
 
   async function _onAuthSuccess() {
+    const user = window.MPAPI.user;
+
+    // Wis demo-data als een andere gebruiker inlogt op dit toestel
+    const storedUserId = localStorage.getItem("mp_user_id");
+    if (user && storedUserId !== user.id) {
+      localStorage.removeItem("mp_state_v3");
+      localStorage.setItem("mp_user_id", user.id);
+      // Herinitialiseer de store met lege planning
+      try {
+        const st = window.MPStore.getState();
+        st.plan    = {};
+        st.snacks  = {};
+        st.extras  = {};
+        st.manual  = [];
+        st.checked = {};
+        st.customRecipes = [];
+        // Trigger store subscribers
+        window.MPStore.actions.gotoCurrentWeek();
+      } catch(e) {}
+    }
+
     await window.MPAPI.loadUserRecipes();
 
     // Patch store om nieuwe recepten ook naar backend te sturen
