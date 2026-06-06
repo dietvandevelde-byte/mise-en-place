@@ -146,6 +146,7 @@ class MealPlanEntry(Base):
     meal_type = Column(SAEnum(MealType), nullable=False, default=MealType.dinner)
     servings_override = Column(Integer, nullable=True)  # afwijkend aantal porties voor dit plan
     notes = Column(Text, nullable=True)
+    eaten = Column(Boolean, default=False, nullable=False)
 
     meal_plan = relationship("MealPlan", back_populates="entries")
     recipe = relationship("Recipe", back_populates="meal_entries")

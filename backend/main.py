@@ -1,12 +1,22 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 from config import settings
 from database import Base, engine
 from routers import auth, recipes, meal_plans, scraper
 
-# Maak tabellen aan als ze nog niet bestaan (voor SQLite/lokaal gebruik)
-# Voor productie: gebruik Alembic migraties
+# Maak tabellen aan als ze nog niet bestaan
 Base.metadata.create_all(bind=engine)
+
+# Voeg nieuwe kolommen toe die in bestaande tabellen ontbreken (lightweight migratie)
+with engine.connect() as conn:
+    try:
+        conn.execute(text(
+            "ALTER TABLE meal_plan_entries ADD COLUMN IF NOT EXISTS eaten BOOLEAN NOT NULL DEFAULT FALSE"
+        ))
+        conn.commit()
+    except Exception:
+        pass
 
 app = FastAPI(
     title="Mise en Place API",

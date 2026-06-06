@@ -141,6 +141,7 @@ class MealPlanEntryCreate(BaseModel):
     meal_type: MealType = MealType.dinner
     servings_override: Optional[int] = None
     notes: Optional[str] = None
+    eaten: bool = False
 
 
 class MealPlanEntryOut(BaseModel):
@@ -150,6 +151,7 @@ class MealPlanEntryOut(BaseModel):
     meal_type: MealType
     servings_override: Optional[int] = None
     notes: Optional[str] = None
+    eaten: bool = False
     recipe: Optional[RecipeOut] = None
 
     class Config:

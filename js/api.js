@@ -135,6 +135,7 @@ window.MPAPI = (function () {
                 day: DAY_NAMES[new Date(date + "T12:00:00").getDay()],
                 meal_type: SLOT_TO_MEAL[slot],
                 recipe_id: backendId,
+                eaten: !!e.eaten,
               });
             }
           }
@@ -154,6 +155,7 @@ window.MPAPI = (function () {
                 day: DAY_NAMES[new Date(date + "T12:00:00").getDay()],
                 meal_type: "snack",
                 recipe_id: backendId,
+                eaten: !!snack.eaten,
               });
             }
           }
@@ -193,7 +195,7 @@ window.MPAPI = (function () {
                 id: "bs_" + Math.random().toString(36).slice(2),
                 recipeId: storeRecipe.id,
                 portions: 1,
-                eaten: false,
+                eaten: !!entry.eaten,
                 manualName: null,
                 status: null,
                 note: null,
@@ -206,7 +208,7 @@ window.MPAPI = (function () {
             state.plan[`${date}|${slot}`] = {
               recipeId: storeRecipe.id,
               portions: 1,
-              eaten: false,
+              eaten: !!entry.eaten,
               manualName: null,
               status: null,
               note: null,
