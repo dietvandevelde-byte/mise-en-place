@@ -10,7 +10,7 @@
   const recById = Object.fromEntries(RECIPES.map((r) => [r.id, r]));
 
   const LS_KEY = "mp_state_v3";
-  const TODAY = "2026-06-03";        // Wednesday
+  const TODAY = new Date().toISOString().slice(0, 10);
   const WEEK_START = "2026-05-30";   // Saturday — anchor for the seeded demo week
 
   // ---- date helpers ----
@@ -141,6 +141,7 @@
   try {
     const raw = localStorage.getItem(LS_KEY);
     state = raw ? JSON.parse(raw) : DEFAULT();
+    state.today = TODAY; // altijd de echte datum gebruiken
   } catch (e) { state = DEFAULT(); }
   // hydrate persisted user recipes back into the runtime library
   if (Array.isArray(state.customRecipes)) {
