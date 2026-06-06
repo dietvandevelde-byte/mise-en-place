@@ -1,0 +1,9 @@
+[[redirects]]
+  from = "/"
+  to = "/app-desktop.html"
+  status = 200
+
+[[redirects]]
+  from = "/mobiel"
+  to = "/app-mobile.html"
+  status = 200
