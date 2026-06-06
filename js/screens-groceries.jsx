@@ -82,7 +82,7 @@ function GroceriesScreen({ layout, toast, openShare }) {
         React.createElement("h1", { className: "shead__title" }, "Boodschappen"),
         React.createElement("div", { className: "shead__sub" }, "Samengevoegd uit je weekplanning · gesorteerd op schap")),
       React.createElement("div", { className: "weeknav" },
-        React.createElement("button", { className: "sharetrigger", onClick: () => openShare && openShare("groceries"), title: "Boodschappenlijst delen" },
+        React.createElement("button", { className: "sharetrigger", style: { marginRight: "auto" }, onClick: () => openShare && openShare("groceries"), title: "Boodschappenlijst delen" },
           React.createElement(Icon, { name: "share", size: 15 }), "Deel"),
         React.createElement("button", { className: "weeknav__btn", onClick: () => S.actions.shiftWeek(-1), title: "Vorige week", "aria-label": "Vorige week" },
           React.createElement(Icon, { name: "chevL", size: 18 })),

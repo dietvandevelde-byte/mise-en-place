@@ -867,5 +867,7 @@
     sel, actions,
     fmt: { fmtDow, fmtDowLong, fmtDay, fmtMon, weekDates, daysFor, dow, addDays },
     entryNutrition, sumNutrition, recipeFoods, recipeCategories,
+    // Registreer een extern (backend) recept in RECIPES én recById zonder emit
+    registerRecipe: (r) => { RECIPES.push(r); recById[r.id] = r; },
   };
 })();

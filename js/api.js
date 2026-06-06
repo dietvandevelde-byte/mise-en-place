@@ -233,7 +233,7 @@ window.MPAPI = (function () {
         const exists = RECIPES.find(x => x._backendId === r.id);
         if (!exists) {
           const sr = _toStoreRecipe(r, nextId++);
-          RECIPES.push(sr);
+          window.MPStore.registerRecipe(sr);  // voegt toe aan RECIPES én recById
           _idMap[sr.id] = r.id;
         } else {
           _idMap[exists.id] = r.id;
