@@ -9,6 +9,10 @@ window.MPAPI = (function () {
   let _token = localStorage.getItem("mp_jwt") || null;
   let _user  = null;
 
+  // id map: store numeric id → backend UUID — persistent over sessies
+  const _idMap = JSON.parse(localStorage.getItem("mp_idmap") || "{}");
+  function _saveIdMap() { try { localStorage.setItem("mp_idmap", JSON.stringify(_idMap)); } catch(e) {} }
+
   // ── HTTP helper ────────────────────────────────────────────────────────────
   async function req(method, path, body, isForm) {
     const headers = {};
@@ -48,6 +52,9 @@ window.MPAPI = (function () {
     _token = null;
     _user = null;
     localStorage.removeItem("mp_jwt");
+    // Wis de ID-map zodat een andere gebruiker niet de recepten-koppelingen erft
+    Object.keys(_idMap).forEach(k => delete _idMap[k]);
+    localStorage.removeItem("mp_idmap");
   }
 
   async function me() {
@@ -113,12 +120,19 @@ window.MPAPI = (function () {
     });
     for (const [mon, dates] of Object.entries(byMon)) {
       const entries = [];
-      dates.forEach((date) => {
-        [0, 2, 4].forEach((slot) => {
+      for (const date of dates) {
+        for (const slot of [0, 2, 4]) {
           const e = state.plan[`${date}|${slot}`];
           if (e && e.recipeId) {
-            // find backend recipe id for this store recipe id
-            const backendId = _idMap && _idMap[e.recipeId];
+            let backendId = _idMap[e.recipeId];
+            // Recept nog niet in backend? Sla het eerst op (ook ingebouwde recepten).
+            if (!backendId) {
+              const recipe = window.MP.RECIPES.find(r => r.id === e.recipeId);
+              if (recipe) {
+                await saveNewRecipe(recipe);
+                backendId = _idMap[e.recipeId];
+              }
+            }
             if (backendId) {
               entries.push({
                 day: DAY_NAMES[new Date(date + "T12:00:00").getDay()],
@@ -127,8 +141,8 @@ window.MPAPI = (function () {
               });
             }
           }
-        });
-      });
+        }
+      }
       req("PUT", "/meal-plans/" + mon, { week_start: mon, entries }).catch(() => {});
     }
   }
@@ -218,8 +232,7 @@ window.MPAPI = (function () {
     };
   }
 
-  // id map: store numeric id → backend UUID
-  const _idMap = {};
+  // (zie boven: _idMap wordt geladen vanuit localStorage)
 
   // Load all user recipes from backend and inject into the store
   async function loadUserRecipes() {
@@ -234,9 +247,9 @@ window.MPAPI = (function () {
         if (!exists) {
           const sr = _toStoreRecipe(r, nextId++);
           window.MPStore.registerRecipe(sr);  // voegt toe aan RECIPES én recById
-          _idMap[sr.id] = r.id;
+          _idMap[sr.id] = r.id; _saveIdMap();
         } else {
-          _idMap[exists.id] = r.id;
+          _idMap[exists.id] = r.id; _saveIdMap();
         }
       });
     } catch (e) {
@@ -271,7 +284,7 @@ window.MPAPI = (function () {
           .map((t, i) => ({ step: i + 1, text: t.trim() })).filter(s => s.text),
       };
       const saved = await createRecipe(payload);
-      _idMap[storeRecipe.id] = saved.id;
+      _idMap[storeRecipe.id] = saved.id; _saveIdMap();
     } catch (e) {
       console.warn("Kon recept niet opslaan in database:", e.message);
     }
