@@ -5,7 +5,7 @@
 window.MPAPI = (function () {
   "use strict";
 
-  const BASE = "http://localhost:8000";
+  const BASE = "https://mise-en-place-api-3ah7.onrender.com";
   let _token = localStorage.getItem("mp_jwt") || null;
   let _user  = null;
 
