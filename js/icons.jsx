@@ -38,6 +38,8 @@ const MP_ICON_PATHS = {
   chat:     '<path d="M4 11.5a7 7 0 1 1 3.2 5.9L4 18.5l1-3a7 7 0 0 1-1-4z"/>',
   share:    '<circle cx="6" cy="12" r="2.2"/><circle cx="17.5" cy="6" r="2.2"/><circle cx="17.5" cy="18" r="2.2"/><path d="M8 11l7.5-4M8 13l7.5 4"/>',
   filter:   '<path d="M3.5 5.5h17l-6.5 8v5l-4 2v-7z"/>',
+  eye:      '<ellipse cx="12" cy="12" rx="8" ry="5.5"/><circle cx="12" cy="12" r="2.3"/>',
+  eyeOff:   '<path d="M3 3l18 18M10.6 10.6A2.3 2.3 0 0 0 12 14.3a2.3 2.3 0 0 0 1.4-.6M6.7 6.7C4.8 8 3.5 10 3.5 12c0 3 3.8 5.5 8.5 5.5a12 12 0 0 0 4.8-1M9.9 5.1A12 12 0 0 1 12 4.5c4.7 0 8.5 2.5 8.5 7.5 0 1.2-.4 2.4-1 3.4"/>',
 };
 
 function Icon({ name, size = 20, stroke = 1.7, fill = false, style, className }) {
