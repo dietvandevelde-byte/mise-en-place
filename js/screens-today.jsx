@@ -102,9 +102,19 @@ function TodayScreen({ layout, openSlot, openSnacks, toast }) {
                 single.portionsEaten != null ? `${single.portionsEaten}\u00d7` : "1\u00d7"))
           : React.createElement("button", { className: "eatbtn", "data-on": allEaten ? 1 : 0, title: allEaten ? "Gegeten" : "Markeer gegeten",
               onClick: () => {
-                if (!allEaten) { S.actions.setPortionsEaten(focus, slot, single && recipe ? (single.portions || 1) : null); }
-                S.actions.toggleEaten(focus, slot);
-                toast(allEaten ? "Teruggezet" : "Gegeten \u2713");
+                if (!allEaten) {
+                  // setPortionsEaten internally sets eaten=true \u2014 don't also call toggleEaten
+                  if (single && recipe) {
+                    S.actions.setPortionsEaten(focus, slot, single.portions || 1);
+                  } else {
+                    // multi-dish or non-recipe: plain toggle
+                    S.actions.toggleEaten(focus, slot);
+                  }
+                  toast("Gegeten \u2713");
+                } else {
+                  S.actions.toggleEaten(focus, slot);
+                  toast("Teruggezet");
+                }
               } },
               React.createElement(Icon, { name: "check", size: 17 })),
         React.createElement("button", { className: "kebab", onClick: () => openSlot(focus, slot), title: "Bewerken" },

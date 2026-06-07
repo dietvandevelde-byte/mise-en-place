@@ -528,6 +528,7 @@ textarea.input { resize: vertical; line-height: 1.5; font-size: var(--fs-13); }
 .recfilters { display: flex; flex-direction: column; gap: 9px; margin-bottom: 20px; }
 .recfilters__group { display: flex; align-items: flex-start; gap: 10px; }
 .recfilters__lbl { flex-shrink: 0; width: 62px; padding-top: 8px; font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.recfilters__cnt { font-size: 9px; font-weight: 800; letter-spacing: .04em; color: var(--brand); }
 .chiprow { display: flex; gap: 7px; flex-wrap: wrap; flex: 1; min-width: 0; }
 .chiprow--split { flex-wrap: nowrap; align-items: flex-start; }
 .chipsub { display: flex; gap: 7px; flex-wrap: wrap; flex: 1; min-width: 0; }
@@ -667,6 +668,15 @@ input[type=number].input::-webkit-outer-spin-button, input[type=number].input::-
 .profcard__userrow { display: flex; align-items: center; gap: 12px; }
 /* op desktop is de sidebar-badge al zichtbaar — verberg de profielkaart */
 .app--desktop .profcard--user { display: none; }
+/* accordion cards */
+.profcard--acc { padding: 0; overflow: hidden; }
+.profcard__toggle { width: 100%; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; font: inherit; gap: 8px; }
+.profcard__toggle:hover { background: var(--paper-2); }
+.profcard--acc .profcard__head { margin-bottom: 0; }
+.profcard--acc.profcard--open .profcard__toggle { border-bottom: 1px solid var(--line); }
+.profcard__toggle svg:last-child { color: var(--ink-3); flex-shrink: 0; }
+.profcard__body { padding: 18px 20px; }
+.profcard__body .profcard__head { display: none; }
 
 .empty { text-align: center; padding: 48px 24px; color: var(--ink-3); }
 .empty__icon { width: 54px; height: 54px; border-radius: 16px; background: var(--paper-2); display: grid; place-items: center; margin: 0 auto 14px; color: var(--ink-4); }
