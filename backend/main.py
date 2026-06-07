@@ -30,6 +30,22 @@ with engine.connect() as conn:
         conn.commit()
     except Exception:
         pass
+    # household_size op users
+    try:
+        conn.execute(text(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS household_size INTEGER NOT NULL DEFAULT 1"
+        ))
+        conn.commit()
+    except Exception:
+        pass
+    # portions_eaten op meal_plan_entries
+    try:
+        conn.execute(text(
+            "ALTER TABLE meal_plan_entries ADD COLUMN IF NOT EXISTS portions_eaten FLOAT NULL"
+        ))
+        conn.commit()
+    except Exception:
+        pass
 
 app = FastAPI(
     title="Mise en Place API",

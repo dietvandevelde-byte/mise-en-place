@@ -56,6 +56,19 @@ def me(current_user: models.User = Depends(auth_utils.get_current_user)):
     return current_user
 
 
+@router.patch("/me", response_model=schemas.UserOut)
+def update_profile(
+    data: schemas.UpdateProfile,
+    current_user: models.User = Depends(auth_utils.get_current_user),
+    db: Session = Depends(get_db),
+):
+    if data.household_size is not None:
+        current_user.household_size = data.household_size
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+
 @router.put("/change-password", status_code=204)
 def change_password(
     data: schemas.ChangePassword,

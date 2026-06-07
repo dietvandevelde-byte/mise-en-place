@@ -111,6 +111,7 @@
     weekStartDow: 6,    // 0=zo .. 6=za — first day of the week (configurable)
     weekOffset: 0,      // 0 = current week, +1 = next, -1 = previous
     showSnacks: true,   // show/hide the snacks lane in Today + Week
+    householdSize: 1,   // aantal personen voor wie je kookt (boodschappenlijst-schaalaar)
     images: {},         // recipeId -> data URL (persisted image overrides)
     targets: {
       maxKcal: 1900, carbsPct: 45, proteinPct: 30, fatPct: 25,
@@ -155,6 +156,7 @@
     state.targets = Object.assign({}, _def.targets, state.targets || {});
     if (!state.snacks || typeof state.snacks !== "object") state.snacks = _def.snacks;
     if (!state.extras || typeof state.extras !== "object") state.extras = {};
+    if (state.householdSize == null) state.householdSize = 1;
     // one-time: align the week to start on Saturday (still changeable in Profile afterwards)
     if (!state._satStartMigrated) { state.weekStartDow = 6; state._satStartMigrated = true; }
   } catch (e) {}
@@ -170,19 +172,41 @@
     if (!r) return 1;
     return entry.portions / r.portions;
   }
+  // Geeft de geplande nutritie (wat je van plan bent te eten)
   function entryNutrition(entry) {
     const r = recById[entry.recipeId];
     if (!r) return { kcal: 0, carbs: 0, protein: 0, fat: 0 };
+    const p = entry.portions || 1;
     return {
-      kcal: Math.round(r.kcal * entry.portions),
-      carbs: Math.round(r.carbs * entry.portions),
-      protein: Math.round(r.protein * entry.portions),
-      fat: Math.round(r.fat * entry.portions),
+      kcal: Math.round(r.kcal * p),
+      carbs: Math.round(r.carbs * p),
+      protein: Math.round(r.protein * p),
+      fat: Math.round(r.fat * p),
+    };
+  }
+  // Geeft de gegeten nutritie — gebruikt portionsEaten als dat gelogd is
+  function entryEatenNutrition(entry) {
+    const r = recById[entry.recipeId];
+    if (!r) return { kcal: 0, carbs: 0, protein: 0, fat: 0 };
+    // portionsEaten: hoeveel porties de gebruiker persoonlijk at
+    const p = (entry.portionsEaten != null) ? entry.portionsEaten : (entry.portions || 1);
+    return {
+      kcal: Math.round(r.kcal * p),
+      carbs: Math.round(r.carbs * p),
+      protein: Math.round(r.protein * p),
+      fat: Math.round(r.fat * p),
     };
   }
   function sumNutrition(entries) {
     return entries.reduce((a, e) => {
       const n = entryNutrition(e);
+      a.kcal += n.kcal; a.carbs += n.carbs; a.protein += n.protein; a.fat += n.fat;
+      return a;
+    }, { kcal: 0, carbs: 0, protein: 0, fat: 0 });
+  }
+  function sumEatenNutrition(entries) {
+    return entries.reduce((a, e) => {
+      const n = entryEatenNutrition(e);
       a.kcal += n.kcal; a.carbs += n.carbs; a.protein += n.protein; a.fat += n.fat;
       return a;
     }, { kcal: 0, carbs: 0, protein: 0, fat: 0 });
@@ -273,9 +297,12 @@
         if (e.status) { const st = window.MP.statusByKey(e.status); return st ? st.name : "?"; }
         return e.manualName || "?";
       });
-      const kcal = list.reduce((a, e) => a + entryNutrition(e).kcal, 0);
+      const eatenItems = list.filter((e) => e.eaten);
+      const eatenCount = eatenItems.length;
       const eaten = list.length > 0 && list.every((e) => e.eaten);
-      const eatenCount = list.filter((e) => e.eaten).length;
+      // Gebruik entryEatenNutrition voor gegeten snacks (portionsEaten indien gelogd)
+      const kcal = eatenItems.reduce((a, e) => a + entryEatenNutrition(e).kcal, 0)
+                 + list.filter((e) => !e.eaten).reduce((a, e) => a + entryNutrition(e).kcal, 0);
       return { count: list.length, names, kcal, eaten, eatenCount, items: list, hasNote: list.some((e) => e.note) };
     },
     entry: (date, slot) => state.plan[`${date}|${slot}`] || null,
@@ -319,7 +346,7 @@
       const eaten = all.filter((e) => e.eaten);
       return {
         planned: sumNutrition(all),
-        eaten: sumNutrition(eaten),
+        eaten: sumEatenNutrition(eaten),  // gebruikt portionsEaten indien gelogd
         eatenCount: eaten.length,
         slotCount: all.length,
       };
@@ -362,13 +389,15 @@
     },
     groceries() {
       const map = {}; // key -> { name, unit, qty, cat, fromRecipes:Set }
+      const hs = state.householdSize || 1;
       const addEntry = (e) => {
         if (!e || !e.recipeId) return;
         if (e.leftoverOf) return;            // leftover meals come from the source pot — no extra groceries
         const r = recById[e.recipeId];
         if (!r) return;
         const mult = e.cookDouble ? 2 : 1;   // cooking a double batch buys twice the ingredients
-        const f = (e.portions * mult) / r.portions;
+        // Schaal op basis van huishoudengrootte ipv persoonlijke portie
+        const f = (hs * mult) / (r.portions || 1);
         r.ingredients.forEach((ing) => {
           const key = `${ing.cat}|${ing.name}|${ing.unit}`;
           if (!map[key]) map[key] = { key, name: ing.name, unit: ing.unit, qty: 0, cat: ing.cat, recipes: new Set() };
@@ -745,6 +774,30 @@
     setMacros(carbs, protein, fat) {
       set((st) => ({ ...st, targets: { ...st.targets, carbsPct: carbs, proteinPct: protein, fatPct: fat } }));
     },
+    setHouseholdSize(n) {
+      set((st) => ({ ...st, householdSize: Math.max(1, Math.min(20, Math.round(n))) }));
+    },
+    // Hoeveel porties de gebruiker persoonlijk gegeten heeft (null = niet gelogd)
+    setPortionsEaten(date, slot, portionsEaten) {
+      set((st) => {
+        const k = `${date}|${slot}`;
+        if (st.plan[k]) {
+          const eaten = portionsEaten != null ? true : st.plan[k].eaten;
+          st.plan[k] = { ...st.plan[k], portionsEaten, eaten };
+        }
+        return { ...st, plan: { ...st.plan } };
+      });
+    },
+    setSnackPortionsEaten(date, id, portionsEaten) {
+      set((st) => {
+        const snacks = { ...(st.snacks || {}) };
+        snacks[date] = (snacks[date] || []).map((e) => {
+          if (e.id !== id) return e;
+          return { ...e, portionsEaten, eaten: portionsEaten != null ? true : e.eaten };
+        });
+        return { ...st, snacks };
+      });
+    },
     createRecipe(obj) {
       const id = Math.max(1000, ...RECIPES.map((r) => r.id)) + 1;
       const r = {
@@ -866,7 +919,7 @@
     subscribe: (fn) => { subs.add(fn); return () => subs.delete(fn); },
     sel, actions,
     fmt: { fmtDow, fmtDowLong, fmtDay, fmtMon, weekDates, daysFor, dow, addDays },
-    entryNutrition, sumNutrition, recipeFoods, recipeCategories,
+    entryNutrition, entryEatenNutrition, sumNutrition, sumEatenNutrition, recipeFoods, recipeCategories,
     // Registreer een extern (backend) recept in RECIPES én recById zonder emit
     registerRecipe: (r) => { RECIPES.push(r); recById[r.id] = r; },
   };

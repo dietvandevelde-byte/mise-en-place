@@ -3,6 +3,7 @@
    ========================================================================= */
 function GroceriesScreen({ layout, toast, openShare }) {
   const state = useStore();
+  const hs = state.householdSize || 1;
   const groups = S.sel.groceries();
   const stats = S.sel.groceryStats();
   const pct = stats.total ? Math.round(stats.done / stats.total * 100) : 0;
@@ -80,7 +81,10 @@ function GroceriesScreen({ layout, toast, openShare }) {
     React.createElement("div", { className: "shead" },
       React.createElement("div", null,
         React.createElement("h1", { className: "shead__title" }, "Boodschappen"),
-        React.createElement("div", { className: "shead__sub" }, "Samengevoegd uit je weekplanning · gesorteerd op schap")),
+        React.createElement("div", { className: "shead__sub" },
+          "Samengevoegd uit je weekplanning · gesorteerd op schap",
+          hs > 1 && React.createElement("span", { className: "groc-hs-badge" },
+            React.createElement(Icon, { name: "user", size: 12 }), ` ${hs} personen`))),
       React.createElement("div", { className: "weeknav" },
         React.createElement("button", { className: "sharetrigger", style: { marginRight: "auto" }, onClick: () => openShare && openShare("groceries"), title: "Boodschappenlijst delen" },
           React.createElement(Icon, { name: "share", size: 15 }), "Deel"),

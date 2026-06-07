@@ -19,6 +19,12 @@ function AppShell({ layout }) {
   const [toastNode, toast] = useToast();
   const days = S.fmt.weekDates();
 
+  // Sync layout class to <body> so portalled sheets (.ov) can be styled via CSS
+  useEffect(() => {
+    document.body.classList.toggle("app--mobile",  layout === "mobile");
+    document.body.classList.toggle("app--desktop", layout === "desktop");
+  }, [layout]);
+
   const openSlot = useCallback((date, slot) => setSheet({ date, slot }), []);
   const openSnacks = useCallback((date) => setSnacksDate(date), []);
   const openShare = useCallback((kind) => setShare(kind), []);
@@ -81,7 +87,15 @@ function AppShell({ layout }) {
         React.createElement("div", { className: "side__week" },
           React.createElement("div", { className: "side__week-eyebrow" }, "Deze week"),
           React.createElement("div", { className: "side__week-range" }, "za ", S.fmt.fmtDay(days[0]), " — vr ", S.fmt.fmtDay(days[6]), " ", S.fmt.fmtMon(days[6])),
-          React.createElement("div", { className: "side__week-meta" }, "Plannen op vrijdag · boodschappen op zaterdag")))),
+          React.createElement("div", { className: "side__week-meta" }, "Plannen op vrijdag · boodschappen op zaterdag")),
+        (function() {
+          const u = window.MPAPI && window.MPAPI.user;
+          if (!u) return null;
+          return React.createElement("div", { className: "side__user" },
+            React.createElement("div", { className: "side__user-av" }, u.name[0].toUpperCase()),
+            React.createElement("div", { className: "side__user-name" }, u.name),
+            React.createElement("button", { className: "side__user-logout", onClick: () => window._authLogout && window._authLogout() }, "Uitloggen"));
+        })())),
     React.createElement("div", { className: "main" }, React.createElement("div", { className: "screen" }, screen)),
     sheet && React.createElement(SlotSheet, { date: sheet.date, slot: sheet.slot, onClose: () => setSheet(null), onSwapStart: swap.start, toast }),
     snacksDate && React.createElement(window.SnacksDaySheet, { date: snacksDate, onClose: () => setSnacksDate(null), toast }),

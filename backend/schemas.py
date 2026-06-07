@@ -34,10 +34,22 @@ class UserOut(BaseModel):
     email: str
     name: str
     avatar_url: Optional[str] = None
+    household_size: int = 1
     created_at: datetime
 
     class Config:
         from_attributes = True
+
+
+class UpdateProfile(BaseModel):
+    household_size: Optional[int] = None
+
+    @field_validator("household_size")
+    @classmethod
+    def household_range(cls, v):
+        if v is not None and not (1 <= v <= 20):
+            raise ValueError("Huishoudengrootte moet tussen 1 en 20 zijn")
+        return v
 
 
 # ── Ingredient (embedded in Recipe) ──────────────────────────────────────────
@@ -142,6 +154,7 @@ class MealPlanEntryCreate(BaseModel):
     servings_override: Optional[int] = None
     notes: Optional[str] = None
     eaten: bool = False
+    portions_eaten: Optional[float] = None  # hoeveel porties de gebruiker persoonlijk at
 
 
 class MealPlanEntryOut(BaseModel):
@@ -152,6 +165,7 @@ class MealPlanEntryOut(BaseModel):
     servings_override: Optional[int] = None
     notes: Optional[str] = None
     eaten: bool = False
+    portions_eaten: Optional[float] = None
     recipe: Optional[RecipeOut] = None
 
     class Config:

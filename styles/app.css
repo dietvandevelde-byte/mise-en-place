@@ -125,6 +125,27 @@
 .side__week-range { font-family: var(--ff-display); font-weight: 700; font-size: var(--fs-15); margin-top: 3px; text-transform: capitalize; }
 .side__week-meta { font-size: var(--fs-12); color: var(--ink-3); margin-top: 6px; }
 
+/* gebruikersregel onderaan sidebar */
+.side__user {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; margin-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.side__user-av {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--brand); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 13px; flex-shrink: 0;
+}
+.side__user-name { font-weight: 700; font-size: var(--fs-13); flex: 1; }
+.side__user-logout {
+  appearance: none; background: none; border: 1.5px solid var(--line-2);
+  border-radius: 8px; padding: 3px 9px; font-size: var(--fs-11);
+  font-family: inherit; font-weight: 700; color: var(--ink-3);
+  cursor: pointer; white-space: nowrap;
+}
+.side__user-logout:hover { border-color: var(--ink-3); color: var(--ink); }
+
 /* ------------ main / screen container ------------ */
 .main { flex: 1; min-width: 0; min-height: 0; position: relative; z-index: 1; display: flex; flex-direction: column; overflow: hidden; }
 .screen { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; position: relative; }
@@ -284,11 +305,23 @@
   color: var(--ink-4); transition: all .14s;
 }
 .eatbtn:hover { border-color: var(--brand); color: var(--brand); }
-.eatbtn[data-on="1"] { background: var(--brand); border-color: var(--brand); color: #fff; }
+.eatbtn[data-on="1"], .eatbtn--on { background: var(--brand); border-color: var(--brand); color: #fff; }
 .eatbtn svg { width: 17px; height: 17px; }
 .slot[data-eaten="1"] { background: var(--surface-2); }
 .slot[data-eaten="1"] .slot__title { color: var(--ink-2); }
 .kebab { appearance: none; cursor: pointer; background: none; border: 0; color: var(--ink-4); padding: 5px; border-radius: var(--r-1); }
+
+/* portie-badge naast eatbtn: toont hoeveel porties gegeten */
+.eaten-portions { display: flex; align-items: center; gap: 3px; }
+.portions-badge {
+  appearance: none; cursor: pointer;
+  background: var(--brand-1, #e8f3ed); border: 1.5px solid var(--brand);
+  border-radius: 10px; padding: 2px 7px;
+  font-family: var(--ff-display); font-weight: 800; font-size: var(--fs-12);
+  color: var(--brand); line-height: 1.4;
+  transition: background .14s;
+}
+.portions-badge:hover { background: var(--brand); color: #fff; }
 .kebab:hover { background: var(--paper-2); color: var(--ink-2); }
 
 /* eaten/upcoming divider label */

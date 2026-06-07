@@ -73,6 +73,12 @@ window.MPAPI = (function () {
     catch { logout(); return null; }
   }
 
+  async function updateProfile(data) {
+    const res = await req("PATCH", "/auth/me", data);
+    _user = res;
+    return res;
+  }
+
   // ── Recipes ────────────────────────────────────────────────────────────────
   async function getRecipes() { return req("GET", "/recipes/"); }
 
@@ -146,6 +152,7 @@ window.MPAPI = (function () {
                 meal_type: SLOT_TO_MEAL[slot],
                 recipe_id: backendId,
                 eaten: !!e.eaten,
+                portions_eaten: e.portionsEaten != null ? e.portionsEaten : null,
               });
             }
           }
@@ -166,6 +173,7 @@ window.MPAPI = (function () {
                 meal_type: "snack",
                 recipe_id: backendId,
                 eaten: !!snack.eaten,
+                portions_eaten: snack.portionsEaten != null ? snack.portionsEaten : null,
               });
             }
           }
@@ -206,6 +214,7 @@ window.MPAPI = (function () {
                 recipeId: storeRecipe.id,
                 portions: 1,
                 eaten: !!entry.eaten,
+                portionsEaten: entry.portions_eaten != null ? entry.portions_eaten : null,
                 manualName: null,
                 status: null,
                 note: null,
@@ -219,6 +228,7 @@ window.MPAPI = (function () {
               recipeId: storeRecipe.id,
               portions: 1,
               eaten: !!entry.eaten,
+              portionsEaten: entry.portions_eaten != null ? entry.portions_eaten : null,
               manualName: null,
               status: null,
               note: null,
@@ -271,7 +281,7 @@ window.MPAPI = (function () {
         name: i.name || "",
         qty: i.amount || 0,
         unit: i.unit || "",
-        cat: "Voorraad",
+        cat: i.cat || "Voorraad",   // bewaar de boodschappenlijst-categorie
       })),
       image: r.image_url || null,
       cats: [],
@@ -326,7 +336,7 @@ window.MPAPI = (function () {
         source_type: "manual",
         tags: storeRecipe.cats || [],
         ingredients: (storeRecipe.ingredients || []).map(i => ({
-          name: i.name, amount: i.qty || null, unit: i.unit || null
+          name: i.name, amount: i.qty || null, unit: i.unit || null, cat: i.cat || null
         })),
         instructions: (storeRecipe.instructions || "").split("\n\n")
           .map((t, i) => ({ step: i + 1, text: t.trim() })).filter(s => s.text),
@@ -342,7 +352,7 @@ window.MPAPI = (function () {
     get token() { return _token; },
     get user() { return _user; },
     get _idMap() { return _idMap; },
-    register, login, logout, me, changePassword, forgotPassword, resetPassword,
+    register, login, logout, me, updateProfile, changePassword, forgotPassword, resetPassword,
     getRecipes, createRecipe, updateRecipe, deleteRecipe,
     scrapeUrl, scrapeScreenshot, scrapeText, calculateNutrition,
     loadUserRecipes, saveNewRecipe, pushWeekPlan, pushAllPlans, loadWeekPlan,

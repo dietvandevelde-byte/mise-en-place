@@ -12,35 +12,9 @@
   body { background: #FBF7F0; font-family: "Hanken Grotesk", sans-serif; }
   #root { width: 100%; height: 100%; }
 
-  /* User badge — rechtsboven */
-  #user-badge {
-    position: fixed; top: 12px; right: 12px; z-index: 500;
-    background: rgba(255,255,255,.9); backdrop-filter: blur(8px);
-    border: 1px solid #EDE7DC; border-radius: 999px;
-    padding: 5px 12px 5px 6px; font-size: 12px; font-weight: 600;
-    color: #5C554B; display: none; align-items: center; gap: 7px;
-    box-shadow: 0 2px 10px -4px rgba(33,30,26,.15);
-  }
-  #user-badge .av {
-    width: 24px; height: 24px; border-radius: 50%;
-    background: #2F7D4F; color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 800;
-  }
-  #user-badge button {
-    background: none; border: none; cursor: pointer;
-    font-size: 10px; color: #938A7C; font-family: inherit; font-weight: 600;
-    padding: 2px 6px; border-radius: 6px; border: 1px solid #DDD7CC;
-  }
 </style>
 </head>
 <body>
-
-<div id="user-badge">
-  <div class="av" id="ub-av">?</div>
-  <span id="ub-name">…</span>
-  <button onclick="window._authLogout()">Uitloggen</button>
-</div>
 
 <div id="root"></div>
 
@@ -70,13 +44,6 @@
 
 <script>
   window._mpMountApp = function () {
-    const user = window.MPAPI.user;
-    if (user) {
-      const badge = document.getElementById("user-badge");
-      badge.style.display = "flex";
-      document.getElementById("ub-av").textContent   = user.name[0].toUpperCase();
-      document.getElementById("ub-name").textContent = user.name;
-    }
     window.mountMP(document.getElementById("root"), "mobile");
   };
 </script>

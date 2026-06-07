@@ -110,7 +110,7 @@ function Sheet({ eyebrow, eyebrowColor, title, onClose, children, foot, wide }) 
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
-  return React.createElement("div", { className: "ov", onMouseDown: (e) => { if (e.target === e.currentTarget) onClose(); } },
+  const content = React.createElement("div", { className: "ov", onMouseDown: (e) => { if (e.target === e.currentTarget) onClose(); } },
     React.createElement("div", { className: "sheet" + (wide ? " sheet--wide" : ""), "data-c": eyebrowColor || undefined },
       React.createElement("div", { className: "sheet__grip" }),
       React.createElement("div", { className: "sheet__head" },
@@ -125,6 +125,8 @@ function Sheet({ eyebrow, eyebrowColor, title, onClose, children, foot, wide }) 
       foot && React.createElement("div", { className: "sheet__foot" }, foot)
     )
   );
+  // Render via portal so position:fixed works correctly even inside CSS transform ancestors
+  return ReactDOM.createPortal(content, document.body);
 }
 
 /* ============================ Stepper ============================ */

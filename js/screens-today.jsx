@@ -48,9 +48,13 @@ function TodayScreen({ layout, openSlot, openSnacks, toast }) {
     const single = dishes.length === 1 ? dishes[0] : null;
     const recipe = single && single.recipeId ? S.sel.recipeById(single.recipeId) : null;
     const status = single && single.status ? window.MP.statusByKey(single.status) : null;
-    const n = single && single.recipeId ? S.entryNutrition(single) : null;
-    const totalKcal = dishes.reduce((a, e) => a + (e.recipeId ? S.entryNutrition(e).kcal : 0), 0);
     const allEaten = dishes.every((e) => e.eaten);
+    // Bij gegeten maaltijden: toon de werkelijk gegeten nutritie (portionsEaten)
+    const n = single && single.recipeId
+      ? (allEaten ? S.entryEatenNutrition(single) : S.entryNutrition(single))
+      : null;
+    const totalKcal = dishes.reduce((a, e) => a + (e.recipeId
+      ? (allEaten ? S.entryEatenNutrition(e).kcal : S.entryNutrition(e).kcal) : 0), 0);
     const anyMeat = dishes.some((e) => { const r = e.recipeId && S.sel.recipeById(e.recipeId); return r && r.meatDish; });
     const names = dishes.map((e) => { const r = e.recipeId ? S.sel.recipeById(e.recipeId) : null; const st = e.status ? window.MP.statusByKey(e.status) : null; return r ? r.title : st ? st.name : e.manualName; });
     const noteText = dishes.map((e) => e.note).filter(Boolean).join(" \u00b7 ");
@@ -69,7 +73,10 @@ function TodayScreen({ layout, openSlot, openSnacks, toast }) {
           totalKcal > 0 && React.createElement("span", null, React.createElement("b", null, totalKcal), " kcal"),
           single && recipe && React.createElement(React.Fragment, null,
             React.createElement("span", { className: "dotsep" }),
-            React.createElement("span", null, fmtPortions(single.portions))),
+            React.createElement("span", null,
+              allEaten && single.portionsEaten != null
+                ? fmtPortions(single.portionsEaten) + " gegeten"
+                : fmtPortions(single.portions))),
           single && recipe && React.createElement(React.Fragment, null,
             React.createElement("span", { className: "dotsep" }),
             React.createElement("span", null, n.protein, "g eiw")),
@@ -79,9 +86,27 @@ function TodayScreen({ layout, openSlot, openSnacks, toast }) {
           noteText && React.createElement("span", { className: "slot__note" }, React.createElement(Icon, { name: "note", size: 12 }), noteText))
       ),
       React.createElement("div", { className: "slot__right" },
-        React.createElement("button", { className: "eatbtn", "data-on": allEaten ? 1 : 0, title: allEaten ? "Gegeten" : "Markeer gegeten",
-          onClick: () => { S.actions.toggleEaten(focus, slot); toast(allEaten ? "Teruggezet" : "Gegeten \u2713"); } },
-          React.createElement(Icon, { name: "check", size: 17 })),
+        allEaten && single && recipe
+          ? React.createElement("div", { className: "eaten-portions" },
+              React.createElement("button", { className: "eatbtn eatbtn--on", title: "Teruggezet",
+                onClick: () => { S.actions.toggleEaten(focus, slot); S.actions.setPortionsEaten(focus, slot, null); toast("Teruggezet"); } },
+                React.createElement(Icon, { name: "check", size: 17 })),
+              React.createElement("button", { className: "portions-badge", title: "Gegeten porties aanpassen",
+                onClick: () => {
+                  const cur = single.portionsEaten != null ? single.portionsEaten : (single.portions || 1);
+                  const v = prompt(`Hoeveel porties at je? (bv. 0.5, 1, 1.5, 2)`, String(cur));
+                  if (v == null) return;
+                  const n = parseFloat(v.replace(",", "."));
+                  if (!isNaN(n) && n > 0) { S.actions.setPortionsEaten(focus, slot, Math.round(n * 10) / 10); toast("Bijgewerkt"); }
+                }},
+                single.portionsEaten != null ? `${single.portionsEaten}\u00d7` : "1\u00d7"))
+          : React.createElement("button", { className: "eatbtn", "data-on": allEaten ? 1 : 0, title: allEaten ? "Gegeten" : "Markeer gegeten",
+              onClick: () => {
+                if (!allEaten) { S.actions.setPortionsEaten(focus, slot, single && recipe ? (single.portions || 1) : null); }
+                S.actions.toggleEaten(focus, slot);
+                toast(allEaten ? "Teruggezet" : "Gegeten \u2713");
+              } },
+              React.createElement(Icon, { name: "check", size: 17 })),
         React.createElement("button", { className: "kebab", onClick: () => openSlot(focus, slot), title: "Bewerken" },
           React.createElement(Icon, { name: "edit", size: 17 }))
       )

@@ -220,13 +220,15 @@ const SNACK_COLORS = ["sage", "teal", "indigo", "honey", "berry"];
 function SnacksDaySheet({ date, onClose, toast }) {
   const state = useStore();
   const dowLong = cap(S.fmt.fmtDowLong(date));
-  const [mode, setMode] = useState("list");        // list | pick | create | confirm | entry | portions
+
+  // Bereken de snacklijst vóór useState zodat we de beginmode kunnen bepalen
+  const list = S.sel.snacksFor(date);
+  // Als er nog geen snacks zijn: ga direct naar de keuzelijst (sla de lege overzichtskaart over)
+  const [mode, setMode] = useState(() => list.length === 0 ? "pick" : "list");
   const [pendingRecipe, setPendingRecipe] = useState(null);
   const [portions, setPortions] = useState(1);
   const [editId, setEditId] = useState(null);      // snack being edited
   const [replaceId, setReplaceId] = useState(null);// snack being replaced via picker
-
-  const list = S.sel.snacksFor(date);
   const totalKcal = list.reduce((a, e) => a + (e.recipeId ? S.entryNutrition(e).kcal : 0), 0);
   const editEntry = editId ? list.find((e) => e.id === editId) : null;
   const editRecipe = editEntry && editEntry.recipeId ? S.sel.recipeById(editEntry.recipeId) : null;

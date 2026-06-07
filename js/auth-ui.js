@@ -162,6 +162,20 @@
     // Laad het weekmenu van de backend (vereist dat recepten al geladen zijn)
     await window.MPAPI.loadWeekPlan();
 
+    // Sync householdSize vanuit het gebruikersprofiel
+    if (user && user.household_size != null) {
+      window.MPStore.actions.setHouseholdSize(user.household_size);
+    }
+
+    // Push eventuele lokale recepten die nog niet in de backend staan
+    // (bijv. aangemaakt vóór login of na een mislukte sync)
+    const localRecipes = window.MPStore.getState().customRecipes || [];
+    for (const r of localRecipes) {
+      if (!window.MPAPI._idMap[r.id]) {
+        await window.MPAPI.saveNewRecipe(r);
+      }
+    }
+
     // Patch store om nieuwe recepten ook naar backend te sturen
     const origCreate = window.MPStore.actions.createRecipe;
     window.MPStore.actions.createRecipe = function (obj) {

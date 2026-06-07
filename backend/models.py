@@ -63,6 +63,7 @@ class User(Base):
     password_hash = Column(String(255), nullable=False)
     avatar_url = Column(String(512), nullable=True)
     is_active = Column(Boolean, default=True)
+    household_size = Column(Integer, default=1, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -160,6 +161,7 @@ class MealPlanEntry(Base):
     servings_override = Column(Integer, nullable=True)  # afwijkend aantal porties voor dit plan
     notes = Column(Text, nullable=True)
     eaten = Column(Boolean, default=False, nullable=False)
+    portions_eaten = Column(Float, nullable=True)  # hoeveel porties de gebruiker zelf heeft gegeten (null = niet gelogd)
 
     meal_plan = relationship("MealPlan", back_populates="entries")
     recipe = relationship("Recipe", back_populates="meal_entries")

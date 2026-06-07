@@ -85,6 +85,32 @@ function ChangePasswordCard({ toast }) {
            : "Wachtwoord opslaan"));
 }
 
+function HouseholdCard({ toast }) {
+  const state = useStore();
+  const hs = state.householdSize || 1;
+
+  async function save(n) {
+    S.actions.setHouseholdSize(n);
+    try {
+      await window.MPAPI.updateProfile({ household_size: n });
+    } catch(e) {
+      toast("Kon niet opslaan: " + e.message);
+    }
+  }
+
+  return React.createElement("div", { className: "profcard" },
+    React.createElement("div", { className: "profcard__head" },
+      React.createElement(Icon, { name: "cart", size: 22 }),
+      React.createElement("h3", null, "Huishoudengrootte")),
+    React.createElement("div", { className: "field__hint", style: { marginBottom: 16 } },
+      "Voor hoeveel personen kook je? Dit bepaalt de hoeveelheden in de boodschappenlijst. Je persoonlijke voedingswaarden worden apart bijgehouden via de eetknop."),
+    React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 16 } },
+      React.createElement(Stepper, { value: hs, min: 1, max: 10, onChange: save }),
+      React.createElement("div", null,
+        React.createElement("div", { style: { fontWeight: 700, fontSize: 15 } }, hs === 1 ? "Alleen" : `${hs} personen`),
+        React.createElement("div", { className: "field__hint" }, hs === 1 ? "Boodschappen voor 1 persoon" : `Boodschappen voor ${hs} personen`))));
+}
+
 function ProfileScreen({ toast }) {
   const state = useStore();
   const t = state.targets;
@@ -105,12 +131,23 @@ function ProfileScreen({ toast }) {
   const gProt = Math.round(t.maxKcal * t.proteinPct / 100 / 4);
   const gFat = Math.round(t.maxKcal * t.fatPct / 100 / 9);
 
+  const u = window.MPAPI && window.MPAPI.user;
+
   return React.createElement("div", { className: "wrap screen-anim" },
     React.createElement("div", { className: "shead" },
       React.createElement("div", null,
         React.createElement("h1", { className: "shead__title" }, "Profiel"),
         React.createElement("div", { className: "shead__sub" }, "Je dieetdoelen — pas ze aan wanneer je dieet verandert"))),
     React.createElement("div", { className: "prof" },
+      // Gebruikersinfo + uitloggen (vooral nuttig op mobiel waar er geen sidebar is)
+      u && React.createElement("div", { className: "profcard profcard--user" },
+        React.createElement("div", { className: "profcard__userrow" },
+          React.createElement("div", { className: "side__user-av" }, u.name[0].toUpperCase()),
+          React.createElement("div", { style: { flex: 1 } },
+            React.createElement("div", { style: { fontWeight: 700, fontSize: 15 } }, u.name),
+            React.createElement("div", { className: "field__hint" }, u.email)),
+          React.createElement("button", { className: "btn btn--ghost btn--sm", onClick: () => window._authLogout && window._authLogout() },
+            "Uitloggen"))),
       // week start
       React.createElement("div", { className: "profcard" },
         React.createElement("div", { className: "profcard__head" }, React.createElement(Icon, { name: "week", size: 22 }), React.createElement("h3", null, "Begin van de week")),
@@ -118,6 +155,8 @@ function ProfileScreen({ toast }) {
         React.createElement("div", { style: { display: "flex", gap: 7, flexWrap: "wrap" } },
           [[1, "Maandag"], [2, "Dinsdag"], [3, "Woensdag"], [4, "Donderdag"], [5, "Vrijdag"], [6, "Zaterdag"], [0, "Zondag"]].map(([d, label]) =>
             React.createElement("button", { key: d, className: "chip", "data-active": state.weekStartDow === d ? 1 : 0, onClick: () => { S.actions.setWeekStartDow(d); toast(`Week begint nu op ${label.toLowerCase()}`); } }, label)))),
+      // huishoudengrootte
+      React.createElement(HouseholdCard, { toast }),
       // calories
       React.createElement("div", { className: "profcard" },
         React.createElement("div", { className: "profcard__head" }, React.createElement(Icon, { name: "flame", size: 22 }), React.createElement("h3", null, "Caloriedoel")),
