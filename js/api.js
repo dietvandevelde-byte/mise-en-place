@@ -57,6 +57,16 @@ window.MPAPI = (function () {
     localStorage.removeItem("mp_idmap");
   }
 
+  async function changePassword(currentPw, newPw) {
+    return req("PUT", "/auth/change-password", { current_password: currentPw, new_password: newPw });
+  }
+  async function forgotPassword(email) {
+    return req("POST", "/auth/forgot-password", { email });
+  }
+  async function resetPassword(token, newPw) {
+    return req("POST", "/auth/reset-password", { token, new_password: newPw });
+  }
+
   async function me() {
     if (!_token) return null;
     try { _user = await req("GET", "/auth/me"); return _user; }
@@ -332,7 +342,7 @@ window.MPAPI = (function () {
     get token() { return _token; },
     get user() { return _user; },
     get _idMap() { return _idMap; },
-    register, login, logout, me,
+    register, login, logout, me, changePassword, forgotPassword, resetPassword,
     getRecipes, createRecipe, updateRecipe, deleteRecipe,
     scrapeUrl, scrapeScreenshot, scrapeText, calculateNutrition,
     loadUserRecipes, saveNewRecipe, pushWeekPlan, pushAllPlans, loadWeekPlan,

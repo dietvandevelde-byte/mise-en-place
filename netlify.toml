@@ -7,3 +7,8 @@
   from = "/mobiel"
   to = "/app-mobile.html"
   status = 200
+
+[[redirects]]
+  from = "/reset-wachtwoord"
+  to = "/reset-wachtwoord.html"
+  status = 200

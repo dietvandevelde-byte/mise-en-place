@@ -33,6 +33,9 @@
       <input id="auth-pw" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')window._authSubmit()" style="width:100%;padding:10px 13px;border:1.5px solid #DDD7CC;border-radius:10px;font-size:14px;font-family:inherit;color:#211E1A;background:#FDFBF8;box-sizing:border-box;margin-bottom:6px;" />
       <div id="auth-err" style="color:#C0392B;font-size:13px;min-height:20px;margin-bottom:6px;"></div>
       <button id="auth-btn" onclick="window._authSubmit()" style="width:100%;padding:11px;border-radius:10px;border:none;background:#2F7D4F;color:#fff;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;">Inloggen</button>
+      <div style="text-align:center;margin-top:12px;">
+        <button onclick="window._showForgotPassword()" style="background:none;border:none;cursor:pointer;font-size:13px;color:#938A7C;font-family:inherit;font-weight:600;text-decoration:underline;">Wachtwoord vergeten?</button>
+      </div>
     </div>
     <div id="auth-panel-register" style="display:none">
       <label style="display:block;font-size:12px;font-weight:700;color:#5C554B;margin-bottom:5px;">Naam</label>
@@ -183,6 +186,18 @@
       _pushTimer = setTimeout(() => window.MPAPI.pushAllPlans(), 2000);
     });
   }
+
+  window._showForgotPassword = function () {
+    const email = document.getElementById("auth-email").value.trim();
+    const answer = prompt("Vul je e-mailadres in om een herstelmail te ontvangen:", email || "");
+    if (!answer) return;
+    const errEl = document.getElementById("auth-err");
+    errEl.style.color = "#938A7C";
+    errEl.textContent = "⏳ Herstelmail wordt verstuurd…";
+    window.MPAPI.forgotPassword(answer.trim())
+      .then(() => { errEl.style.color = "#2F7D4F"; errEl.textContent = "✓ Herstelmail verstuurd — controleer je inbox (en spammap)"; })
+      .catch(e => { errEl.style.color = "#C0392B"; errEl.textContent = e.message; });
+  };
 
   window._authLogout = function () {
     window.MPAPI.logout();

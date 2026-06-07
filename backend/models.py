@@ -120,6 +120,19 @@ class Recipe(Base):
     meal_entries = relationship("MealPlanEntry", back_populates="recipe")
 
 
+class PasswordResetToken(Base):
+    """Tijdelijk token voor wachtwoord-reset via e-mail."""
+    __tablename__ = "password_reset_tokens"
+
+    id = Column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    user_id = Column(UUID(as_uuid=False), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    token = Column(String(64), unique=True, nullable=False, index=True)
+    expires_at = Column(DateTime, nullable=False)
+    used = Column(Boolean, default=False)
+
+    user = relationship("User")
+
+
 class MealPlan(Base):
     """Weekmenu voor één gebruiker, startend op maandag."""
     __tablename__ = "meal_plans"

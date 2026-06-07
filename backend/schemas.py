@@ -182,6 +182,36 @@ class MealPlanOut(BaseModel):
         from_attributes = True
 
 
+# ── Auth extra ───────────────────────────────────────────────────────────────
+
+class ChangePassword(BaseModel):
+    current_password: str
+    new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def min_length(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError("Nieuw wachtwoord moet minimaal 8 tekens bevatten")
+        return v
+
+
+class ForgotPassword(BaseModel):
+    email: EmailStr
+
+
+class ResetPassword(BaseModel):
+    token: str
+    new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def min_length(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError("Wachtwoord moet minimaal 8 tekens bevatten")
+        return v
+
+
 # ── AI Scraper ────────────────────────────────────────────────────────────────
 
 class ScrapeUrlRequest(BaseModel):

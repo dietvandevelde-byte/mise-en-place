@@ -48,6 +48,43 @@ function ShopOrderCard({ toast }) {
 }
 window.ShopOrderCard = ShopOrderCard;
 
+function ChangePasswordCard({ toast }) {
+  const [cur, setCur]   = useState("");
+  const [nw1, setNw1]   = useState("");
+  const [nw2, setNw2]   = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg]   = useState(null);  // {text, ok}
+
+  async function submit() {
+    if (!cur || !nw1 || !nw2) { setMsg({ text: "Vul alle velden in", ok: false }); return; }
+    if (nw1 !== nw2) { setMsg({ text: "Nieuwe wachtwoorden komen niet overeen", ok: false }); return; }
+    if (nw1.length < 8) { setMsg({ text: "Nieuw wachtwoord moet minimaal 8 tekens zijn", ok: false }); return; }
+    setBusy(true); setMsg(null);
+    try {
+      await window.MPAPI.changePassword(cur, nw1);
+      setCur(""); setNw1(""); setNw2("");
+      setMsg({ text: "✓ Wachtwoord gewijzigd", ok: true });
+      toast("Wachtwoord gewijzigd");
+    } catch(e) { setMsg({ text: e.message, ok: false }); }
+    finally { setBusy(false); }
+  }
+
+  const inp = (label, val, set, type="password") =>
+    React.createElement("div", { className: "field", style: { marginBottom: 10 } },
+      React.createElement("label", { className: "crf__lbl" }, label),
+      React.createElement("input", { className: "input", type, value: val, onChange: e => { set(e.target.value); setMsg(null); }, onKeyDown: e => { if (e.key === "Enter") submit(); } }));
+
+  return React.createElement("div", { className: "profcard" },
+    React.createElement("div", { className: "profcard__head" }, React.createElement(Icon, { name: "user", size: 22 }), React.createElement("h3", null, "Wachtwoord wijzigen")),
+    inp("Huidig wachtwoord", cur, setCur),
+    inp("Nieuw wachtwoord", nw1, setNw1),
+    inp("Bevestig nieuw wachtwoord", nw2, setNw2),
+    msg && React.createElement("div", { style: { fontSize: 13, fontWeight: 600, color: msg.ok ? "#2F7D4F" : "#C0392B", marginBottom: 10 } }, msg.text),
+    React.createElement("button", { className: "btn btn--block", onClick: submit, disabled: busy },
+      busy ? React.createElement(React.Fragment, null, React.createElement("span", { className: "spinner" }), "Opslaan…")
+           : "Wachtwoord opslaan"));
+}
+
 function ProfileScreen({ toast }) {
   const state = useStore();
   const t = state.targets;
@@ -143,6 +180,8 @@ function ProfileScreen({ toast }) {
           React.createElement("span", null, "Fruitregel: bevat het ontbijt al fruit, dan blijft er die dag nog max. 1 fruitsnack over."))),
       // shop order
       React.createElement(ShopOrderCard, { toast }),
+      // wachtwoord wijzigen
+      React.createElement(ChangePasswordCard, { toast }),
       // reset
       React.createElement("div", { style: { display: "flex", gap: 10 } },
         React.createElement("button", { className: "btn btn--danger", onClick: () => { if (confirm("Alles terugzetten naar de standaardweek?")) { S.actions.reset(); toast("Hersteld"); } } },

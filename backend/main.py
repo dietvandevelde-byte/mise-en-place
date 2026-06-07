@@ -17,6 +17,19 @@ with engine.connect() as conn:
         conn.commit()
     except Exception:
         pass
+    try:
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                token TEXT UNIQUE NOT NULL,
+                expires_at TIMESTAMP NOT NULL,
+                used BOOLEAN NOT NULL DEFAULT FALSE
+            )
+        """))
+        conn.commit()
+    except Exception:
+        pass
 
 app = FastAPI(
     title="Mise en Place API",
