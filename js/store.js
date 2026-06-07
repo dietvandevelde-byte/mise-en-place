@@ -768,6 +768,14 @@
         return { ...st };
       });
     },
+    clearCheckedItems() {
+      // Verwijder afgevinkte handmatige items; zet recept-items terug op onafgevinkt
+      set((st) => ({
+        ...st,
+        checked: {},
+        manual: st.manual.filter((m) => !m.checked),
+      }));
+    },
     setTarget(key, val) {
       set((st) => ({ ...st, targets: { ...st.targets, [key]: val } }));
     },

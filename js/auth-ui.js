@@ -168,8 +168,9 @@
     }
 
     // Push eventuele lokale recepten die nog niet in de backend staan
-    // (bijv. aangemaakt vóór login of na een mislukte sync)
-    const localRecipes = window.MPStore.getState().customRecipes || [];
+    // (bijv. aangemaakt op een ander apparaat vóór sync, of na een mislukte save)
+    // Correctie: customRecipes bestaat niet als store-veld — recepten zitten in window.MP.RECIPES
+    const localRecipes = (window.MP.RECIPES || []).filter(r => r.custom || r.imported);
     for (const r of localRecipes) {
       if (!window.MPAPI._idMap[r.id]) {
         await window.MPAPI.saveNewRecipe(r);
