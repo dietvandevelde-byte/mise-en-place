@@ -95,20 +95,37 @@
     document.getElementById("auth-btn").disabled  = true;
     document.getElementById("auth-btn2").disabled = true;
     try {
-      if (_mode === "login") {
-        const email = document.getElementById("auth-email").value.trim();
-        const pw    = document.getElementById("auth-pw").value;
-        await window.MPAPI.login(email, pw);
-      } else {
-        const name  = document.getElementById("auth-name").value.trim();
-        const email = document.getElementById("auth-email2").value.trim();
-        const pw    = document.getElementById("auth-pw2").value;
-        await window.MPAPI.register(name, email, pw);
+      const errId = _mode === "login" ? "auth-err" : "auth-err2";
+      // Bij een netwerk-fout (server nog aan het opstarten): automatisch 1x herproberen na 8 sec
+      async function doAuth() {
+        if (_mode === "login") {
+          const email = document.getElementById("auth-email").value.trim();
+          const pw    = document.getElementById("auth-pw").value;
+          await window.MPAPI.login(email, pw);
+        } else {
+          const name  = document.getElementById("auth-name").value.trim();
+          const email = document.getElementById("auth-email2").value.trim();
+          const pw    = document.getElementById("auth-pw2").value;
+          await window.MPAPI.register(name, email, pw);
+        }
+      }
+      try {
+        await doAuth();
+      } catch (e) {
+        if (e.message === "Failed to fetch" || e.message.includes("NetworkError")) {
+          document.getElementById(errId).textContent = "⏳ Server start op, 8 sec wachten…";
+          await new Promise(r => setTimeout(r, 8000));
+          await doAuth();  // gooit opnieuw als het nog steeds faalt
+        } else {
+          throw e;
+        }
       }
       await _onAuthSuccess();
     } catch (e) {
-      const id = _mode === "login" ? "auth-err" : "auth-err2";
-      document.getElementById(id).textContent = e.message;
+      const errId = _mode === "login" ? "auth-err" : "auth-err2";
+      document.getElementById(errId).textContent = e.message === "Failed to fetch"
+        ? "Server niet bereikbaar — probeer over 30 seconden opnieuw"
+        : e.message;
     } finally {
       document.getElementById("auth-btn").disabled  = false;
       document.getElementById("auth-btn2").disabled = false;
@@ -171,6 +188,58 @@
     window.MPAPI.logout();
     location.reload();
   };
+
+  // ── Backend wake-up ping ────────────────────────────────────────────────────
+  // Render free tier slaapt na 15 min. Ping direct bij laden zodat de server
+  // al opgestart is tegen dat de gebruiker op "Inloggen" klikt.
+  (function wakeBackend() {
+    const BASE = "https://mise-en-place-api-3ah7.onrender.com";
+    let wakeTimer = null;
+
+    function setStatus(msg, color) {
+      let el = document.getElementById("auth-wake-status");
+      if (!el) {
+        el = document.createElement("div");
+        el.id = "auth-wake-status";
+        el.style.cssText = "font-size:12px;font-weight:600;text-align:center;margin-top:10px;min-height:16px;transition:opacity .4s;";
+        const btn = document.getElementById("auth-btn");
+        if (btn && btn.parentNode) btn.parentNode.insertBefore(el, btn.nextSibling);
+      }
+      el.textContent = msg;
+      el.style.color = color || "#938A7C";
+      el.style.opacity = msg ? "1" : "0";
+    }
+
+    // Toon melding als de ping langer dan 4 seconden duurt
+    wakeTimer = setTimeout(() => setStatus("⏳ Server opgestart, even geduld…", "#CF6238"), 4000);
+
+    fetch(BASE + "/health", { cache: "no-store" })
+      .then(r => {
+        clearTimeout(wakeTimer);
+        if (r.ok) setStatus("✓ Verbonden", "#2F7D4F");
+        setTimeout(() => setStatus(""), 2500);
+      })
+      .catch(() => {
+        clearTimeout(wakeTimer);
+        setStatus("⏳ Server start op, even geduld…", "#CF6238");
+        // Herprobeert elke 5 sec tot verbinding lukt
+        let retries = 0;
+        const retry = setInterval(() => {
+          retries++;
+          fetch(BASE + "/health", { cache: "no-store" })
+            .then(r => {
+              if (r.ok) {
+                clearInterval(retry);
+                setStatus("✓ Verbonden", "#2F7D4F");
+                setTimeout(() => setStatus(""), 2500);
+              }
+            })
+            .catch(() => {
+              if (retries >= 12) { clearInterval(retry); setStatus("⚠️ Geen verbinding — controleer je internet", "#C0392B"); }
+            });
+        }, 5000);
+      });
+  })();
 
   // Auto-login als er al een token is
   window.MPAPI.me().then(user => { if (user) _onAuthSuccess(); });
