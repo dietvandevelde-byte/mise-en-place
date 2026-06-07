@@ -36,8 +36,8 @@ Extraheer alle beschikbare receptinformatie en geef dit terug als geldig JSON-ob
   "difficulty": "easy",
   "tags": ["vegetarisch", "snel"],
   "ingredients": [
-    {"name": "pasta", "amount": 400, "unit": "g"},
-    {"name": "tomatensaus", "amount": 200, "unit": "ml"}
+    {"name": "pasta", "amount": 400, "unit": "g", "cat": "Voorraad"},
+    {"name": "tomatensaus", "amount": 200, "unit": "ml", "cat": "Voorraad"}
   ],
   "instructions": [
     {"step": 1, "text": "Kook de pasta al dente."},
@@ -48,8 +48,10 @@ Extraheer alle beschikbare receptinformatie en geef dit terug als geldig JSON-ob
 
 Regels:
 - Gebruik null voor onbekende numerieke velden (niet 0)
-- category moet één van zijn: breakfast, lunch, dinner, snack, dessert, soup, salad, other
+- category (recept) moet één van zijn: breakfast, lunch, dinner, snack, dessert, soup, salad, other
 - difficulty moet één van zijn: easy, medium, hard
+- cat (per ingrediënt) moet één van zijn: Groenten, Fruit, Vlees, Kaas, Brood, Voorraad, Zuivel, Dranken, Diepvries, Huishouden, Overige
+  Gebruik de meest passende supermarktafdeling: melk/yoghurt/boter/room/eieren/amandelmelk → Zuivel; fruit/bessen → Fruit; groenten/aardappel → Groenten; vlees/vis/ham/spek → Vlees; kaas/mozzarella/feta → Kaas; brood/wrap/pita → Brood; pasta/rijst/blik/sauzen/olie/kruiden → Voorraad
 - confidence is een getal tussen 0 en 1 dat aangeeft hoe volledig de extractie was
 - Retourneer ALLEEN het JSON-object, geen uitleg of markdown
 """

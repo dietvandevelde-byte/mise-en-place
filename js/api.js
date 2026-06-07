@@ -260,6 +260,58 @@ window.MPAPI = (function () {
     }
   }
 
+  // ── Ingredient category guesser (keyword-based fallback) ─────────────────
+  // Returns one of the known aisle keys. Used when the backend has no cat stored.
+  function _guessCat(name) {
+    const n = (name || "").toLowerCase();
+    const m = (words) => words.some((w) => n.includes(w));
+
+    if (m(["banaan","braam","aardbei","framboos","blauwe bes","bosbes","druif","mango",
+           "ananas","kiwi","sinaasappel","mandarijn","citroen","limoen","grapefruit",
+           "granaatappel","watermeloen","meloen","perzik","nectarine","pruim","kersen",
+           "vijg","dadel","abrikoos","appelsien","appel","peer","kers","lychee",
+           "papaya","passievrucht","guave","kumquat","tamarinde"])) return "Fruit";
+
+    if (m(["wortel","prei","knoflook","sjalot","tomaat","paprika","courgette","broccoli",
+           "bloemkool","spinazie","andijvie","champignon","paddenstoel","aubergine",
+           "komkommer","radijs","biet","selderij","asperge","venkel","paksoi",
+           "boerenkool","lente-ui","rucola","witlof","spruitje","spruiten","tuinboon",
+           "doperwt","avocado","olijf","maïs","mais","zoete aardappel","aardappel",
+           "knolselderij","raap","waterkers","veldsla","ijsbergsla","romanosla",
+           "bleekselderij","schorseneer","pastinaak","artisjok","prei","ui ","uien"])) return "Groenten";
+
+    if (m(["kip","zalm","kabeljauw","garnaal","tonijn","makreel","forel","haring",
+           "mossel","inktvis","calamari","ansjovis","sardine","schelvis","tilapia",
+           "heek","paling","schol","tong ","bot ","koolvis","zeebaars",
+           "ham","spek","chorizo","salami","worst","rookworst","pepperoni",
+           "biefstuk","gehakt","tartaar","entrecote","ossenhaas","ribeye",
+           "varkensfilet","kipfilet","kippenborst","kippendij","kipreep",
+           "rund","varken","lam ","lams","kalkoen","eend ","vlees","vis ","visstick",
+           "bacon","pancetta","prosciutto","bresaola"])) return "Vlees";
+
+    if (m(["mozzarella","parmezaan","parmesan","parmigiano","cheddar","camembert",
+           "brie","gorgonzola","feta","ricotta","gruyère","gruyere","gruyèrekaas",
+           "mascarpone","halloumi","manchego","emmentaler","gouda","edam","beemster",
+           "roomkaas","smeerkaas","cottage cheese","boursin","reblochon",
+           " kaas","kaas","kaasvlokken"])) return "Kaas";
+
+    if (m(["brood","boterham","ciabatta","baguette","pistolet","pita","wrap",
+           "toast","crackers","beschuit","roggebrood","volkorenbrood",
+           "croissant","bagel","focaccia","naan","brioche","chapati","tortilla"])) return "Brood";
+
+    if (m(["melk","yoghurt","room ","slagroom","boter ","kwark","vla","karnemelk",
+           "crème fraîche","creme fraiche","crème","amandelmelk","havermelk",
+           "sojamelk","rijstmelk","kokosmelk","kokosroom","eieren","eidooier",
+           "eiwit","gekookt ei","hardgekookt","zachje ei"," ei ","ei,"])) return "Zuivel";
+
+    if (m(["wijn","bier","frisdrank","cola","tonic","limonade"," sap ","sinaasappelsap",
+           "appelsap","tomatensap","vruchtensap","cranberrysap"])) return "Dranken";
+
+    if (m(["diepvries","bevroren","ingevroren"])) return "Diepvries";
+
+    return "Voorraad";
+  }
+
   // ── Convert backend recipe → store recipe format ───────────────────────────
   function _toStoreRecipe(r, storeId) {
     return {
@@ -281,7 +333,7 @@ window.MPAPI = (function () {
         name: i.name || "",
         qty: i.amount || 0,
         unit: i.unit || "",
-        cat: i.cat || "Voorraad",   // bewaar de boodschappenlijst-categorie
+        cat: i.cat || _guessCat(i.name),  // keyword-guesser als fallback
       })),
       image: r.image_url || null,
       cats: [],
