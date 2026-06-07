@@ -22,13 +22,6 @@ function GroceriesScreen({ layout, toast, openShare }) {
     setName("");
   }
 
-  function handleClearChecked() {
-    const n = stats.done;
-    if (!n) return;
-    if (!confirm(`${n} afgevinkte item${n === 1 ? "" : "s"} verwijderen?\n\nHandmatig toegevoegde items worden permanent gewist. Ingrediënten uit recepten komen terug als onafgevinkt.`)) return;
-    S.actions.clearCheckedItems();
-    toast(`${n} item${n === 1 ? "" : "s"} verwijderd`);
-  }
 
   // horizontal add bar for the desktop top
   const addBar = React.createElement("div", { className: "grocadd" },
@@ -37,9 +30,7 @@ function GroceriesScreen({ layout, toast, openShare }) {
     React.createElement("select", { className: "input grocadd__cat", value: cat, onChange: (e) => setCat(e.target.value) },
       AISLES.map((a) => React.createElement("option", { key: a.key, value: a.key }, a.name))),
     React.createElement("button", { className: "btn", onClick: addItem, disabled: !name.trim() }, React.createElement(Icon, { name: "plus", size: 17 }), "Toevoegen"),
-    stats.done > 0 && React.createElement(React.Fragment, null,
-      React.createElement("button", { className: "btn btn--ghost", onClick: () => { S.actions.uncheckAllGroceries(); toast("Lijst hersteld"); } }, React.createElement(Icon, { name: "swap", size: 16 }), "Terugzetten"),
-      React.createElement("button", { className: "btn btn--danger", onClick: handleClearChecked }, React.createElement(Icon, { name: "trash", size: 16 }), "Verwijder afgevinkte"))
+    stats.done > 0 && React.createElement("button", { className: "btn btn--ghost", onClick: () => { S.actions.uncheckAllGroceries(); toast("Lijst hersteld"); } }, React.createElement(Icon, { name: "swap", size: 16 }), "Alles terugzetten")
   );
 
   const progress = React.createElement("div", { className: "groc__progress" },
@@ -49,9 +40,7 @@ function GroceriesScreen({ layout, toast, openShare }) {
         React.createElement("div", { className: "groc__progress-num" }, stats.done, React.createElement("span", null, " / ", stats.total))),
       React.createElement("div", { style: { fontFamily: "var(--ff-display)", fontWeight: 800, fontSize: 28, color: pct === 100 ? "var(--brand)" : "var(--ink)" } }, pct, "%")),
     React.createElement("div", { className: "groc__progress-bar" }, React.createElement("div", { className: "groc__progress-fill", style: { width: pct + "%" } })),
-    stats.done > 0 && React.createElement("div", { style: { marginTop: 12, display: "flex", gap: 8 } },
-      React.createElement("button", { className: "btn btn--ghost btn--sm", style: { flex: 1 }, onClick: () => { S.actions.uncheckAllGroceries(); toast("Lijst hersteld"); } }, React.createElement(Icon, { name: "swap", size: 14 }), "Terugzetten"),
-      React.createElement("button", { className: "btn btn--danger btn--sm", style: { flex: 1 }, onClick: handleClearChecked }, React.createElement(Icon, { name: "trash", size: 14 }), "Verwijder afgevinkte"))
+    stats.done > 0 && React.createElement("button", { className: "btn btn--ghost btn--sm", style: { marginTop: 12, width: "100%" }, onClick: () => { S.actions.uncheckAllGroceries(); toast("Lijst hersteld"); } }, "Alles terugzetten")
   );
 
   const addCard = React.createElement("div", { className: "card", style: { padding: 16 } },
@@ -61,9 +50,7 @@ function GroceriesScreen({ layout, toast, openShare }) {
       React.createElement("select", { className: "input", value: cat, onChange: (e) => setCat(e.target.value), style: { flex: 1 } },
         AISLES.map((a) => React.createElement("option", { key: a.key, value: a.key }, a.name))),
       React.createElement("button", { className: "btn", onClick: addItem, disabled: !name.trim() }, React.createElement(Icon, { name: "plus", size: 18 }))),
-    stats.done > 0 && React.createElement("div", { style: { marginTop: 10, display: "flex", gap: 8 } },
-      React.createElement("button", { className: "btn btn--ghost btn--sm", style: { flex: 1 }, onClick: () => { S.actions.uncheckAllGroceries(); toast("Lijst hersteld"); } }, React.createElement(Icon, { name: "swap", size: 14 }), "Terugzetten"),
-      React.createElement("button", { className: "btn btn--danger btn--sm", style: { flex: 1 }, onClick: handleClearChecked }, React.createElement(Icon, { name: "trash", size: 14 }), "Verwijder (", stats.done, ")"))
+    stats.done > 0 && React.createElement("button", { className: "btn btn--ghost btn--sm", style: { marginTop: 10, width: "100%" }, onClick: () => { S.actions.uncheckAllGroceries(); toast("Lijst hersteld"); } }, React.createElement(Icon, { name: "swap", size: 15 }), "Alles terugzetten (", stats.done, ")")
   );
 
   const aisles = React.createElement("div", { className: layout === "desktop" && groups.length > 0 ? "aislewrap aislewrap--cols" : "aislewrap" },

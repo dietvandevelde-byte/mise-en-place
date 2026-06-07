@@ -493,8 +493,10 @@ textarea.input { resize: vertical; line-height: 1.5; font-size: var(--fs-13); }
 .gitem + .gitem { border-top: 1px solid var(--line); }
 .gitem:hover { background: var(--surface-2); }
 .gcheck { width: 24px; height: 24px; border-radius: var(--r-1); border: 1.5px solid var(--line-2); background: var(--surface); display: grid; place-items: center; color: #fff; flex-shrink: 0; transition: all .14s; }
+.gitem[data-on="1"] { opacity: .55; }
 .gitem[data-on="1"] .gcheck { background: var(--brand); border-color: var(--brand); }
-.gitem[data-on="1"] .gitem__name { color: var(--ink-3); text-decoration: line-through; }
+.gitem[data-on="1"] .gitem__name { color: var(--ink-2); text-decoration: line-through; text-decoration-thickness: 2px; text-decoration-color: var(--ink); }
+.gitem[data-on="1"] .gitem__qty { text-decoration: line-through; text-decoration-thickness: 1px; }
 .gcheck svg { width: 15px; height: 15px; opacity: 0; transition: opacity .12s; }
 .gitem[data-on="1"] .gcheck svg { opacity: 1; }
 .gitem__body { flex: 1; min-width: 0; }
