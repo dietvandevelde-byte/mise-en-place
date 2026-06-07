@@ -100,6 +100,7 @@ function SlotSheet({ date, slot, onClose, onSwapStart, toast }) {
   const [portions, setPortions] = useState(entry ? entry.portions : 1);
   const [note, setNote] = useState(entry && entry.note ? entry.note : "");
   const [cookDouble, setCookDouble] = useState(entry ? !!entry.cookDouble : false);
+  const [importing, setImporting] = useState(false);
   const dowLong = cap(S.fmt.fmtDowLong(date));
 
   function confirmPick(r) { setPendingRecipe(r); setPortions(slot === 4 ? 2 : 1); setMode("confirm"); }
@@ -146,9 +147,11 @@ function SlotSheet({ date, slot, onClose, onSwapStart, toast }) {
   } else if (mode === "pick") {
     body = React.createElement(React.Fragment, null,
       React.createElement(RecipePicker, { slot, onPick: confirmPick }),
-      React.createElement("div", { style: { marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--line)" } },
+      React.createElement("div", { style: { marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--line)", display: "flex", gap: 8 } },
         React.createElement("button", { className: "btn btn--soft btn--block", onClick: () => setMode("create") },
-          React.createElement(Icon, { name: "plus", size: 18 }), "Nieuw recept maken")),
+          React.createElement(Icon, { name: "plus", size: 18 }), "Nieuw recept"),
+        React.createElement("button", { className: "btn btn--soft btn--block", onClick: () => setImporting(true) },
+          React.createElement(Icon, { name: "clipboard", size: 18 }), "Importeer")),
       React.createElement("div", { style: { marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--line)" } },
         React.createElement("div", { className: "section-label" }, "Geen recept? Andere opties"),
         React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
@@ -208,10 +211,12 @@ function SlotSheet({ date, slot, onClose, onSwapStart, toast }) {
 
   const baseTitle = recipe ? recipe.title : status ? status.name : (entry && entry.manualName) ? entry.manualName : slotMeta.name;
   const titleTxt = mode === "pick" ? `${slotMeta.name} inplannen` : mode === "create" ? "Nieuw recept" : mode === "note" ? "Notitie" : mode === "view" ? (recipe ? recipe.title : slotMeta.name) : mode === "confirm" ? "Inplannen" : mode === "portions" ? "Porties" : baseTitle;
-  return React.createElement(Sheet, {
-    eyebrow: `${dowLong} \u00b7 ${slotMeta.name}`, eyebrowColor: slotMeta.color,
-    title: titleTxt, onClose, foot,
-  }, body);
+  return React.createElement(React.Fragment, null,
+    React.createElement(Sheet, {
+      eyebrow: `${dowLong} \u00b7 ${slotMeta.name}`, eyebrowColor: slotMeta.color,
+      title: titleTxt, onClose, foot,
+    }, body),
+    importing && React.createElement(window.ImportSheet, { onClose: () => setImporting(false), toast }));
 }
 window.SlotSheet = SlotSheet;
 
@@ -227,6 +232,7 @@ function SnacksDaySheet({ date, onClose, toast }) {
   const [mode, setMode] = useState(() => list.length === 0 ? "pick" : "list");
   const [pendingRecipe, setPendingRecipe] = useState(null);
   const [portions, setPortions] = useState(1);
+  const [importing, setImporting] = useState(false);
   const [editId, setEditId] = useState(null);      // snack being edited
   const [replaceId, setReplaceId] = useState(null);// snack being replaced via picker
   const totalKcal = list.reduce((a, e) => a + (e.recipeId ? S.entryNutrition(e).kcal : 0), 0);
@@ -316,9 +322,11 @@ function SnacksDaySheet({ date, onClose, toast }) {
     titleTxt = replaceId ? "Snack vervangen" : "Snack toevoegen";
     body = React.createElement(React.Fragment, null,
       React.createElement(RecipePicker, { slot: "snacks", onPick: confirmPick }),
-      React.createElement("div", { style: { marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--line)" } },
+      React.createElement("div", { style: { marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--line)", display: "flex", gap: 8 } },
         React.createElement("button", { className: "btn btn--soft btn--block", onClick: () => setMode("create") },
-          React.createElement(Icon, { name: "plus", size: 18 }), "Nieuw recept maken")),
+          React.createElement(Icon, { name: "plus", size: 18 }), "Nieuw recept"),
+        React.createElement("button", { className: "btn btn--soft btn--block", onClick: () => setImporting(true) },
+          React.createElement(Icon, { name: "clipboard", size: 18 }), "Importeer")),
       React.createElement("div", { style: { marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--line)" } },
         React.createElement("div", { className: "section-label" }, "Geen recept? Andere opties"),
         React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
@@ -420,6 +428,8 @@ function SnacksDaySheet({ date, onClose, toast }) {
     foot = React.createElement("button", { className: "btn btn--block", onClick: () => setMode("list") }, "Terug naar snacks");
   }
 
-  return React.createElement(Sheet, { eyebrow: `${dowLong} · snacks`, eyebrowColor: "sage", title: titleTxt, onClose, foot }, body);
+  return React.createElement(React.Fragment, null,
+    React.createElement(Sheet, { eyebrow: `${dowLong} · snacks`, eyebrowColor: "sage", title: titleTxt, onClose, foot }, body),
+    importing && React.createElement(window.ImportSheet, { onClose: () => setImporting(false), toast }));
 }
 window.SnacksDaySheet = SnacksDaySheet;

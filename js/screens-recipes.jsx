@@ -195,7 +195,7 @@ function ImportSheet({ onClose, toast }) {
   async function _saveRecipe(result) {
     const r = result.recipe;
     const ingredients = (r.ingredients || []).map(i => ({
-      name: i.name, qty: i.amount || 0, unit: i.unit || "", cat: "Voorraad"
+      name: i.name, qty: i.amount || 0, unit: i.unit || "", cat: i.cat || "Voorraad"
     }));
     let kcal = r.kcal || 0, carbs = r.carbs || 0, protein = r.protein || 0, fat = r.fat || 0;
 
@@ -331,6 +331,7 @@ function ImportSheet({ onClose, toast }) {
     err && React.createElement("div", { className: "import__err" }, err)
   );
 }
+window.ImportSheet = ImportSheet;
 
 /* ---- Reusable create-recipe form (used in slot picker + Recipes screen) ---- */
 /* Reusable create-recipe form (used in slot picker + Recipes screen) */
