@@ -497,9 +497,11 @@ function CreateRecipeSheet({ onClose, toast }) {
 function RecipesScreen({ toast }) {
   useStore();
   const [q, setQ] = useState("");
+  const [typeFilter, setTypeFilter] = useState("gerecht"); // "gerecht"|"snack"|"alle"
   const [meal, setMeal] = useState("alle");  // alle|0|2|4|snack
   const [selCats, setSelCats] = useState([]);  // multi-select soort filter ([] = alle)
   function toggleSoort(k) { if (k === "alle") { setSelCats([]); return; } setSelCats((p) => p.includes(k) ? p.filter((x) => x !== k) : [...p, k]); }
+  function setType(t) { setTypeFilter(t); setMeal("alle"); setSelCats([]); }
   const [detail, setDetail] = useState(null);
   const [importing, setImporting] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -510,6 +512,10 @@ function RecipesScreen({ toast }) {
   const list = useMemo(() => {
     const ql = q.trim().toLowerCase();
     return recipes.filter((r) => {
+      // type-filter: gerechten vs snacks
+      const isSnack = !!(r.fruit || r.dairy);
+      if (typeFilter === "gerecht" && isSnack) return false;
+      if (typeFilter === "snack"   && !isSnack) return false;
       if (ql && !r.title.toLowerCase().includes(ql)) return false;
       // wanneer (dagdeel)
       if (meal === "snack") { if (!r.suits.some((s) => [1, 3, 5].includes(s))) return false; }
@@ -518,7 +524,7 @@ function RecipesScreen({ toast }) {
       if (selCats.length && !selCats.some((k) => S.recipeCategories(r).includes(k))) return false;
       return true;
     });
-  }, [q, meal, selCats, recipes.length]);
+  }, [q, typeFilter, meal, selCats, recipes.length]);
 
   const MEALS = [["alle", "Alle"], ["0", "Ochtend"], ["2", "Middag"], ["4", "Avond"], ["snack", "Snacks"]];
   const CATS = [["alle", "Alle"], ...S.sel.allCats().map((c) => [c.key, c.name])];
@@ -531,10 +537,13 @@ function RecipesScreen({ toast }) {
       React.createElement("div", { style: { display: "flex", gap: 8 } },
         React.createElement("button", { className: "btn btn--ghost", onClick: () => setImporting(true) }, React.createElement(Icon, { name: "clipboard", size: 18 }), "Importeer"),
         React.createElement("button", { className: "btn", onClick: () => setCreating(true) }, React.createElement(Icon, { name: "plus", size: 18 }), "Nieuw recept"))),
+    React.createElement("div", { className: "rectypebar" },
+      [["gerecht", "Gerechten"], ["snack", "Snacks"], ["alle", "Alles"]].map(([k, l]) =>
+        React.createElement("button", { key: k, className: "rectype", "data-active": typeFilter === k ? 1 : 0, onClick: () => setType(k) }, l))),
     React.createElement("div", { className: "picker__search", style: { marginBottom: 12 } },
       React.createElement(Icon, { name: "search", size: 18 }),
       React.createElement("input", { className: "input", placeholder: "Zoek op naam…", value: q, onChange: (e) => setQ(e.target.value) })),
-    React.createElement("div", { className: "recfilters" },
+    typeFilter !== "snack" && React.createElement("div", { className: "recfilters" },
       React.createElement("div", { className: "recfilters__group" },
         React.createElement("span", { className: "recfilters__lbl" }, "Wanneer"),
         React.createElement("div", { className: "chiprow chiprow--split" },
@@ -550,7 +559,7 @@ function RecipesScreen({ toast }) {
           React.createElement("div", { className: "chipsub" },
             CATS.slice(1).map(([k, l]) => React.createElement("button", { key: k, className: "chip chip--toggle", "data-active": selCats.includes(k) ? 1 : 0, onClick: () => toggleSoort(k) },
               selCats.includes(k) && React.createElement(Icon, { name: "check", size: 12 }), l)))))),
-    React.createElement("div", { className: "filterbar" },
+    typeFilter !== "snack" && React.createElement("div", { className: "filterbar" },
       React.createElement("button", { className: "filterbtn", "data-active": activeFilters > 0 ? 1 : 0, onClick: () => setFilterOpen(true) },
         React.createElement(Icon, { name: "filter", size: 16 }), "Filters",
         activeFilters > 0 && React.createElement("span", { className: "filterbtn__badge" }, activeFilters)),

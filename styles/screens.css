@@ -521,6 +521,12 @@ textarea.input { resize: vertical; line-height: 1.5; font-size: var(--fs-13); }
 .app--mobile .aisle .gitem__qty { font-size: var(--fs-11); white-space: normal; }
 
 /* ---------------------------------------------------------------- RECIPES */
+/* ---- recipe type toggle bar (Gerechten / Snacks / Alles) ---- */
+.rectypebar { display: flex; background: var(--paper-2); border-radius: 12px; padding: 4px; gap: 3px; margin-bottom: 14px; }
+.rectype { flex: 1; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; font-weight: 700; font-size: 13px; background: none; color: var(--ink-3); transition: background .15s, color .15s, box-shadow .15s; }
+.rectype[data-active="1"] { background: var(--surface); color: var(--ink); box-shadow: var(--sh-1); }
+.rectype:not([data-active="1"]):hover { color: var(--ink-2); background: var(--paper-3, rgba(0,0,0,.04)); }
+
 .recgrid { display: grid; gap: 14px; }
 .app--desktop .recgrid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
 .app--mobile .recgrid { grid-template-columns: 1fr; }
