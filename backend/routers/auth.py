@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
-import os, secrets, smtplib
-from email.mime.text import MIMEText
+import os, secrets
+import resend
 from database import get_db
 import auth as auth_utils
 import models
@@ -12,22 +12,18 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 def _send_email(to: str, subject: str, body: str):
-    """Verstuurt een e-mail via Gmail SMTP. Vereist SMTP_USER en SMTP_PASS env vars."""
-    host = os.getenv("SMTP_HOST", "smtp.gmail.com")
-    port = int(os.getenv("SMTP_PORT", "587"))
-    user = os.getenv("SMTP_USER", "")
-    pw   = os.getenv("SMTP_PASS", "")
-    frm  = os.getenv("SMTP_FROM", user)
-    if not user or not pw:
-        raise RuntimeError("E-mail niet geconfigureerd (SMTP_USER / SMTP_PASS ontbreekt)")
-    msg = MIMEText(body, "html", "utf-8")
-    msg["Subject"] = subject
-    msg["From"] = frm
-    msg["To"] = to
-    with smtplib.SMTP(host, port) as s:
-        s.starttls()
-        s.login(user, pw)
-        s.sendmail(frm, [to], msg.as_string())
+    """Verstuurt een e-mail via Resend. Vereist RESEND_API_KEY env var."""
+    api_key = os.getenv("RESEND_API_KEY", "")
+    frm     = os.getenv("SMTP_FROM", "Mise en Place <onboarding@resend.dev>")
+    if not api_key:
+        raise RuntimeError("E-mail niet geconfigureerd (RESEND_API_KEY ontbreekt)")
+    resend.api_key = api_key
+    resend.Emails.send({
+        "from": frm,
+        "to": [to],
+        "subject": subject,
+        "html": body,
+    })
 
 
 @router.post("/register", response_model=schemas.UserOut, status_code=201)

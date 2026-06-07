@@ -11,3 +11,4 @@ pydantic-settings==2.6.1
 anthropic==0.40.0
 httpx==0.28.0
 python-dotenv==1.0.1
+resend==2.4.0
