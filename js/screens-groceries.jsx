@@ -69,11 +69,13 @@ function GroceriesScreen({ layout, toast, openShare }) {
         React.createElement(Icon, { name: "swap", size: 14 }), "Terugzetten"))
   );
 
-  // filter groepen als hideChecked actief is
-  const visibleGroups = groups.map((g) => ({
-    ...g,
-    items: hideChecked ? g.items.filter((it) => !it.checked) : g.items,
-  })).filter((g) => g.items.length > 0);
+  // checked items naar onderkant, of verbergen als hideChecked actief
+  const visibleGroups = groups.map((g) => {
+    const items = hideChecked
+      ? g.items.filter((it) => !it.checked)
+      : [...g.items.filter((it) => !it.checked), ...g.items.filter((it) => it.checked)];
+    return { ...g, items };
+  }).filter((g) => g.items.length > 0);
 
   const aisles = React.createElement("div", { className: layout === "desktop" && groups.length > 0 ? "aislewrap aislewrap--cols" : "aislewrap" },
     groups.length === 0 && React.createElement("div", { className: "empty" },
