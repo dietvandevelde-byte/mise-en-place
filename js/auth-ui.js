@@ -22,8 +22,7 @@
       Mise <span style="color:#2F7D4F">en Place</span>
     </div>
     <div style="margin-bottom:24px;">
-      <div style="font-size:13px;color:#6B655C;font-weight:600;">Weekmenu</div>
-      <div style="font-size:13px;color:#6B655C;font-weight:600;">plan, kook en eet bewust</div>
+      <div style="font-size:15px;color:#6B655C;font-weight:700;letter-spacing:.04em;">WEEKMENU</div>
       <div style="font-size:12px;color:#938A7C;font-weight:500;font-style:italic;margin-top:2px;">Planning &middot; Recepten &middot; Boodschappen &middot; Calorie&euml;n</div>
     </div>
     <div style="display:flex;border-bottom:2px solid #EDE7DC;margin-bottom:22px;" id="auth-tabs">
