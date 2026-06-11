@@ -941,5 +941,6 @@
     entryNutrition, entryEatenNutrition, sumNutrition, sumEatenNutrition, recipeFoods, recipeCategories,
     // Registreer een extern (backend) recept in RECIPES én recById zonder emit
     registerRecipe: (r) => { RECIPES.push(r); recById[r.id] = r; },
+    applyStoredImages: () => { Object.entries(_imgStore).forEach(([id, url]) => { if (recById[id]) recById[id].image = url; }); emit(); },
   };
 })();

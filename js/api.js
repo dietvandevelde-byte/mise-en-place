@@ -401,6 +401,11 @@ window.MPAPI = (function () {
           if (bid && backendLoaded.has(bid)) RECIPES.splice(i, 1);
         }
       }
+
+      // Re-apply stored images now that backend recipes are registered with their local IDs
+      if (window.MPStore.actions && window.MPStore.actions.applyStoredImages) {
+        window.MPStore.actions.applyStoredImages();
+      }
     } catch (e) {
       console.warn("Kon recepten niet laden:", e.message);
     }
