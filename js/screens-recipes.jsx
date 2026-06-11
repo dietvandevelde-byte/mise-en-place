@@ -596,28 +596,33 @@ function RecipesScreen({ toast }) {
       : React.createElement("div", { className: "recgrid" },
           list.map((r) => {
             const isFav = (state.favorites || []).includes(r.id);
-            return React.createElement("div", { key: r.id, className: "reccard", "data-c": primaryColor(r) },
-            React.createElement("button", { className: "reccard__favbtn", "data-on": isFav ? 1 : 0, title: isFav ? "Verwijder uit favorieten" : "Voeg toe aan favorieten",
-              onClick: (e) => { e.stopPropagation(); S.actions.toggleFavorite(r.id); } },
-              React.createElement(Icon, { name: "star", size: 15, fill: isFav })),
-            React.createElement("button", { className: "reccard__inner", onClick: () => setDetail(r) },
-            r.image
+            const cardTop = r.image
               ? React.createElement("div", { className: "reccard__photo" }, React.createElement("img", { src: r.image, alt: "" }))
-              : React.createElement("div", { className: "reccard__top" }),
-            React.createElement("div", { className: "reccard__body" },
+              : React.createElement("div", { className: "reccard__top" });
+            const cardKcal = React.createElement("div", { className: "reccard__kcal" + (r.kcal === 0 ? " reccard__kcal--missing" : "") },
+              r.kcal === 0
+                ? React.createElement(React.Fragment, null, React.createElement(Icon, { name: "warn", size: 12 }), " geen kcal")
+                : React.createElement(React.Fragment, null, r.kcal, " ", React.createElement("span", null, "kcal")));
+            const cardTags = React.createElement("div", { className: "reccard__tags" },
+              React.createElement("span", { className: "tag" }, React.createElement(Icon, { name: "clock", size: 12 }), r.prepTime, "m"),
+              r.meatDish
+                ? React.createElement("span", { className: "tag" }, React.createElement(Icon, { name: "meat", size: 12 }))
+                : React.createElement("span", { className: "tag", style: { background: "var(--sage-soft)", color: "var(--sage-ink)" } }, React.createElement(Icon, { name: "leaf", size: 12 })));
+            const cardBody = React.createElement("div", { className: "reccard__body" },
               React.createElement("div", { className: "reccard__cat" },
                 React.createElement("div", { className: "reccard__cat-dot" }),
                 React.createElement("div", { className: "reccard__cat-name" }, slotLabel(r)),
                 (r.imported || r.custom) && React.createElement("span", { className: "imported-flag", style: { marginLeft: "auto" } }, r.custom ? "Eigen" : "Import")),
               React.createElement("div", { className: "reccard__title" }, r.title),
-              React.createElement("div", { className: "reccard__meta" },
-                React.createElement("div", { className: "reccard__kcal" + (r.kcal === 0 ? " reccard__kcal--missing" : "") },
-                  r.kcal === 0 ? React.createElement(React.Fragment, null, React.createElement(Icon, { name: "warn", size: 12 }), " geen kcal") : React.createElement(React.Fragment, null, r.kcal, " ", React.createElement("span", null, "kcal"))),
-                React.createElement("div", { className: "reccard__tags" },
-                  React.createElement("span", { className: "tag" }, React.createElement(Icon, { name: "clock", size: 12 }), r.prepTime, "m"),
-                  r.meatDish
-                    ? React.createElement("span", { className: "tag" }, React.createElement(Icon, { name: "meat", size: 12 }))
-                    : React.createElement("span", { className: "tag", style: { background: "var(--sage-soft)", color: "var(--sage-ink)" } }, React.createElement(Icon, { name: "leaf", size: 12 }))))))) ); }) ),
+              React.createElement("div", { className: "reccard__meta" }, cardKcal, cardTags));
+            return React.createElement("div", { key: r.id, className: "reccard", "data-c": primaryColor(r) },
+              React.createElement("button", { className: "reccard__favbtn", "data-on": isFav ? 1 : 0,
+                title: isFav ? "Verwijder uit favorieten" : "Voeg toe aan favorieten",
+                onClick: (e) => { e.stopPropagation(); S.actions.toggleFavorite(r.id); } },
+                React.createElement(Icon, { name: "star", size: 15, fill: isFav })),
+              React.createElement("button", { className: "reccard__inner", onClick: () => setDetail(r) },
+                cardTop, cardBody));
+          })),
     detail && React.createElement(RecipeDetail, { recipe: detail, onClose: () => setDetail(null), toast }),
     filterOpen && React.createElement(Sheet, { eyebrow: "Recepten", eyebrowColor: "brand", title: "Filteren", onClose: () => setFilterOpen(false),
       foot: React.createElement(React.Fragment, null,
