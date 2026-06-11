@@ -596,9 +596,19 @@ function RecipesScreen({ toast }) {
       : React.createElement("div", { className: "recgrid" },
           list.map((r) => {
             const isFav = (state.favorites || []).includes(r.id);
-            const cardTop = r.image
-              ? React.createElement("div", { className: "reccard__photo" }, React.createElement("img", { src: r.image, alt: "" }))
-              : React.createElement("div", { className: "reccard__top" });
+            const ownFlag = (r.imported || r.custom)
+              ? React.createElement("span", { className: "imported-flag" }, r.custom ? "Eigen" : "Import")
+              : null;
+            const cardBand = React.createElement("div", { className: "reccard__band" },
+              React.createElement("span", { className: "reccard__band-label" }, slotLabel(r)),
+              ownFlag,
+              React.createElement("button", { className: "reccard__favbtn", "data-on": isFav ? 1 : 0,
+                title: isFav ? "Verwijder uit favorieten" : "Voeg toe aan favorieten",
+                onClick: (e) => { e.stopPropagation(); S.actions.toggleFavorite(r.id); } },
+                React.createElement(Icon, { name: "star", size: 14, fill: isFav })));
+            const cardImg = r.image
+              ? React.createElement("div", { className: "reccard__thumb" }, React.createElement("img", { src: r.image, alt: "" }))
+              : React.createElement("div", { className: "reccard__thumb reccard__thumb--empty" });
             const cardKcal = React.createElement("div", { className: "reccard__kcal" + (r.kcal === 0 ? " reccard__kcal--missing" : "") },
               r.kcal === 0
                 ? React.createElement(React.Fragment, null, React.createElement(Icon, { name: "warn", size: 12 }), " geen kcal")
@@ -608,20 +618,14 @@ function RecipesScreen({ toast }) {
               r.meatDish
                 ? React.createElement("span", { className: "tag" }, React.createElement(Icon, { name: "meat", size: 12 }))
                 : React.createElement("span", { className: "tag", style: { background: "var(--sage-soft)", color: "var(--sage-ink)" } }, React.createElement(Icon, { name: "leaf", size: 12 })));
-            const cardBody = React.createElement("div", { className: "reccard__body" },
-              React.createElement("div", { className: "reccard__cat" },
-                React.createElement("div", { className: "reccard__cat-dot" }),
-                React.createElement("div", { className: "reccard__cat-name" }, slotLabel(r)),
-                (r.imported || r.custom) && React.createElement("span", { className: "imported-flag", style: { marginLeft: "auto" } }, r.custom ? "Eigen" : "Import")),
-              React.createElement("div", { className: "reccard__title" }, r.title),
-              React.createElement("div", { className: "reccard__meta" }, cardKcal, cardTags));
+            const cardContent = React.createElement("div", { className: "reccard__content" },
+              React.createElement("div", { className: "reccard__left" },
+                React.createElement("div", { className: "reccard__title" }, r.title),
+                React.createElement("div", { className: "reccard__meta" }, cardKcal, cardTags)),
+              cardImg);
             return React.createElement("div", { key: r.id, className: "reccard", "data-c": primaryColor(r) },
-              React.createElement("button", { className: "reccard__favbtn", "data-on": isFav ? 1 : 0,
-                title: isFav ? "Verwijder uit favorieten" : "Voeg toe aan favorieten",
-                onClick: (e) => { e.stopPropagation(); S.actions.toggleFavorite(r.id); } },
-                React.createElement(Icon, { name: "star", size: 15, fill: isFav })),
               React.createElement("button", { className: "reccard__inner", onClick: () => setDetail(r) },
-                cardTop, cardBody));
+                cardBand, cardContent));
           })),
     detail && React.createElement(RecipeDetail, { recipe: detail, onClose: () => setDetail(null), toast }),
     filterOpen && React.createElement(Sheet, { eyebrow: "Recepten", eyebrowColor: "brand", title: "Filteren", onClose: () => setFilterOpen(false),

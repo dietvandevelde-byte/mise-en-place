@@ -584,20 +584,25 @@ textarea.input { resize: vertical; line-height: 1.5; font-size: var(--fs-13); }
 .reccard {
   text-align: left;
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-3);
-  box-shadow: var(--sh-1); overflow: hidden; position: relative;
+  box-shadow: var(--sh-1); overflow: hidden;
   display: flex; flex-direction: column;
 }
-.reccard__inner { appearance: none; text-align: left; cursor: pointer; background: none; border: none; padding: 0; display: flex; flex-direction: column; flex: 1; transition: transform .1s, box-shadow .14s; }
+.reccard__inner { appearance: none; text-align: left; cursor: pointer; background: none; border: none; padding: 0; display: flex; flex-direction: column; flex: 1; transition: transform .1s; }
 .reccard__inner:hover { transform: translateY(-2px); }
-.reccard__favbtn { position: absolute; top: 6px; right: 6px; z-index: 1; background: rgba(255,255,255,.85); border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink-3); transition: color .14s, background .14s; }
-.reccard__favbtn[data-on="1"] { color: #E8A020; background: #FFF8EC; }
-.reccard__favbtn:hover { color: #E8A020; }
-.reccard__top { height: 36px; background: var(--c); }
-.reccard__body { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
-.reccard__cat { display: flex; align-items: center; gap: 7px; }
-.reccard__cat-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--c); }
-.reccard__cat-name { font-size: var(--fs-11); font-weight: 800; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--c-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-.reccard__title { font-family: var(--ff-display); font-weight: 700; font-size: var(--fs-18); line-height: 1.1; letter-spacing: var(--tr-snug); }
+/* band: colored strip with category label + fav button */
+.reccard__band { background: var(--c); padding: 6px 10px 6px 12px; display: flex; align-items: center; gap: 8px; min-height: 34px; }
+.reccard__band-label { font-size: var(--fs-11); font-weight: 800; letter-spacing: var(--tr-caps); text-transform: uppercase; color: rgba(255,255,255,.9); flex: 1; }
+.reccard__favbtn { background: rgba(255,255,255,.2); border: none; border-radius: 50%; width: 26px; height: 26px; min-width: 26px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: rgba(255,255,255,.7); transition: color .14s, background .14s; }
+.reccard__favbtn[data-on="1"] { color: #F5C842; background: rgba(255,255,255,.25); }
+.reccard__favbtn:hover { color: #F5C842; background: rgba(255,255,255,.3); }
+/* content: left text + right thumb */
+.reccard__content { display: flex; align-items: stretch; flex: 1; }
+.reccard__left { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 0; }
+.reccard__thumb { width: 88px; min-width: 88px; background: var(--c); opacity: .18; }
+.reccard__thumb--empty { background: var(--c); opacity: .13; }
+.reccard__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 1; }
+.reccard__thumb:has(img) { opacity: 1; }
+.reccard__title { font-family: var(--ff-display); font-weight: 700; font-size: var(--fs-16); line-height: 1.2; letter-spacing: var(--tr-snug); }
 .reccard__meta { margin-top: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .reccard__kcal { font-family: var(--ff-display); font-weight: 800; font-size: var(--fs-20); }
 .reccard__kcal span { font-size: var(--fs-12); color: var(--ink-3); font-weight: 700; }
