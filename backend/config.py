@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     DATABASE_URL: str
     SECRET_KEY: str
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080  # 7 days
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 525600  # 365 days
     ANTHROPIC_API_KEY: str
     ALLOWED_ORIGINS: str = "http://localhost:5500,http://127.0.0.1:5500"
 
