@@ -598,8 +598,7 @@ function RecipesScreen({ toast }) {
             const isFav = (state.favorites || []).includes(r.id);
             const cardTop = r.image
               ? React.createElement("div", { className: "reccard__photo" }, React.createElement("img", { src: r.image, alt: "" }))
-              : React.createElement("div", { className: "reccard__top" },
-                  React.createElement("span", { className: "reccard__top-initial" }, (r.title || "?")[0].toUpperCase()));
+              : React.createElement("div", { className: "reccard__top" });
             const cardKcal = React.createElement("div", { className: "reccard__kcal" + (r.kcal === 0 ? " reccard__kcal--missing" : "") },
               r.kcal === 0
                 ? React.createElement(React.Fragment, null, React.createElement(Icon, { name: "warn", size: 12 }), " geen kcal")
