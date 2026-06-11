@@ -8,12 +8,14 @@ function useConfirm() {
   const confirm = (msg, danger = false) => new Promise((resolve) => {
     setState({ msg, danger, onOk: () => { setState(null); resolve(true); }, onCancel: () => { setState(null); resolve(false); } });
   });
-  const portal = state && React.createElement("div", { className: "confirm-overlay", onClick: state.onCancel },
-    React.createElement("div", { className: "confirm-box", onClick: (e) => e.stopPropagation() },
-      React.createElement("div", { className: "confirm-box__msg" }, state.msg),
-      React.createElement("div", { className: "confirm-box__foot" },
-        React.createElement("button", { className: "btn btn--ghost", onClick: state.onCancel }, "Annuleren"),
-        React.createElement("button", { className: state.danger ? "btn btn--danger btn--block" : "btn btn--block", onClick: state.onOk }, "Bevestigen"))));
+  const portal = state && ReactDOM.createPortal(
+    React.createElement("div", { className: "confirm-overlay", onClick: state.onCancel },
+      React.createElement("div", { className: "confirm-box", onClick: (e) => e.stopPropagation() },
+        React.createElement("div", { className: "confirm-box__msg" }, state.msg),
+        React.createElement("div", { className: "confirm-box__foot" },
+          React.createElement("button", { className: "btn btn--ghost", onClick: state.onCancel }, "Annuleren"),
+          React.createElement("button", { className: state.danger ? "btn btn--danger btn--block" : "btn btn--block", onClick: state.onOk }, "Bevestigen")))),
+    document.body);
   return [confirm, portal];
 }
 window.useConfirm = useConfirm;
