@@ -131,6 +131,20 @@ async def scrape_from_url(
 
     messages = [{"role": "user", "content": f"URL: {body.url}\n\nInhoud:\n{content}"}]
     data = _call_claude(messages)
+
+    # Fallback: JS-rendered site — no ingredients extracted. Ask Claude from its own knowledge.
+    if not data.get("ingredients"):
+        recipe_name = data.get("name", "")
+        fallback_msg = (
+            f"De webpagina op {body.url} is JavaScript-rendered en kon niet gescraped worden. "
+            f"Het recept heet: \"{recipe_name}\". "
+            f"Gebruik je eigen trainingskennis om dit recept volledig te reconstrueren "
+            f"met ingrediënten, hoeveelheden en bereidingswijze."
+        )
+        data = _call_claude([{"role": "user", "content": fallback_msg}])
+        # Keep the original source URL
+        data["source_url"] = body.url
+
     recipe = _build_recipe(data, source_url=body.url, source_type=models.SourceType.url)
     return schemas.ScrapeResult(recipe=recipe, confidence=data.get("confidence", 0.9))
 
