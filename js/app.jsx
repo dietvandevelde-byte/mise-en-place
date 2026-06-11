@@ -53,7 +53,7 @@ function AppShell({ layout }) {
     React.createElement("div", { className: "brand__mark" }, React.createElement(Icon, { name: "leaf", size: layout === "desktop" ? 22 : 18, fill: true })),
     React.createElement("div", null,
       React.createElement("div", { className: "brand__name" }, "Mise ", React.createElement("span", null, "en Place")),
-      layout === "desktop" && React.createElement("div", { className: "brand__sub" }, "Weekmenu — plan, kook en eet bewust")));
+      layout === "desktop" && React.createElement("div", { className: "brand__sub" }, "Weekmenu", React.createElement("br"), "plan, kook en eet bewust")));
 
   if (layout === "mobile") {
     return React.createElement("div", { className: "app app--mobile" },
