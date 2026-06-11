@@ -592,7 +592,8 @@ textarea.input { resize: vertical; line-height: 1.5; font-size: var(--fs-13); }
 .reccard__favbtn { position: absolute; top: 6px; right: 6px; z-index: 1; background: rgba(255,255,255,.85); border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink-3); transition: color .14s, background .14s; }
 .reccard__favbtn[data-on="1"] { color: #E8A020; background: #FFF8EC; }
 .reccard__favbtn:hover { color: #E8A020; }
-.reccard__top { height: 8px; background: var(--c); }
+.reccard__top { height: 72px; background: var(--c); display: flex; align-items: center; justify-content: center; }
+.reccard__top-initial { font-family: var(--ff-display); font-weight: 900; font-size: 36px; color: rgba(255,255,255,.45); letter-spacing: -1px; line-height: 1; user-select: none; }
 .reccard__body { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
 .reccard__cat { display: flex; align-items: center; gap: 7px; }
 .reccard__cat-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--c); }
