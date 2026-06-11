@@ -351,17 +351,36 @@ window.MPAPI = (function () {
       const recipes = await getRecipes();
       const RECIPES = window.MP.RECIPES;
       let nextId = Math.max(2000, ...RECIPES.map(r => r.id)) + 1;
+
+      // Reverse map: backendId → local storeId (from _idMap)
+      const backendToLocal = {};
+      Object.entries(_idMap).forEach(([localId, backendId]) => { backendToLocal[backendId] = Number(localId); });
+
       recipes.forEach((r) => {
-        // check if already loaded (by backendId)
-        const exists = RECIPES.find(x => x._backendId === r.id);
-        if (!exists) {
-          const sr = _toStoreRecipe(r, nextId++);
-          window.MPStore.registerRecipe(sr);  // voegt toe aan RECIPES én recById
-          _idMap[sr.id] = r.id; _saveIdMap();
-        } else {
-          _idMap[exists.id] = r.id; _saveIdMap();
+        // Already loaded from backend (has _backendId field)
+        const existsByBackendId = RECIPES.find(x => x._backendId === r.id);
+        if (existsByBackendId) { _idMap[existsByBackendId.id] = r.id; _saveIdMap(); return; }
+        // Already exists locally (created on this device, tracked via _idMap)
+        const localId = backendToLocal[r.id];
+        if (localId != null) {
+          const localRecipe = RECIPES.find(x => x.id === localId);
+          if (localRecipe) { localRecipe._backendId = r.id; return; }
         }
+        // Truly new — add from backend
+        const sr = _toStoreRecipe(r, nextId++);
+        window.MPStore.registerRecipe(sr);
+        _idMap[sr.id] = r.id; _saveIdMap();
       });
+
+      // Dedup: remove local copies that now have a backend-loaded equivalent
+      const backendLoaded = new Set(RECIPES.filter(r => r._backendId).map(r => r._backendId));
+      for (let i = RECIPES.length - 1; i >= 0; i--) {
+        const r = RECIPES[i];
+        if (!r._backendId && (r.custom || r.imported)) {
+          const bid = _idMap[r.id];
+          if (bid && backendLoaded.has(bid)) RECIPES.splice(i, 1);
+        }
+      }
     } catch (e) {
       console.warn("Kon recepten niet laden:", e.message);
     }
