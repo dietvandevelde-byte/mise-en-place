@@ -367,25 +367,35 @@ function CreateRecipeForm({ slot, onCancel, onSave, initialRecipe }) {
   );
   const [calcBusy, setCalcBusy] = useState(false);
   const [calcMsg, setCalcMsg] = useState(null);
+  const calcTimerRef = React.useRef(null);
   const upd = (k, v) => setF((s) => ({ ...s, [k]: v }));
   const updIng = (i, k, v) => setIngs((s) => s.map((x, j) => j === i ? { ...x, [k]: v } : x));
 
-  async function calcNutrition() {
-    const filled = ings.filter(i => i.name.trim());
-    if (!filled.length) { setCalcMsg("Voeg eerst ingrediënten toe."); return; }
+  async function calcNutrition(ingList, title, portions) {
+    const filled = (ingList || ings).filter(i => i.name.trim());
+    if (!filled.length) return;
     setCalcBusy(true); setCalcMsg(null);
     try {
-      const result = await window.MPAPI.calculateNutrition(f.title || "recept", filled, f.portions || 1);
+      const result = await window.MPAPI.calculateNutrition(title || f.title || "recept", filled, portions || f.portions || 1);
       setF(s => ({ ...s,
         kcal:    Math.round(result.kcal    || 0),
         protein: Math.round((result.protein || 0) * 10) / 10,
         carbs:   Math.round((result.carbs   || 0) * 10) / 10,
         fat:     Math.round((result.fat     || 0) * 10) / 10,
       }));
-      setCalcMsg("✓ Voedingswaarden ingevuld op basis van NEVO-tabel");
-    } catch(e) { setCalcMsg("Kon voedingswaarden niet berekenen: " + e.message); }
+      setCalcMsg("✓ Automatisch berekend op basis van NEVO-tabel");
+    } catch(e) { setCalcMsg(null); }
     finally { setCalcBusy(false); }
   }
+
+  // auto-berekenen na 1.5s stilte bij ingrediëntenwijzigingen
+  useEffect(() => {
+    const filled = ings.filter(i => i.name.trim());
+    if (!filled.length) return;
+    if (calcTimerRef.current) clearTimeout(calcTimerRef.current);
+    calcTimerRef.current = setTimeout(() => calcNutrition(ings, f.title, f.portions), 1500);
+    return () => clearTimeout(calcTimerRef.current);
+  }, [ings]);
   const AISLES = window.MP.AISLES;
   const SLOTS = window.MP.SLOTS;
 
@@ -442,10 +452,10 @@ function CreateRecipeForm({ slot, onCancel, onSave, initialRecipe }) {
       React.createElement("div", { className: "section-label", style: { margin: 0 } }, "Voeding per portie"),
       React.createElement("button", {
         type: "button", className: "btn btn--ghost", style: { fontSize: 12, padding: "4px 10px" },
-        onClick: calcNutrition, disabled: calcBusy,
+        onClick: () => calcNutrition(), disabled: calcBusy,
       }, calcBusy
         ? React.createElement(React.Fragment, null, React.createElement("span", { className: "spinner" }), " Berekenen\u2026")
-        : React.createElement(React.Fragment, null, React.createElement(Icon, { name: "spark", size: 14 }), " Automatisch berekenen"))),
+        : React.createElement(React.Fragment, null, React.createElement(Icon, { name: "spark", size: 14 }), " Herbereken"))),
     React.createElement("div", { className: "crf__row4" },
       numField("kcal", "Calorie\u00ebn", "kcal"),
       numField("carbs", "Koolh.", "g"),
