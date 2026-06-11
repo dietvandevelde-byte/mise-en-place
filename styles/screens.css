@@ -230,6 +230,14 @@ textarea.input { resize: vertical; line-height: 1.5; font-size: var(--fs-13); }
 .sumcard__bar-fill[data-over="1"] { background: var(--danger); }
 .sumcard--span { grid-column: 1 / -1; }
 
+/* Onboarding banner */
+.onboarding-banner { background: linear-gradient(100deg, var(--brand-soft), #eef4ec); border: 1px solid #cfe2d4; border-radius: var(--r-3); padding: 18px 18px 16px; margin-bottom: 18px; position: relative; }
+.onboarding-banner__close { position: absolute; top: 10px; right: 10px; background: none; border: none; cursor: pointer; color: var(--ink-3); padding: 4px; line-height: 1; }
+.onboarding-banner__title { display: flex; align-items: center; gap: 6px; font-size: var(--fs-16); font-weight: 700; color: var(--brand); margin-bottom: 14px; }
+.onboarding-banner__steps { display: flex; flex-direction: column; gap: 10px; }
+.onboarding-step { display: flex; align-items: flex-start; gap: 12px; font-size: var(--fs-14); color: var(--ink-2); }
+.onboarding-step__num { width: 22px; height: 22px; min-width: 22px; border-radius: 50%; background: var(--brand); color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+
 /* AI suggest banner */
 .aibar {
   display: flex; align-items: center; gap: 14px; padding: 16px 18px; margin-bottom: 18px;

@@ -11,8 +11,12 @@ function WeekScreen({ layout, openSlot, openSnacks, toast, swap, openShare }) {
   const SLOTS = window.MP.SLOTS;
   const showSnacks = state.showSnacks !== false;
   const mealMetas = [SLOTS[0], SLOTS[2], SLOTS[4]];   // ontbijt, lunch, diner
-  const [drag, setDrag] = useState(null);          // {date,slot}
-  const [dragOver, setDragOver] = useState(null);  // "date|slot"
+  const [drag, setDrag] = useState(null);
+  const [dragOver, setDragOver] = useState(null);
+  const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem("mp_onboarded"));
+
+  function dismissOnboarding() { localStorage.setItem("mp_onboarded", "1"); setShowOnboarding(false); }
+  useEffect(() => { if (filled > 0) dismissOnboarding(); }, [filled]);
 
   const swapping = !!swap.source;
 
@@ -249,6 +253,20 @@ function WeekScreen({ layout, openSlot, openSnacks, toast, swap, openShare }) {
           React.createElement(Icon, { name: "chevR", size: 18 })))
     ),
     swapBanner,
+    showOnboarding && filled === 0 && React.createElement("div", { className: "onboarding-banner" },
+      React.createElement("button", { className: "onboarding-banner__close", onClick: dismissOnboarding, title: "Sluiten" }, React.createElement(Icon, { name: "x", size: 16 })),
+      React.createElement("div", { className: "onboarding-banner__title" }, React.createElement(Icon, { name: "spark", size: 18 }), "Welkom bij Mise en Place!"),
+      React.createElement("div", { className: "onboarding-banner__steps" },
+        React.createElement("div", { className: "onboarding-step" },
+          React.createElement("div", { className: "onboarding-step__num" }, "1"),
+          React.createElement("div", null, React.createElement("b", null, "Voeg recepten toe"), React.createElement("br"), "Via het tabblad Recepten — importeer via URL of maak zelf aan")),
+        React.createElement("div", { className: "onboarding-step" },
+          React.createElement("div", { className: "onboarding-step__num" }, "2"),
+          React.createElement("div", null, React.createElement("b", null, "Plan je week"), React.createElement("br"), "Klik op een leeg vakje om een recept in te plannen")),
+        React.createElement("div", { className: "onboarding-step" },
+          React.createElement("div", { className: "onboarding-step__num" }, "3"),
+          React.createElement("div", null, React.createElement("b", null, "Doe boodschappen"), React.createElement("br"), "Je boodschappenlijst wordt automatisch aangemaakt"))),
+      React.createElement("button", { className: "btn btn--soft", style: { marginTop: 16 }, onClick: dismissOnboarding }, "Begrepen, toon niet meer")),
     aibar,
     layout === "desktop" ? matrix : React.createElement("div", { className: "weekdays" }, days.map(MobileDay)),
     weeklimits,
