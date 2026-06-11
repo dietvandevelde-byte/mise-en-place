@@ -100,15 +100,15 @@ function WeekScreen({ layout, openSlot, openSnacks, toast, swap, openShare }) {
                 const st = d.status ? window.MP.statusByKey(d.status) : null;
                 return React.createElement("div", { key: i, className: "mcell__snackitem" }, d.leftoverOf && "\u21a9 ", r ? r.title : st ? st.name : d.manualName);
               })),
-              React.createElement("div", { className: "mcell__sub" }, totalKcal, " kcal"))
+              React.createElement("div", { className: "mcell__sub" }, totalKcal, " kcal", dishes.some((d) => d.note) && React.createElement(Icon, { name: "note", size: 10, style: { marginLeft: 4, color: "var(--ink-4)" } })))
           : React.createElement(React.Fragment, null,
               React.createElement("div", { className: "mcell__name" }, recipe ? recipe.title : cstatus ? cstatus.name : e.manualName),
               React.createElement("div", { className: "mcell__sub" },
                 e.leftoverOf ? React.createElement("span", { className: "leftover-badge" }, React.createElement(Icon, { name: "swap", size: 9 }), "Restje")
                   : recipe ? React.createElement(React.Fragment, null, S.entryNutrition(e).kcal, " kcal", recipe.meatDish && React.createElement(Icon, { name: "meat", size: 11 }), e.cookDouble && React.createElement(Icon, { name: "swap", size: 11, style: { marginLeft: 2 }, title: "Kook dubbel" }))
-                  : cstatus ? React.createElement(Icon, { name: cstatus.icon, size: 11 })
+                  : cstatus ? React.createElement(React.Fragment, null, React.createElement(Icon, { name: cstatus.icon, size: 11 }), e.note && React.createElement(Icon, { name: "note", size: 10, style: { marginLeft: 2 } }))
                   : e.note ? React.createElement(Icon, { name: "note", size: 11 }) : null,
-                e.note && recipe && React.createElement(Icon, { name: "note", size: 11, style: { marginLeft: 4 } }))))
+                e.note && recipe && React.createElement(Icon, { name: "note", size: 10, style: { marginLeft: 4 } }))))
     );
   }
 
@@ -181,9 +181,9 @@ function WeekScreen({ layout, openSlot, openSnacks, toast, swap, openShare }) {
               ? React.createElement("div", { className: "wslot__name" }, names.join(", "))
               : React.createElement("div", { className: "wslot__name empty" }, "—"),
             totalKcal > 0
-              ? React.createElement("div", { className: "wslot__kcal" }, totalKcal)
+              ? React.createElement("div", { className: "wslot__kcal" }, totalKcal, e && e.note && React.createElement(Icon, { name: "note", size: 10, style: { color: "var(--ink-4)", marginLeft: 2, flexShrink: 0 } }))
               : filledCell
-                ? React.createElement("div", { className: "wslot__kcal" }, React.createElement(Icon, { name: cstatus ? cstatus.icon : "note", size: 14, style: { color: "var(--ink-4)" } }))
+                ? React.createElement("div", { className: "wslot__kcal" }, React.createElement(Icon, { name: cstatus ? cstatus.icon : "note", size: 14, style: { color: "var(--ink-4)" } }), cstatus && e && e.note && React.createElement(Icon, { name: "note", size: 10, style: { color: "var(--ink-4)", marginLeft: 2 } }))
                 : React.createElement("div", { className: "wslot__kcal" }, React.createElement(Icon, { name: "plus", size: 15, style: { color: "var(--ink-4)" } })));
         }),
         showSnacks && (function () {

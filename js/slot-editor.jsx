@@ -168,8 +168,15 @@ function SlotSheet({ date, slot, onClose, onSwapStart, toast }) {
     body = React.createElement(window.RecipeView, { recipe, portions: entry.portions });
     foot = React.createElement(React.Fragment, null,
       React.createElement("button", { className: "btn btn--ghost", onClick: () => setMode("menu") }, "Terug"),
+      React.createElement("button", { className: "btn btn--ghost", onClick: () => setMode("edit") }, React.createElement(Icon, { name: "edit", size: 17 }), "Bewerken"),
       React.createElement("button", { className: "btn btn--block", onClick: () => { S.actions.toggleEaten(date, slot); toast && toast(entry.eaten ? "Teruggezet" : "Gegeten \u2713"); onClose(); } },
         React.createElement(Icon, { name: "check", size: 18 }), entry.eaten ? "Terug naar gepland" : "Markeer als gegeten"));
+  } else if (mode === "edit") {
+    body = React.createElement(window.CreateRecipeForm, {
+      init: recipe,
+      onCancel: () => setMode("view"),
+      onSave: () => setMode("view"),
+    });
   } else if (mode === "confirm") {
     const c = slotMeta.color;
     const per = { kcal: pendingRecipe.kcal, carbs: pendingRecipe.carbs, protein: pendingRecipe.protein, fat: pendingRecipe.fat };
@@ -210,7 +217,7 @@ function SlotSheet({ date, slot, onClose, onSwapStart, toast }) {
   }
 
   const baseTitle = recipe ? recipe.title : status ? status.name : (entry && entry.manualName) ? entry.manualName : slotMeta.name;
-  const titleTxt = mode === "pick" ? `${slotMeta.name} inplannen` : mode === "create" ? "Nieuw recept" : mode === "note" ? "Notitie" : mode === "view" ? (recipe ? recipe.title : slotMeta.name) : mode === "confirm" ? "Inplannen" : mode === "portions" ? "Porties" : baseTitle;
+  const titleTxt = mode === "pick" ? `${slotMeta.name} inplannen` : mode === "create" ? "Nieuw recept" : mode === "edit" ? "Recept bewerken" : mode === "note" ? "Notitie" : mode === "view" ? (recipe ? recipe.title : slotMeta.name) : mode === "confirm" ? "Inplannen" : mode === "portions" ? "Porties" : baseTitle;
   return React.createElement(React.Fragment, null,
     React.createElement(Sheet, {
       eyebrow: `${dowLong} \u00b7 ${slotMeta.name}`, eyebrowColor: slotMeta.color,
