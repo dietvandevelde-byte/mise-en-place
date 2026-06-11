@@ -40,6 +40,9 @@ function RecipeView({ recipe, portions, editable, onImageChange }) {
     editable
       ? React.createElement(ImagePicker, { value: recipe.image, onChange: onImageChange, height: 180, label: "Foto toevoegen aan recept" })
       : (recipe.image && React.createElement("div", { className: "rdetail__hero" }, React.createElement("img", { src: recipe.image, alt: "" }))),
+    recipe.kcal === 0 && React.createElement("div", { className: "rdetail__nokcal" },
+      React.createElement(Icon, { name: "warn", size: 15 }),
+      React.createElement("span", null, "Geen voedingswaarden. Bereken ze automatisch via ", React.createElement("b", null, "Bewerken"), ".")),
     React.createElement("div", null,
       React.createElement("div", { className: "rdetail__macros" },
         React.createElement("div", { className: "rmacro" }, React.createElement("b", null, recipe.kcal), React.createElement("span", null, "kcal")),
@@ -582,7 +585,8 @@ function RecipesScreen({ toast }) {
                 (r.imported || r.custom) && React.createElement("span", { className: "imported-flag", style: { marginLeft: "auto" } }, r.custom ? "Eigen" : "Import")),
               React.createElement("div", { className: "reccard__title" }, r.title),
               React.createElement("div", { className: "reccard__meta" },
-                React.createElement("div", { className: "reccard__kcal" }, r.kcal, " ", React.createElement("span", null, "kcal")),
+                React.createElement("div", { className: "reccard__kcal" + (r.kcal === 0 ? " reccard__kcal--missing" : "") },
+                  r.kcal === 0 ? React.createElement(React.Fragment, null, React.createElement(Icon, { name: "warn", size: 12 }), " geen kcal") : React.createElement(React.Fragment, null, r.kcal, " ", React.createElement("span", null, "kcal"))),
                 React.createElement("div", { className: "reccard__tags" },
                   React.createElement("span", { className: "tag" }, React.createElement(Icon, { name: "clock", size: 12 }), r.prepTime, "m"),
                   r.meatDish
