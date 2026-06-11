@@ -348,7 +348,19 @@ window.MPAPI = (function () {
   async function loadUserRecipes() {
     if (!_token) return;
     try {
-      const recipes = await getRecipes();
+      const allRecipes = await getRecipes();
+
+      // Server-side dedup: verwijder recepten met dezelfde naam uit de database
+      const seen = new Map();
+      const toDelete = [];
+      allRecipes.forEach(r => {
+        const key = (r.name || "").toLowerCase().trim();
+        if (seen.has(key)) { toDelete.push(r.id); }
+        else { seen.set(key, r); }
+      });
+      for (const id of toDelete) { await deleteRecipe(id).catch(() => {}); }
+      const recipes = allRecipes.filter(r => !toDelete.includes(r.id));
+
       const RECIPES = window.MP.RECIPES;
       let nextId = Math.max(2000, ...RECIPES.map(r => r.id)) + 1;
 
