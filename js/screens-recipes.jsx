@@ -605,7 +605,8 @@ function RecipesScreen({ toast }) {
               React.createElement("button", { className: "reccard__favbtn", "data-on": isFav ? 1 : 0,
                 title: isFav ? "Verwijder uit favorieten" : "Voeg toe aan favorieten",
                 onClick: (e) => { e.stopPropagation(); S.actions.toggleFavorite(r.id); } },
-                React.createElement(Icon, { name: "star", size: 14, fill: isFav })));
+                React.createElement("svg", { width: 14, height: 14, viewBox: "0 0 24 24", fill: isFav ? "#E8A020" : "none", stroke: isFav ? "#333" : "#999", strokeWidth: 1.7 },
+                  React.createElement("path", { d: "M12 2.5l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 16.8l-5.6 2.9 1.1-6.2L3 9.1l6.2-.9z" }))));
             const cardImg = r.image
               ? React.createElement("div", { className: "reccard__thumb" }, React.createElement("img", { src: r.image, alt: "" }))
               : React.createElement("div", { className: "reccard__thumb reccard__thumb--empty" });
