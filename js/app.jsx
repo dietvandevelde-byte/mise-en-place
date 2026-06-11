@@ -1,6 +1,22 @@
 /* =========================================================================
    MEAL PLANNER — App shell (one instance; mobile or desktop layout)
    ========================================================================= */
+
+/* Reusable confirm dialog — useConfirm() hook + ConfirmPortal */
+function useConfirm() {
+  const [state, setState] = useState(null); // { msg, onOk, danger }
+  const confirm = (msg, danger = false) => new Promise((resolve) => {
+    setState({ msg, danger, onOk: () => { setState(null); resolve(true); }, onCancel: () => { setState(null); resolve(false); } });
+  });
+  const portal = state && React.createElement("div", { className: "confirm-overlay", onClick: state.onCancel },
+    React.createElement("div", { className: "confirm-box", onClick: (e) => e.stopPropagation() },
+      React.createElement("div", { className: "confirm-box__msg" }, state.msg),
+      React.createElement("div", { className: "confirm-box__foot" },
+        React.createElement("button", { className: "btn btn--ghost", onClick: state.onCancel }, "Annuleren"),
+        React.createElement("button", { className: state.danger ? "btn btn--danger btn--block" : "btn btn--block", onClick: state.onOk }, "Bevestigen"))));
+  return [confirm, portal];
+}
+window.useConfirm = useConfirm;
 const TABS = [
   { key: "vandaag", name: "Vandaag", icon: "today" },
   { key: "week", name: "Week", icon: "week" },

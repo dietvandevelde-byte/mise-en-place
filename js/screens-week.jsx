@@ -3,6 +3,7 @@
    ========================================================================= */
 function WeekScreen({ layout, openSlot, openSnacks, toast, swap, openShare }) {
   const state = useStore();
+  const [confirm, confirmPortal] = useConfirm();
   const days = S.sel.days();
   const offset = state.weekOffset || 0;
   const relLabel = offset === 0 ? "Deze week" : offset === 1 ? "Volgende week" : offset === -1 ? "Vorige week"
@@ -59,7 +60,7 @@ function WeekScreen({ layout, openSlot, openSnacks, toast, swap, openShare }) {
       React.createElement(Icon, { name: "refresh", size: 17 }), React.createElement("span", { className: "aibar__btnlbl" }, "Nieuw voorstel")),
     hasSug && React.createElement("button", { className: "btn btn--ghost", title: "Voorstel wissen — verwijder alleen de automatisch ingevulde gaten, jouw eigen keuzes blijven staan", onClick: () => { S.actions.clearSuggested(); toast("Voorstel gewist — eigen keuzes behouden"); } },
       React.createElement(Icon, { name: "x", size: 17 }), React.createElement("span", { className: "aibar__btnlbl" }, "Voorstel wissen")),
-    React.createElement("button", { className: "btn btn--ghost aibar__clear", title: "Alles leegmaken — verwijder ook je eigen keuzes", onClick: () => { S.actions.clearWeek(); toast("Week leeggemaakt"); } },
+    React.createElement("button", { className: "btn btn--ghost aibar__clear", title: "Alles leegmaken — verwijder ook je eigen keuzes", onClick: async () => { if (await confirm("Weet je zeker dat je de hele week wil leegmaken?", true)) { S.actions.clearWeek(); toast("Week leeggemaakt"); } } },
       React.createElement(Icon, { name: "trash", size: 17 }), React.createElement("span", { className: "aibar__btnlbl" }, "Leeg"))
   );
 
@@ -271,7 +272,8 @@ function WeekScreen({ layout, openSlot, openSnacks, toast, swap, openShare }) {
     layout === "desktop" ? matrix : React.createElement("div", { className: "weekdays" }, days.map(MobileDay)),
     weeklimits,
     layout === "desktop" && React.createElement("div", { style: { marginTop: 14, fontSize: 13, color: "var(--ink-3)", display: "flex", alignItems: "center", gap: 8 } },
-      React.createElement(Icon, { name: "grip", size: 16 }), "Tip: sleep een gerecht naar een ander vakje om te wisselen.")
+      React.createElement(Icon, { name: "grip", size: 16 }), "Tip: sleep een gerecht naar een ander vakje om te wisselen."),
+    confirmPortal
   );
 }
 window.WeekScreen = WeekScreen;

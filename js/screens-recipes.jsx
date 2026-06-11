@@ -121,6 +121,7 @@ function RecipeDetail({ recipe, onClose, toast }) {
   const state = useStore();
   const [planning, setPlanning] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [confirm, confirmPortal] = useConfirm();
 
   const [day, setDay] = useState(state.today);
   const [slot, setSlot] = useState(recipe.suits[0]);
@@ -135,7 +136,7 @@ function RecipeDetail({ recipe, onClose, toast }) {
           React.createElement("button", { className: "btn btn--ghost", onClick: () => setPlanning(false) }, "Terug"),
           React.createElement("button", { className: "btn btn--block", onClick: () => { S.actions.assign(day, slot, recipe.id, portions); toast(`${recipe.title} ingepland`); onClose(); } }, React.createElement(Icon, { name: "check", size: 18 }), "Inplannen"))
       : React.createElement(React.Fragment, null,
-          React.createElement("button", { className: "btn btn--danger btn--icon", title: "Recept verwijderen", onClick: () => { if (confirm(`"${recipe.title}" verwijderen uit je bibliotheek? Het wordt ook uit geplande dagen gehaald.`)) { S.actions.deleteRecipe(recipe.id); toast(`${recipe.title} verwijderd`); onClose(); } } },
+          React.createElement("button", { className: "btn btn--danger btn--icon", title: "Recept verwijderen", onClick: async () => { if (await confirm(`"${recipe.title}" verwijderen uit je bibliotheek? Het wordt ook uit geplande dagen gehaald.`, true)) { S.actions.deleteRecipe(recipe.id); toast(`${recipe.title} verwijderd`); onClose(); } } },
             React.createElement(Icon, { name: "trash", size: 19 })),
           React.createElement("button", { className: "btn btn--ghost", style: { display: "flex", alignItems: "center", gap: 6 }, onClick: () => setEditing(true) }, React.createElement(Icon, { name: "edit", size: 18 }), "Bewerken"),
           React.createElement("button", { className: "btn btn--block", onClick: () => setPlanning(true) }, React.createElement(Icon, { name: "plus", size: 18 }), "In de week plannen"));
@@ -164,7 +165,9 @@ function RecipeDetail({ recipe, onClose, toast }) {
   const eyebrow = editing ? "Recept bewerken" : slotLabel(recipe);
   const eyebrowColor = editing ? "teal" : c;
 
-  return React.createElement(Sheet, { eyebrow, eyebrowColor, title, onClose: editing ? () => setEditing(false) : onClose, foot, wide: true }, body);
+  return React.createElement(React.Fragment, null,
+    React.createElement(Sheet, { eyebrow, eyebrowColor, title, onClose: editing ? () => setEditing(false) : onClose, foot, wide: true }, body),
+    confirmPortal);
 }
 
 function repairTruncatedJSON(s) {

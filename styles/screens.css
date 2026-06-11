@@ -325,6 +325,12 @@ textarea.input { resize: vertical; line-height: 1.5; font-size: var(--fs-13); }
 .snackempty__s { font-size: var(--fs-13); color: var(--ink-3); margin-top: 5px; line-height: 1.5; max-width: 320px; margin-left: auto; margin-right: auto; }
 
 /* error boundary — shown instead of a blank screen */
+.confirm-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 9000; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.confirm-box { background: var(--surface); border-radius: var(--r-4); padding: 24px; max-width: 340px; width: 100%; box-shadow: var(--sh-3, 0 8px 32px rgba(0,0,0,.18)); }
+.confirm-box__msg { font-size: var(--fs-15); line-height: 1.5; color: var(--ink); margin-bottom: 20px; }
+.confirm-box__foot { display: flex; gap: 10px; }
+.confirm-box__foot .btn { flex: 1; }
+
 .errbound { min-height: 100%; display: grid; place-items: center; padding: 32px 20px; background: var(--paper); }
 .errbound__card { max-width: 340px; text-align: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-4); padding: 28px 24px; box-shadow: var(--sh-2); }
 .errbound__icon { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; margin: 0 auto 14px; background: var(--brand-soft); color: var(--brand); }

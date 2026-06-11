@@ -120,6 +120,7 @@ function HouseholdCard({ toast }) {
 
 function ProfileScreen({ toast }) {
   const state = useStore();
+  const [confirm, confirmPortal] = useConfirm();
   const t = state.targets;
   const macroSum = t.carbsPct + t.proteinPct + t.fatPct;
 
@@ -234,9 +235,10 @@ function ProfileScreen({ toast }) {
 
       /* Reset */
       React.createElement("div", { style: { display: "flex", gap: 10 } },
-        React.createElement("button", { className: "btn btn--danger", onClick: () => { if (confirm("Alles terugzetten naar de standaardweek?")) { S.actions.reset(); toast("Hersteld"); } } },
+        React.createElement("button", { className: "btn btn--danger", onClick: async () => { if (await confirm("Alles terugzetten naar de standaardweek? Je planning en eigen recepten gaan verloren.", true)) { S.actions.reset(); toast("Hersteld"); } } },
           React.createElement(Icon, { name: "trash", size: 18 }), "Reset demo-data"))
-    )
+    ),
+    confirmPortal
   );
 }
 window.ProfileScreen = ProfileScreen;
