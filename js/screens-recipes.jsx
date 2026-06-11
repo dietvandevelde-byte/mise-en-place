@@ -219,6 +219,7 @@ function ImportSheet({ onClose, toast }) {
 
   async function _saveRecipe(result, overrideSource) {
     const r = result.recipe;
+    console.log("[scraper] recipe.name:", r?.name, "| ingredients:", r?.ingredients?.length, "| instructions:", r?.instructions?.length);
     const ingredients = (r.ingredients || []).map(i => ({
       name: i.name, qty: i.amount || 0, unit: i.unit || "", cat: i.cat || "Voorraad"
     }));
@@ -259,6 +260,7 @@ function ImportSheet({ onClose, toast }) {
     setErr(null); setBusy(true);
     try {
       const result = await window.MPAPI.scrapeUrl(url.trim());
+      console.log("[scraper] result:", JSON.stringify(result?.recipe?.ingredients?.slice(0,2)));
       _saveRecipe(result);
     } catch (e) { setErr("Kon URL niet lezen: " + e.message); }
     finally { setBusy(false); }
