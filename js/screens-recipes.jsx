@@ -651,7 +651,7 @@ function RecipesScreen({ toast }) {
                 React.createElement("div", { className: "reccard__meta" }, cardKcal, cardTags)),
               cardImg);
             return React.createElement("div", { key: r.id, className: "reccard", "data-c": primaryColor(r) },
-              React.createElement("button", { className: "reccard__inner", onClick: () => setDetail(r) },
+              React.createElement("div", { className: "reccard__inner", role: "button", tabIndex: 0, onClick: () => setDetail(r), onKeyDown: (e) => { if (e.key === "Enter" || e.key === " ") setDetail(r); } },
                 cardBand, cardContent));
           })),
     detail && React.createElement(RecipeDetail, { recipe: detail, onClose: () => setDetail(null), toast }),
