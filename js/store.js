@@ -629,6 +629,13 @@
       set((st) => ({ ...st, customCats: [ ...((st.customCats) || []), { key, name: clean, custom: true } ] }));
       return key;
     },
+    toggleFavorite(id) {
+      set((st) => {
+        const favs = new Set(st.favorites || []);
+        if (favs.has(id)) favs.delete(id); else favs.add(id);
+        return { ...st, favorites: Array.from(favs) };
+      });
+    },
     setRecipeImage(id, dataUrl) {
       if (recById[id]) recById[id].image = dataUrl || null;
       set((st) => {

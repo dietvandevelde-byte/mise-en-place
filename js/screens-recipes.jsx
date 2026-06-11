@@ -509,7 +509,7 @@ function CreateRecipeSheet({ onClose, toast }) {
 }
 
 function RecipesScreen({ toast }) {
-  useStore();
+  const state = useStore();
   const [q, setQ] = useState("");
   const [typeFilter, setTypeFilter] = useState("gerecht"); // "gerecht"|"snack"|"alle"
   const [meal, setMeal] = useState("alle");  // alle|0|2|4|snack
@@ -520,8 +520,10 @@ function RecipesScreen({ toast }) {
   const [importing, setImporting] = useState(false);
   const [creating, setCreating] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [favsOnly, setFavsOnly] = useState(false);
   const activeFilters = (meal !== "alle" ? 1 : 0) + selCats.length;
   const recipes = window.MP.RECIPES;
+  const favIds = new Set(state.favorites || []);
 
   const list = useMemo(() => {
     const ql = q.trim().toLowerCase();
@@ -530,6 +532,7 @@ function RecipesScreen({ toast }) {
       const isSnack = !!(r.fruit || r.dairy);
       if (typeFilter === "gerecht" && isSnack) return false;
       if (typeFilter === "snack"   && !isSnack) return false;
+      if (favsOnly && !favIds.has(r.id)) return false;
       if (ql && !r.title.toLowerCase().includes(ql)) return false;
       // wanneer (dagdeel)
       if (meal === "snack") { if (!r.suits.some((s) => [1, 3, 5].includes(s))) return false; }
@@ -554,9 +557,12 @@ function RecipesScreen({ toast }) {
     React.createElement("div", { className: "rectypebar" },
       [["gerecht", "Gerechten"], ["snack", "Snacks"], ["alle", "Alles"]].map(([k, l]) =>
         React.createElement("button", { key: k, className: "rectype", "data-active": typeFilter === k ? 1 : 0, onClick: () => setType(k) }, l))),
-    React.createElement("div", { className: "picker__search", style: { marginBottom: 12 } },
-      React.createElement(Icon, { name: "search", size: 18 }),
-      React.createElement("input", { className: "input", placeholder: "Zoek op naam…", value: q, onChange: (e) => setQ(e.target.value) })),
+    React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 12, alignItems: "center" } },
+      React.createElement("div", { className: "picker__search", style: { flex: 1, marginBottom: 0 } },
+        React.createElement(Icon, { name: "search", size: 18 }),
+        React.createElement("input", { className: "input", placeholder: "Zoek op naam…", value: q, onChange: (e) => setQ(e.target.value) })),
+      favIds.size > 0 && React.createElement("button", { className: "chip", "data-active": favsOnly ? 1 : 0, style: { whiteSpace: "nowrap" }, onClick: () => setFavsOnly(v => !v) },
+        React.createElement(Icon, { name: "star", size: 14, fill: favsOnly }), "Favorieten")),
     typeFilter !== "snack" && React.createElement("div", { className: "recfilters" },
       React.createElement("div", { className: "recfilters__group" },
         React.createElement("span", { className: "recfilters__lbl" }, "Wanneer"),
@@ -584,7 +590,13 @@ function RecipesScreen({ toast }) {
           React.createElement("div", { className: "empty__title" }, "Niets gevonden"),
           React.createElement("div", null, "Pas je zoekterm of filter aan."))
       : React.createElement("div", { className: "recgrid" },
-          list.map((r) => React.createElement("button", { key: r.id, className: "reccard", "data-c": primaryColor(r), onClick: () => setDetail(r) },
+          list.map((r) => {
+            const isFav = (state.favorites || []).includes(r.id);
+            return React.createElement("div", { key: r.id, className: "reccard", "data-c": primaryColor(r) },
+            React.createElement("button", { className: "reccard__favbtn", "data-on": isFav ? 1 : 0, title: isFav ? "Verwijder uit favorieten" : "Voeg toe aan favorieten",
+              onClick: (e) => { e.stopPropagation(); S.actions.toggleFavorite(r.id); } },
+              React.createElement(Icon, { name: "star", size: 15, fill: isFav })),
+            React.createElement("button", { className: "reccard__inner", onClick: () => setDetail(r) },
             r.image
               ? React.createElement("div", { className: "reccard__photo" }, React.createElement("img", { src: r.image, alt: "" }))
               : React.createElement("div", { className: "reccard__top" }),
@@ -601,7 +613,7 @@ function RecipesScreen({ toast }) {
                   React.createElement("span", { className: "tag" }, React.createElement(Icon, { name: "clock", size: 12 }), r.prepTime, "m"),
                   r.meatDish
                     ? React.createElement("span", { className: "tag" }, React.createElement(Icon, { name: "meat", size: 12 }))
-                    : React.createElement("span", { className: "tag", style: { background: "var(--sage-soft)", color: "var(--sage-ink)" } }, React.createElement(Icon, { name: "leaf", size: 12 }))))))) ),
+                    : React.createElement("span", { className: "tag", style: { background: "var(--sage-soft)", color: "var(--sage-ink)" } }, React.createElement(Icon, { name: "leaf", size: 12 }))))))) ); }) ),
     detail && React.createElement(RecipeDetail, { recipe: detail, onClose: () => setDetail(null), toast }),
     filterOpen && React.createElement(Sheet, { eyebrow: "Recepten", eyebrowColor: "brand", title: "Filteren", onClose: () => setFilterOpen(false),
       foot: React.createElement(React.Fragment, null,
