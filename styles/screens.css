@@ -182,6 +182,7 @@ textarea.input { resize: vertical; line-height: 1.5; font-size: var(--fs-13); }
 .mcell__card[data-eaten="1"] { opacity: .62; }
 .mcell__name { font-family: var(--ff-display); font-weight: 700; font-size: var(--fs-14); line-height: 1.12; color: var(--c-ink); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .mcell__sub { font-size: 11px; font-weight: 700; color: var(--c); margin-top: auto; display: flex; align-items: center; gap: 4px; }
+.mcell__note { font-size: 10px; font-weight: 500; color: var(--ink-3); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-style: italic; }
 .mcell__empty { height: 100%; cursor: pointer; border: 1px dashed var(--line-2); border-radius: var(--r-1); display: grid; place-items: center; color: var(--ink-4); background: var(--surface-2); transition: all .12s; }
 .mcell__empty:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-soft); }
 .mcell__empty svg { width: 16px; height: 16px; }
@@ -212,6 +213,7 @@ textarea.input { resize: vertical; line-height: 1.5; font-size: var(--fs-13); }
 .wslot__meal { font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--c-ink); }
 .wslot__name { font-family: var(--ff-display); font-weight: 700; font-size: var(--fs-14); line-height: 1.1; min-width: 0; }
 .wslot__name.empty { color: var(--ink-4); font-family: var(--ff-body); font-weight: 600; padding: 0; text-align: left; }
+.wslot__note { font-size: 11px; font-weight: 500; color: var(--ink-3); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-style: italic; }
 .wslot__kcal { font-size: var(--fs-12); color: var(--ink-3); font-weight: 600; padding-right: 14px; font-variant-numeric: tabular-nums; }
 
 /* week summary banner */
