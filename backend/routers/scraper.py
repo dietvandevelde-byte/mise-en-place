@@ -9,6 +9,32 @@ import httpx
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel
 
+
+def _extract_content(html: str) -> str:
+    """Extract recipe-relevant text from HTML.
+    1. Try JSON-LD Recipe schema (reliable even on JS-rendered pages).
+    2. Fall back to stripped HTML text.
+    """
+    # 1. Look for JSON-LD with @type Recipe
+    for match in re.finditer(r'<script[^>]+type=["\']application/ld\+json["\'][^>]*>(.*?)</script>', html, re.DOTALL | re.IGNORECASE):
+        try:
+            data = json.loads(match.group(1))
+            # Handle @graph arrays
+            items = data if isinstance(data, list) else data.get("@graph", [data])
+            for item in items:
+                if isinstance(item, dict) and "Recipe" in str(item.get("@type", "")):
+                    return f"[JSON-LD Recipe schema gevonden]\n{json.dumps(item, ensure_ascii=False)[:30_000]}"
+        except Exception:
+            continue
+
+    # 2. Strip HTML tags and collapse whitespace
+    text = re.sub(r'<script[^>]*>.*?</script>', ' ', html, flags=re.DOTALL | re.IGNORECASE)
+    text = re.sub(r'<style[^>]*>.*?</style>', ' ', text, flags=re.DOTALL | re.IGNORECASE)
+    text = re.sub(r'<[^>]+>', ' ', text)
+    text = re.sub(r'[ \t]+', ' ', text)
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    return text.strip()[:30_000]
+
 from auth import get_current_user
 from config import settings
 import models
@@ -97,13 +123,13 @@ async def scrape_from_url(
     """Haal een recept op via een URL. Claude leest de paginatekst."""
     try:
         async with httpx.AsyncClient(follow_redirects=True, timeout=15) as client:
-            resp = await client.get(body.url, headers={"User-Agent": "Mozilla/5.0"})
+            resp = await client.get(body.url, headers={"User-Agent": "Mozilla/5.0 (compatible; RecipeBot/1.0)"})
             resp.raise_for_status()
-            page_text = resp.text[:20_000]  # max 20k tekens meegeven
+            content = _extract_content(resp.text)
     except httpx.HTTPError as e:
         raise HTTPException(status_code=400, detail=f"Kon URL niet ophalen: {e}")
 
-    messages = [{"role": "user", "content": f"URL: {body.url}\n\nPaginatekst:\n{page_text}"}]
+    messages = [{"role": "user", "content": f"URL: {body.url}\n\nInhoud:\n{content}"}]
     data = _call_claude(messages)
     recipe = _build_recipe(data, source_url=body.url, source_type=models.SourceType.url)
     return schemas.ScrapeResult(recipe=recipe, confidence=data.get("confidence", 0.9))
