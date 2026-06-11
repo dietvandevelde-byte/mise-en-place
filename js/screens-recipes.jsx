@@ -136,7 +136,12 @@ function RecipeDetail({ recipe, onClose, toast }) {
           React.createElement("button", { className: "btn btn--ghost", onClick: () => setPlanning(false) }, "Terug"),
           React.createElement("button", { className: "btn btn--block", onClick: () => { S.actions.assign(day, slot, recipe.id, portions); toast(`${recipe.title} ingepland`); onClose(); } }, React.createElement(Icon, { name: "check", size: 18 }), "Inplannen"))
       : React.createElement(React.Fragment, null,
-          React.createElement("button", { className: "btn btn--danger btn--icon", title: "Recept verwijderen", onClick: async () => { if (await confirm(`"${recipe.title}" verwijderen uit je bibliotheek? Het wordt ook uit geplande dagen gehaald.`, true)) { S.actions.deleteRecipe(recipe.id); toast(`${recipe.title} verwijderd`); onClose(); } } },
+          React.createElement("button", { className: "btn btn--danger btn--icon", title: "Recept verwijderen", onClick: async () => { if (await confirm(`"${recipe.title}" verwijderen uit je bibliotheek? Het wordt ook uit geplande dagen gehaald.`, true)) {
+              S.actions.deleteRecipe(recipe.id);
+              const backendId = recipe._backendId || (window.MPAPI && window.MPAPI._idMap && window.MPAPI._idMap[recipe.id]);
+              if (window.MPAPI && backendId) window.MPAPI.deleteRecipe(backendId).catch(() => {});
+              toast(`${recipe.title} verwijderd`); onClose();
+            } } },
             React.createElement(Icon, { name: "trash", size: 19 })),
           React.createElement("button", { className: "btn btn--ghost", style: { display: "flex", alignItems: "center", gap: 6 }, onClick: () => setEditing(true) }, React.createElement(Icon, { name: "edit", size: 18 }), "Bewerken"),
           React.createElement("button", { className: "btn btn--block", onClick: () => setPlanning(true) }, React.createElement(Icon, { name: "plus", size: 18 }), "In de week plannen"));
