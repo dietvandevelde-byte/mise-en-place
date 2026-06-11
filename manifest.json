@@ -1,7 +1,7 @@
 {
   "name": "Mise en Place",
   "short_name": "Mise en Place",
-  "description": "Jouw persoonlijke weekmenu-planner",
+  "description": "Weekmenu — Planning, Recepten, Boodschappen & Calorieën",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",

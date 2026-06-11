@@ -21,7 +21,7 @@
     <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:24px;color:#211E1A;letter-spacing:-.02em;margin-bottom:4px;">
       Mise <span style="color:#2F7D4F">en Place</span>
     </div>
-    <div style="font-size:13px;color:#6B655C;margin-bottom:24px;font-weight:500;">Jouw persoonlijke weekmenu-planner</div>
+    <div style="font-size:13px;color:#6B655C;margin-bottom:24px;font-weight:500;">WEEKMENU &mdash; Planning &middot; Recepten &middot; Boodschappen &middot; Calorie&euml;n</div>
     <div style="display:flex;border-bottom:2px solid #EDE7DC;margin-bottom:22px;" id="auth-tabs">
       <button onclick="window._authTab('login')"    id="atab-login"    style="flex:1;padding:8px;text-align:center;font-size:14px;font-weight:700;cursor:pointer;color:#2F7D4F;border:none;border-bottom:2px solid #2F7D4F;margin-bottom:-2px;background:none;">Inloggen</button>
       <button onclick="window._authTab('register')" id="atab-register" style="flex:1;padding:8px;text-align:center;font-size:14px;font-weight:700;cursor:pointer;color:#938A7C;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;background:none;">Registreren</button>
