@@ -12,14 +12,14 @@ from pydantic import BaseModel
 
 def _extract_content(html: str) -> str:
     """Extract recipe-relevant text from HTML.
-    1. Try JSON-LD Recipe schema (reliable even on JS-rendered pages).
-    2. Fall back to stripped HTML text.
+    1. Try JSON-LD Recipe schema.
+    2. Try Next.js __NEXT_DATA__ embedded JSON.
+    3. Fall back to stripped HTML text.
     """
     # 1. Look for JSON-LD with @type Recipe
     for match in re.finditer(r'<script[^>]+type=["\']application/ld\+json["\'][^>]*>(.*?)</script>', html, re.DOTALL | re.IGNORECASE):
         try:
             data = json.loads(match.group(1))
-            # Handle @graph arrays
             items = data if isinstance(data, list) else data.get("@graph", [data])
             for item in items:
                 if isinstance(item, dict) and "Recipe" in str(item.get("@type", "")):
@@ -27,7 +27,22 @@ def _extract_content(html: str) -> str:
         except Exception:
             continue
 
-    # 2. Strip HTML tags and collapse whitespace
+    # 2. Try Next.js __NEXT_DATA__ (and similar framework blobs)
+    for pattern in [
+        r'<script[^>]+id=["\']__NEXT_DATA__["\'][^>]*>(.*?)</script>',
+        r'<script[^>]+id=["\']__NUXT_DATA__["\'][^>]*>(.*?)</script>',
+        r'window\.__INITIAL_STATE__\s*=\s*(\{.*?\});\s*(?:</script>|window\.)',
+    ]:
+        m = re.search(pattern, html, re.DOTALL | re.IGNORECASE)
+        if m:
+            try:
+                blob = json.loads(m.group(1))
+                text = json.dumps(blob, ensure_ascii=False)
+                return f"[Next.js/framework data gevonden]\n{text[:30_000]}"
+            except Exception:
+                continue
+
+    # 3. Strip HTML tags and collapse whitespace
     text = re.sub(r'<script[^>]*>.*?</script>', ' ', html, flags=re.DOTALL | re.IGNORECASE)
     text = re.sub(r'<style[^>]*>.*?</style>', ' ', text, flags=re.DOTALL | re.IGNORECASE)
     text = re.sub(r'<[^>]+>', ' ', text)
