@@ -542,7 +542,7 @@ function RecipesScreen({ toast }) {
       // soort (categorie) — multi-select: match any selected category
       if (selCats.length && !selCats.some((k) => S.recipeCategories(r).includes(k))) return false;
       return true;
-    });
+    }).sort((a, b) => a.title.localeCompare(b.title, "nl"));
   }, [q, typeFilter, meal, selCats, favsOnly, ownOnly, recipes.length, state.favorites]);
 
   const MEALS = [["alle", "Alle"], ["0", "Ochtend"], ["2", "Middag"], ["4", "Avond"], ["snack", "Snacks"]];
