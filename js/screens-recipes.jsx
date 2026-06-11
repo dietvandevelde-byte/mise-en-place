@@ -159,7 +159,12 @@ function RecipeDetail({ recipe, onClose, toast }) {
           React.createElement("div", { className: "field__row" },
             React.createElement("div", { className: "field__label" }, "Porties"),
             React.createElement(Stepper, { value: portions, onChange: setPortions, step: 0.1, min: 0.1, max: 20, editable: true })))
-      : React.createElement(RecipeView, { recipe, portions: recipe.portions, editable: true, onImageChange: (v) => S.actions.setRecipeImage(recipe.id, v) });
+      : React.createElement(RecipeView, { recipe, portions: recipe.portions, editable: true, onImageChange: (v) => {
+          S.actions.setRecipeImage(recipe.id, v);
+          if (window.MPAPI && window.MPAPI._idMap && window.MPAPI._idMap[recipe.id]) {
+            window.MPAPI.updateRecipe(window.MPAPI._idMap[recipe.id], { image_url: v || null }).catch(() => {});
+          }
+        } });
 
   const title = editing ? `Bewerken: ${recipe.title}` : recipe.title;
   const eyebrow = editing ? "Recept bewerken" : slotLabel(recipe);
