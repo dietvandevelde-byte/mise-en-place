@@ -192,16 +192,32 @@ function repairTruncatedJSON(s) {
   return t + close;
 }
 
+function sourceLabel(r) {
+  if (r.source && r.source.startsWith("http")) {
+    try {
+      const host = new URL(r.source).hostname.replace(/^www\./, "");
+      const parts = host.split(".");
+      // "njam.tv" → "njam", "leukerecepten.nl" → "leukerecepten"
+      return parts.length >= 2 ? parts[parts.length - 2] : parts[0];
+    } catch(e) {}
+  }
+  if (r.source && r.source !== "Eigen recept" && r.source !== "AI import") return r.source;
+  return "Eigen";
+}
+window.sourceLabel = sourceLabel;
+
 function ImportSheet({ onClose, toast }) {
   const [tab, setTab] = useState("url");     // url | screenshot | tekst | json
   const [txt, setTxt] = useState("");
   const [url, setUrl] = useState("");
   const [img, setImg] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [screenshotSource, setScreenshotSource] = useState("");
+  const [tekstSource, setTekstSource] = useState("");
   const [err, setErr] = useState(null);
   const [busy, setBusy] = useState(false);
 
-  async function _saveRecipe(result) {
+  async function _saveRecipe(result, overrideSource) {
     const r = result.recipe;
     const ingredients = (r.ingredients || []).map(i => ({
       name: i.name, qty: i.amount || 0, unit: i.unit || "", cat: i.cat || "Voorraad"
@@ -221,7 +237,7 @@ function ImportSheet({ onClose, toast }) {
 
     const obj = {
       title: r.name || "Naamloos recept",
-      source: r.source_url || "AI import",
+      source: overrideSource || r.source_url || null,
       portions: r.servings || 1,
       prepTime: r.prep_time || r.total_time || 0,
       meatDish: false,
@@ -254,7 +270,7 @@ function ImportSheet({ onClose, toast }) {
     setErr(null); setBusy(true);
     try {
       const result = await window.MPAPI.scrapeScreenshot(file);
-      _saveRecipe(result);
+      _saveRecipe(result, screenshotSource.trim() || null);
     } catch (e) { setErr("Kon screenshot niet lezen: " + e.message); }
     finally { setBusy(false); }
   }
@@ -264,7 +280,7 @@ function ImportSheet({ onClose, toast }) {
     setErr(null); setBusy(true);
     try {
       const result = await window.MPAPI.scrapeText(txt.trim());
-      _saveRecipe(result);
+      _saveRecipe(result, tekstSource.trim() || null);
     } catch (e) { setErr("Kon recept niet lezen: " + e.message); }
     finally { setBusy(false); }
   }
@@ -309,6 +325,7 @@ function ImportSheet({ onClose, toast }) {
       seg,
       React.createElement("div", { className: "import__hint" }, "Maak een screenshot van een recept en upload het hier. De AI herkent automatisch alle informatie."),
       React.createElement("input", { type: "file", accept: "image/*", onChange: (e) => { setSelectedFile(e.target.files[0] || null); setErr(null); }, style: { marginTop: 12, width: "100%" } }),
+      React.createElement("input", { className: "input", type: "text", placeholder: "Bron (bijv. Njam, Dagelijkse kost…)", value: screenshotSource, onChange: (e) => setScreenshotSource(e.target.value), style: { marginTop: 10 } }),
       err && React.createElement("div", { className: "import__err" }, err)
     );
   }
@@ -322,7 +339,8 @@ function ImportSheet({ onClose, toast }) {
     },
       seg,
       React.createElement("div", { className: "import__hint" }, "Plak de tekst van een recept. De AI haalt er automatisch de titel, porties, voedingswaarden, ingrediënten en bereiding uit."),
-      React.createElement("textarea", { className: "input", rows: 8, placeholder: "Plak hier de recepttekst…", value: txt, onChange: (e) => { setTxt(e.target.value); setErr(null); }, style: { marginTop: 12 } }),
+      React.createElement("input", { className: "input", type: "text", placeholder: "Bron (bijv. Njam, Dagelijkse kost…)", value: tekstSource, onChange: (e) => setTekstSource(e.target.value), style: { marginTop: 12 } }),
+      React.createElement("textarea", { className: "input", rows: 7, placeholder: "Plak hier de recepttekst…", value: txt, onChange: (e) => { setTxt(e.target.value); setErr(null); }, style: { marginTop: 8 } }),
       err && React.createElement("div", { className: "import__err" }, err)
     );
   }
@@ -604,7 +622,7 @@ function RecipesScreen({ toast }) {
           list.map((r) => {
             const isFav = (state.favorites || []).includes(r.id);
             const ownFlag = (r.imported || r.custom)
-              ? React.createElement("span", { className: "imported-flag" }, r.custom ? "Eigen" : "Import")
+              ? React.createElement("span", { className: "imported-flag" }, sourceLabel(r))
               : null;
             const cardBand = React.createElement("div", { className: "reccard__band" },
               React.createElement("span", { className: "reccard__band-label" }, slotLabel(r)),
