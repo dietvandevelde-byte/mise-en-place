@@ -122,6 +122,9 @@ function SlotSheet({ date, slot, onClose, onSwapStart, toast }) {
       recipe && React.createElement("button", { className: "actionrow", onClick: () => setMode("portions") },
         React.createElement(Icon, { name: "user", size: 20 }),
         React.createElement("div", { className: "actionrow__txt" }, "Porties aanpassen", React.createElement("small", null, `Nu ${fmtPortions(entry.portions)}`))),
+      recipe && entry.eaten && React.createElement("button", { className: "actionrow", onClick: () => setMode("eatenPortions") },
+        React.createElement(Icon, { name: "check", size: 20 }),
+        React.createElement("div", { className: "actionrow__txt" }, "Gegeten porties aanpassen", React.createElement("small", null, `${entry.portionsEaten != null ? fmtPortions(entry.portionsEaten) : "1 portie"} gegeten`))),
       recipe && slot === 4 && React.createElement("button", { className: "actionrow", onClick: () => { S.actions.assign(date, slot, entry.recipeId, entry.portions, { cookDouble: !entry.cookDouble }); toast && toast(!entry.cookDouble ? "Kookt dubbel \u00b7 restje morgen" : "Dubbel koken uit"); onClose(); } },
         React.createElement(Icon, { name: "swap", size: 20 }),
         React.createElement("div", { className: "actionrow__txt" }, entry.cookDouble ? "Dubbel koken uitzetten" : "Kook dubbel", React.createElement("small", null, "Restje als lunch morgen"))),
@@ -214,10 +217,21 @@ function SlotSheet({ date, slot, onClose, onSwapStart, toast }) {
     foot = React.createElement(React.Fragment, null,
       React.createElement("button", { className: "btn btn--ghost", onClick: () => setMode("menu") }, "Terug"),
       React.createElement("button", { className: "btn btn--block", onClick: () => { S.actions.setPortions(date, slot, portions); toast && toast("Porties aangepast"); onClose(); } }, "Opslaan"));
+  } else if (mode === "eatenPortions") {
+    const initEaten = entry.portionsEaten != null ? entry.portionsEaten : 1;
+    const [eatenP, setEatenP] = useState(initEaten);
+    body = React.createElement("div", { style: { textAlign: "center", padding: "10px 0" } },
+      React.createElement("div", { className: "bigreadout", style: { marginBottom: 18 } }, nlNum(eatenP), React.createElement("span", null, eatenP === 1 ? " portie" : " porties")),
+      React.createElement("div", { style: { display: "flex", justifyContent: "center" } }, React.createElement(Stepper, { value: eatenP, onChange: setEatenP, step: 0.1, min: 0.1, max: 20, editable: true })),
+      React.createElement("div", { style: { marginTop: 12, fontSize: 12, color: "var(--ink-3)" } }, "Hoeveel porties heb je gegeten?"),
+      recipe && React.createElement("div", { style: { marginTop: 14, color: "var(--ink-2)", fontWeight: 600 } }, `${Math.round(recipe.kcal * eatenP)} kcal`));
+    foot = React.createElement(React.Fragment, null,
+      React.createElement("button", { className: "btn btn--ghost", onClick: () => setMode("menu") }, "Terug"),
+      React.createElement("button", { className: "btn btn--block", onClick: () => { S.actions.setPortionsEaten(date, slot, eatenP); toast && toast("Bijgewerkt"); onClose(); } }, React.createElement(Icon, { name: "check", size: 18 }), "Opslaan"));
   }
 
   const baseTitle = recipe ? recipe.title : status ? status.name : (entry && entry.manualName) ? entry.manualName : slotMeta.name;
-  const titleTxt = mode === "pick" ? `${slotMeta.name} inplannen` : mode === "create" ? "Nieuw recept" : mode === "edit" ? "Recept bewerken" : mode === "note" ? "Notitie" : mode === "view" ? (recipe ? recipe.title : slotMeta.name) : mode === "confirm" ? "Inplannen" : mode === "portions" ? "Porties" : baseTitle;
+  const titleTxt = mode === "pick" ? `${slotMeta.name} inplannen` : mode === "create" ? "Nieuw recept" : mode === "edit" ? "Recept bewerken" : mode === "note" ? "Notitie" : mode === "view" ? (recipe ? recipe.title : slotMeta.name) : mode === "confirm" ? "Inplannen" : mode === "portions" ? "Porties" : mode === "eatenPortions" ? "Gegeten porties" : baseTitle;
   return React.createElement(React.Fragment, null,
     React.createElement(Sheet, {
       eyebrow: `${dowLong} \u00b7 ${slotMeta.name}`, eyebrowColor: slotMeta.color,
