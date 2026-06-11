@@ -403,8 +403,8 @@ window.MPAPI = (function () {
       }
 
       // Re-apply stored images now that backend recipes are registered with their local IDs
-      if (window.MPStore.actions && window.MPStore.actions.applyStoredImages) {
-        window.MPStore.actions.applyStoredImages();
+      if (window.MPStore.applyStoredImages) {
+        window.MPStore.applyStoredImages();
       }
     } catch (e) {
       console.warn("Kon recepten niet laden:", e.message);
