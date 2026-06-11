@@ -149,11 +149,18 @@
     state.customRecipes.forEach((r) => { if (!recById[r.id]) { RECIPES.push(r); recById[r.id] = r; } });
   }
   // apply persisted recipe images — stored separately to avoid filling main localStorage quota
+  // Keys can be local integer IDs OR backend UUIDs (more stable)
   let _imgStore = {};
   try { _imgStore = JSON.parse(localStorage.getItem("mp_images") || "{}"); } catch(e) {}
   // merge legacy images from main state
   if (state.images) { Object.assign(_imgStore, state.images); delete state.images; }
-  Object.entries(_imgStore).forEach(([id, url]) => { if (recById[id]) recById[id].image = url; });
+  function _applyImages() {
+    RECIPES.forEach(r => {
+      const url = _imgStore[String(r.id)] || (r._backendId ? _imgStore[r._backendId] : null);
+      if (url) r.image = url;
+    });
+  }
+  _applyImages();
   function _saveImages() { try { localStorage.setItem("mp_images", JSON.stringify(_imgStore)); } catch(e) { console.warn("Afbeeldingen konden niet worden opgeslagen (localStorage vol)"); } }
   // forward-compat: ensure new target/limit fields & snacks exist on older saved state
   try {
@@ -642,10 +649,18 @@
       });
     },
     setRecipeImage(id, dataUrl) {
-      if (recById[id]) recById[id].image = dataUrl || null;
-      if (dataUrl) _imgStore[id] = dataUrl; else delete _imgStore[id];
+      const rec = recById[id];
+      if (rec) rec.image = dataUrl || null;
+      // Store by local id AND by backend UUID (UUID survives reloads even if local id shifts)
+      if (dataUrl) {
+        _imgStore[String(id)] = dataUrl;
+        if (rec && rec._backendId) _imgStore[rec._backendId] = dataUrl;
+      } else {
+        delete _imgStore[String(id)];
+        if (rec && rec._backendId) delete _imgStore[rec._backendId];
+      }
       _saveImages();
-      set((st) => ({ ...st })); // trigger re-render
+      set((st) => ({ ...st }));
     },
     deleteRecipe(id) {
       const idx = RECIPES.findIndex((r) => r.id === id);
@@ -941,6 +956,6 @@
     entryNutrition, entryEatenNutrition, sumNutrition, sumEatenNutrition, recipeFoods, recipeCategories,
     // Registreer een extern (backend) recept in RECIPES én recById zonder emit
     registerRecipe: (r) => { RECIPES.push(r); recById[r.id] = r; },
-    applyStoredImages: () => { Object.entries(_imgStore).forEach(([id, url]) => { if (recById[id]) recById[id].image = url; }); emit(); },
+    applyStoredImages: () => { _applyImages(); emit(); },
   };
 })();
