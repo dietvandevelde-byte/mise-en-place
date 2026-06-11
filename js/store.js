@@ -148,8 +148,13 @@
   if (Array.isArray(state.customRecipes)) {
     state.customRecipes.forEach((r) => { if (!recById[r.id]) { RECIPES.push(r); recById[r.id] = r; } });
   }
-  // apply persisted recipe images onto the runtime recipe objects
-  if (state.images) Object.entries(state.images).forEach(([id, url]) => { if (recById[id]) recById[id].image = url; });
+  // apply persisted recipe images — stored separately to avoid filling main localStorage quota
+  let _imgStore = {};
+  try { _imgStore = JSON.parse(localStorage.getItem("mp_images") || "{}"); } catch(e) {}
+  // merge legacy images from main state
+  if (state.images) { Object.assign(_imgStore, state.images); delete state.images; }
+  Object.entries(_imgStore).forEach(([id, url]) => { if (recById[id]) recById[id].image = url; });
+  function _saveImages() { try { localStorage.setItem("mp_images", JSON.stringify(_imgStore)); } catch(e) { console.warn("Afbeeldingen konden niet worden opgeslagen (localStorage vol)"); } }
   // forward-compat: ensure new target/limit fields & snacks exist on older saved state
   try {
     const _def = DEFAULT();
@@ -638,11 +643,9 @@
     },
     setRecipeImage(id, dataUrl) {
       if (recById[id]) recById[id].image = dataUrl || null;
-      set((st) => {
-        const images = { ...(st.images || {}) };
-        if (dataUrl) images[id] = dataUrl; else delete images[id];
-        return { ...st, images };
-      });
+      if (dataUrl) _imgStore[id] = dataUrl; else delete _imgStore[id];
+      _saveImages();
+      set((st) => ({ ...st })); // trigger re-render
     },
     deleteRecipe(id) {
       const idx = RECIPES.findIndex((r) => r.id === id);
@@ -655,6 +658,7 @@
         // remove from snack lists too
         const snacks = { ...(st.snacks || {}) };
         Object.keys(snacks).forEach((d) => { snacks[d] = (snacks[d] || []).filter((e) => e.recipeId !== id); });
+        delete _imgStore[id]; _saveImages();
         const images = { ...(st.images || {}) };
         delete images[id];
         const customRecipes = (st.customRecipes || []).filter((r) => r.id !== id);
