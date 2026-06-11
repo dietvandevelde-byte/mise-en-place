@@ -10,6 +10,30 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel
 
 
+def _find_recipe_in_blob(blob, _depth=0) -> str:
+    """Walk a nested dict/list to find the subtree most likely to contain a recipe."""
+    if _depth > 10:
+        return json.dumps(blob, ensure_ascii=False)
+    if isinstance(blob, dict):
+        # Look for recipe-like keys
+        recipe_keys = {"ingredients", "instructions", "recipeIngredient", "recipeInstructions",
+                       "preparationSteps", "ingrediënten", "bereidingswijze"}
+        if recipe_keys & set(str(k).lower() for k in blob.keys()):
+            return json.dumps(blob, ensure_ascii=False)
+        # Recurse into likely containers
+        for key in ("pageProps", "recipe", "recept", "data", "props", "initialData"):
+            if key in blob:
+                result = _find_recipe_in_blob(blob[key], _depth + 1)
+                if len(result) > 100:
+                    return result
+    if isinstance(blob, list):
+        for item in blob:
+            result = _find_recipe_in_blob(item, _depth + 1)
+            if len(result) > 100:
+                return result
+    return json.dumps(blob, ensure_ascii=False)
+
+
 def _extract_content(html: str) -> str:
     """Extract recipe-relevant text from HTML.
     1. Try JSON-LD Recipe schema.
@@ -37,7 +61,8 @@ def _extract_content(html: str) -> str:
         if m:
             try:
                 blob = json.loads(m.group(1))
-                text = json.dumps(blob, ensure_ascii=False)
+                # Try to find the recipe-relevant subtree to keep token count low
+                text = _find_recipe_in_blob(blob)
                 return f"[Next.js/framework data gevonden]\n{text[:30_000]}"
             except Exception:
                 continue
@@ -102,7 +127,7 @@ def _call_claude(messages: list) -> dict:
     client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
     response = client.messages.create(
         model="claude-opus-4-8",
-        max_tokens=2048,
+        max_tokens=4096,
         system=SYSTEM_PROMPT,
         messages=messages,
     )
