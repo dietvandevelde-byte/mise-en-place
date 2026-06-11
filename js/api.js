@@ -371,12 +371,20 @@ window.MPAPI = (function () {
       recipes.forEach((r) => {
         // Already loaded from backend (has _backendId field)
         const existsByBackendId = RECIPES.find(x => x._backendId === r.id);
-        if (existsByBackendId) { _idMap[existsByBackendId.id] = r.id; _saveIdMap(); return; }
+        if (existsByBackendId) {
+          _idMap[existsByBackendId.id] = r.id; _saveIdMap();
+          if (r.image_url) existsByBackendId.image = r.image_url;
+          return;
+        }
         // Already exists locally (created on this device, tracked via _idMap)
         const localId = backendToLocal[r.id];
         if (localId != null) {
           const localRecipe = RECIPES.find(x => x.id === localId);
-          if (localRecipe) { localRecipe._backendId = r.id; return; }
+          if (localRecipe) {
+            localRecipe._backendId = r.id;
+            if (r.image_url) localRecipe.image = r.image_url;
+            return;
+          }
         }
         // Truly new — add from backend
         const sr = _toStoreRecipe(r, nextId++);

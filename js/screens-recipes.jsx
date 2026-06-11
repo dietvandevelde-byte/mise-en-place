@@ -162,7 +162,9 @@ function RecipeDetail({ recipe, onClose, toast }) {
       : React.createElement(RecipeView, { recipe, portions: recipe.portions, editable: true, onImageChange: (v) => {
           S.actions.setRecipeImage(recipe.id, v);
           if (window.MPAPI && window.MPAPI._idMap && window.MPAPI._idMap[recipe.id]) {
-            window.MPAPI.updateRecipe(window.MPAPI._idMap[recipe.id], { image_url: v || null }).catch(() => {});
+            window.MPAPI.updateRecipe(window.MPAPI._idMap[recipe.id], { image_url: v || null })
+              .then(() => toast && toast("Foto opgeslagen"))
+              .catch(() => toast && toast("Foto kon niet worden opgeslagen"));
           }
         } });
 
