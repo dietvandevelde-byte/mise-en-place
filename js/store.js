@@ -174,7 +174,15 @@
   } catch (e) {}
 
   const subs = new Set();
-  function persist() { try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {} }
+  function persist() {
+    try {
+      // Strip images out of customRecipes before saving — images live in mp_images, not in main state
+      const toSave = state.customRecipes && state.customRecipes.some(r => r.image)
+        ? { ...state, customRecipes: state.customRecipes.map(r => r.image ? { ...r, image: null } : r) }
+        : state;
+      localStorage.setItem(LS_KEY, JSON.stringify(toSave));
+    } catch (e) {}
+  }
   function emit() { persist(); subs.forEach((fn) => fn()); }
   function set(updater) { state = updater(state); emit(); }
 
