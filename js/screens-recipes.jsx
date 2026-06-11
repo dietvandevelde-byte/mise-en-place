@@ -161,10 +161,13 @@ function RecipeDetail({ recipe, onClose, toast }) {
             React.createElement(Stepper, { value: portions, onChange: setPortions, step: 0.1, min: 0.1, max: 20, editable: true })))
       : React.createElement(RecipeView, { recipe, portions: recipe.portions, editable: true, onImageChange: (v) => {
           S.actions.setRecipeImage(recipe.id, v);
-          if (window.MPAPI && window.MPAPI._idMap && window.MPAPI._idMap[recipe.id]) {
-            window.MPAPI.updateRecipe(window.MPAPI._idMap[recipe.id], { image_url: v || null })
+          const backendId = recipe._backendId || (window.MPAPI && window.MPAPI._idMap && window.MPAPI._idMap[recipe.id]);
+          if (window.MPAPI && backendId) {
+            window.MPAPI.updateRecipe(backendId, { image_url: v || null })
               .then(() => toast && toast("Foto opgeslagen"))
               .catch(() => toast && toast("Foto kon niet worden opgeslagen"));
+          } else {
+            toast && toast("Foto opgeslagen (lokaal)");
           }
         } });
 
