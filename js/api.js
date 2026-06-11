@@ -393,6 +393,7 @@ window.MPAPI = (function () {
       });
 
       // Dedup: remove local copies that now have a backend-loaded equivalent
+      const backendIds = new Set(recipes.map(r => r.id));
       const backendLoaded = new Set(RECIPES.filter(r => r._backendId).map(r => r._backendId));
       for (let i = RECIPES.length - 1; i >= 0; i--) {
         const r = RECIPES[i];
@@ -401,6 +402,15 @@ window.MPAPI = (function () {
           if (bid && backendLoaded.has(bid)) RECIPES.splice(i, 1);
         }
       }
+
+      // Sync deletes: remove local customRecipes that no longer exist on the backend
+      const localState = window.MPStore.getState();
+      (localState.customRecipes || []).forEach(r => {
+        const bid = _idMap[r.id] || (r._backendId);
+        if (bid && !backendIds.has(bid)) {
+          window.MPStore.actions.deleteRecipe(r.id);
+        }
+      });
 
       // Re-apply stored images now that backend recipes are registered with their local IDs
       if (window.MPStore.applyStoredImages) {
