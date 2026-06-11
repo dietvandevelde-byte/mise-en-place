@@ -521,6 +521,7 @@ function RecipesScreen({ toast }) {
   const [creating, setCreating] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [favsOnly, setFavsOnly] = useState(false);
+  const [ownOnly, setOwnOnly] = useState(false);
   const activeFilters = (meal !== "alle" ? 1 : 0) + selCats.length;
   const recipes = window.MP.RECIPES;
   const favIds = new Set(state.favorites || []);
@@ -533,6 +534,7 @@ function RecipesScreen({ toast }) {
       if (typeFilter === "gerecht" && isSnack) return false;
       if (typeFilter === "snack"   && !isSnack) return false;
       if (favsOnly && !favIds.has(r.id)) return false;
+      if (ownOnly && !(r.custom || r.imported)) return false;
       if (ql && !r.title.toLowerCase().includes(ql)) return false;
       // wanneer (dagdeel)
       if (meal === "snack") { if (!r.suits.some((s) => [1, 3, 5].includes(s))) return false; }
@@ -541,7 +543,7 @@ function RecipesScreen({ toast }) {
       if (selCats.length && !selCats.some((k) => S.recipeCategories(r).includes(k))) return false;
       return true;
     });
-  }, [q, typeFilter, meal, selCats, recipes.length]);
+  }, [q, typeFilter, meal, selCats, favsOnly, ownOnly, recipes.length, state.favorites]);
 
   const MEALS = [["alle", "Alle"], ["0", "Ochtend"], ["2", "Middag"], ["4", "Avond"], ["snack", "Snacks"]];
   const CATS = [["alle", "Alle"], ...S.sel.allCats().map((c) => [c.key, c.name])];
@@ -556,7 +558,9 @@ function RecipesScreen({ toast }) {
         React.createElement("button", { className: "btn", onClick: () => setCreating(true) }, React.createElement(Icon, { name: "plus", size: 18 }), "Nieuw recept"))),
     React.createElement("div", { className: "rectypebar" },
       [["gerecht", "Gerechten"], ["snack", "Snacks"], ["alle", "Alles"]].map(([k, l]) =>
-        React.createElement("button", { key: k, className: "rectype", "data-active": typeFilter === k ? 1 : 0, onClick: () => setType(k) }, l))),
+        React.createElement("button", { key: k, className: "rectype", "data-active": typeFilter === k ? 1 : 0, onClick: () => setType(k) }, l)),
+      React.createElement("button", { className: "rectype rectype--own", "data-active": ownOnly ? 1 : 0, onClick: () => setOwnOnly(v => !v), title: "Toon alleen eigen recepten" },
+        React.createElement(Icon, { name: "user", size: 13 }), "Eigen")),
     React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 12, alignItems: "center" } },
       React.createElement("div", { className: "picker__search", style: { flex: 1, marginBottom: 0 } },
         React.createElement(Icon, { name: "search", size: 18 }),
