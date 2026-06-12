@@ -965,5 +965,6 @@
     // Registreer een extern (backend) recept in RECIPES én recById zonder emit
     registerRecipe: (r) => { RECIPES.push(r); recById[r.id] = r; },
     applyStoredImages: () => { _applyImages(); emit(); },
+    touch: () => { emit(); },
   };
 })();

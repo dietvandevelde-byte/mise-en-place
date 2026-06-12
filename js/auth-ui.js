@@ -164,6 +164,7 @@
 
     // Laad het weekmenu van de backend (vereist dat recepten al geladen zijn)
     await window.MPAPI.loadWeekPlan();
+    window.MPStore.touch(); // trigger React re-render after plan is loaded
 
     // Sync householdSize vanuit het gebruikersprofiel
     if (user && user.household_size != null) {
