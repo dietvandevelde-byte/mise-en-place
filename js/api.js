@@ -179,7 +179,7 @@ window.MPAPI = (function () {
           }
         }
       }
-      req("PUT", "/meal-plans/" + mon, { week_start: mon, entries }).catch(() => {});
+      req("PUT", "/meal-plans/" + mon, { week_start: mon, entries }).catch(e => console.warn("[sync] weekplan push mislukt:", e.message));
     }
   }
 
