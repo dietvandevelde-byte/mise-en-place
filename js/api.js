@@ -349,17 +349,7 @@ window.MPAPI = (function () {
     if (!_token) return;
     try {
       const allRecipes = await getRecipes();
-
-      // Server-side dedup: verwijder recepten met dezelfde naam uit de database
-      const seen = new Map();
-      const toDelete = [];
-      allRecipes.forEach(r => {
-        const key = (r.name || "").toLowerCase().trim();
-        if (seen.has(key)) { toDelete.push(r.id); }
-        else { seen.set(key, r); }
-      });
-      for (const id of toDelete) { await deleteRecipe(id).catch(() => {}); }
-      const recipes = allRecipes.filter(r => !toDelete.includes(r.id));
+      const recipes = allRecipes;
 
       const RECIPES = window.MP.RECIPES;
       let nextId = Math.max(2000, ...RECIPES.map(r => r.id)) + 1;
@@ -404,8 +394,14 @@ window.MPAPI = (function () {
       }
 
       // Sync deletes: remove local customRecipes that no longer exist on the backend
+      // Safety: never auto-delete a recipe that is currently planned in the week
       const localState = window.MPStore.getState();
+      const plannedIds = new Set(Object.values(localState.plan || {}).map(e => e && e.recipeId).filter(Boolean));
+      (localState.snacks || {}) && Object.values(localState.snacks || {}).forEach(arr =>
+        (arr || []).forEach(e => e && e.recipeId && plannedIds.add(e.recipeId))
+      );
       (localState.customRecipes || []).forEach(r => {
+        if (plannedIds.has(r.id)) return; // never auto-delete a planned recipe
         const bid = _idMap[r.id] || (r._backendId);
         if (bid && !backendIds.has(bid)) {
           window.MPStore.actions.deleteRecipe(r.id);
