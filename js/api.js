@@ -204,10 +204,13 @@ window.MPAPI = (function () {
           if (!storeRecipe) return;
 
           if (entry.meal_type === "snack") {
-            // Snacks herstellen
+            // Snacks herstellen — skip als de snack al lokaal aanwezig is (stabiel lokaal ID bewaren)
             if (!state.snacks) state.snacks = {};
             if (!state.snacks[date]) state.snacks[date] = [];
-            const alreadyHas = state.snacks[date].some(s => s.recipeId === storeRecipe.id);
+            const alreadyHas = state.snacks[date].some(s => {
+              const r = window.MPStore.sel.recipeById(s.recipeId);
+              return r && (r._backendId === entry.recipe.id || s.recipeId === storeRecipe.id);
+            });
             if (!alreadyHas) {
               state.snacks[date].push({
                 id: "bs_" + Math.random().toString(36).slice(2),
@@ -222,9 +225,13 @@ window.MPAPI = (function () {
             }
           } else {
             // Hoofdmaaltijden herstellen
+            // Bewaar bestaande lokale entry als de recipe daar al geldig in staat (stabiel lokaal ID)
             const slot = MEAL_TO_SLOT[entry.meal_type];
             if (slot === undefined) return;
-            state.plan[`${date}|${slot}`] = {
+            const key = `${date}|${slot}`;
+            const existing = state.plan[key];
+            if (existing && existing.recipeId && window.MPStore.sel.recipeById(existing.recipeId)) return;
+            state.plan[key] = {
               recipeId: storeRecipe.id,
               portions: 1,
               eaten: !!entry.eaten,
