@@ -72,9 +72,7 @@ function GroceriesScreen({ layout, toast, openShare }) {
 
   // checked items naar onderkant, of verbergen als hideChecked actief
   const visibleGroups = groups.map((g) => {
-    const items = hideChecked
-      ? g.items.filter((it) => !it.checked)
-      : [...g.items.filter((it) => !it.checked), ...g.items.filter((it) => it.checked)];
+    const items = hideChecked ? g.items.filter((it) => !it.checked) : g.items;
     return { ...g, items };
   }).filter((g) => g.items.length > 0);
 
@@ -106,7 +104,7 @@ function GroceriesScreen({ layout, toast, openShare }) {
                 it.manual
                   ? React.createElement("span", { className: "gitem__manual" }, "Zelf toegevoegd")
                   : it.recipeCount > 1 ? `uit ${it.recipeCount} recepten` : "uit 1 recept")),
-        it.qty != null && editingItem !== it.key && React.createElement("div", { className: "gitem__qty" }, fmtQty(it.qty, it.unit)),
+        it.qty != null && React.createElement("div", { className: "gitem__qty" }, fmtQty(it.qty, it.unit)),
         it.manual && React.createElement("button", { className: "gitem__del", onClick: (e) => { e.stopPropagation(); S.actions.removeManual(it.manualId); } }, React.createElement(Icon, { name: "trash", size: 16 }))
       ))
     ))

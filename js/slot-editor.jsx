@@ -5,7 +5,7 @@
 function RecipePicker({ slot, onPick }) {
   const [q, setQ] = useState("");
   const [all, setAll] = useState(true);
-  const [cats, setCats] = useState([]);
+  const [cats, setCats] = useState("");  // single active category filter
   const [showFilters, setShowFilters] = useState(false);
   const recipes = window.MP.RECIPES;
   const isSnacks = slot === "snacks";
@@ -20,12 +20,12 @@ function RecipePicker({ slot, onPick }) {
       if (!all && isSnacks && !window.MP.isSnackRecipe(r)) return false;
       if (!all && !isSnacks && slot != null && !r.suits.includes(slot)) return false;
       if (ql && !r.title.toLowerCase().includes(ql)) return false;
-      if (cats.length && !cats.some(c => S.recipeCategories(r).includes(c))) return false;
+      if (cats && !S.recipeCategories(r).includes(cats)) return false;
       return true;
     });
   }, [q, all, cats, slot, recipes.length]);
 
-  const toggleCat = (key) => setCats(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
+  const toggleCat = (key) => setCats(prev => prev === key ? "" : key);
 
   return React.createElement(React.Fragment, null,
     React.createElement("div", { className: "picker__search" },
@@ -38,22 +38,22 @@ function RecipePicker({ slot, onPick }) {
     slot != null && React.createElement("div", { style: { display: "flex", gap: 7, marginBottom: 10, flexWrap: "wrap", alignItems: "center" } },
       React.createElement("button", {
         className: "chip",
-        "data-active": (showFilters || cats.length) ? 1 : 0,
+        "data-active": (showFilters || cats) ? 1 : 0,
         style: { marginLeft: "auto", display: "flex", alignItems: "center", gap: 5 },
         onClick: () => setShowFilters(v => !v),
       },
         React.createElement(Icon, { name: "filter", size: 14 }),
-        cats.length ? `${cats.length} filter${cats.length > 1 ? "s" : ""}` : "Filter",
-        cats.length > 0 && React.createElement("span", {
+        cats ? (allCats.find(c => c.key === cats) || {}).name || "Filter" : "Filter",
+        cats && React.createElement("span", {
           style: { marginLeft: 2, cursor: "pointer", opacity: 0.7 },
-          onClick: (e) => { e.stopPropagation(); setCats([]); },
+          onClick: (e) => { e.stopPropagation(); setCats(""); },
         }, "✕")
       )
     ),
     showFilters && React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" } },
       allCats.map((c) => React.createElement("button", {
         key: c.key, className: "chip",
-        "data-active": cats.includes(c.key) ? 1 : 0,
+        "data-active": cats === c.key ? 1 : 0,
         "data-c": c.color || "brand",
         onClick: () => toggleCat(c.key),
         style: { fontSize: 12 },
@@ -295,7 +295,7 @@ function SnacksDaySheet({ date, onClose, toast }) {
 
   if (mode === "list") {
     const cards = list.map((e, idx) => {
-      const recipe = e.recipeId ? S.sel.recipeById(e.recipeId) : null;
+      const recipe = e.recipeId ? (S.sel.recipeById(e.recipeId) || (state.customRecipes || []).find(r => r.id === e.recipeId) || null) : null;
       const status = e.status ? window.MP.statusByKey(e.status) : null;
       const n = recipe ? S.entryNutrition(e) : null;
       const color = SNACK_COLORS[idx % SNACK_COLORS.length];

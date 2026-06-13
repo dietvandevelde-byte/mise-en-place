@@ -71,10 +71,19 @@ window.MPAPI = (function () {
     if (!_token) return null;
     try { _user = await req("GET", "/auth/me"); return _user; }
     catch (e) {
-      // Only log out on 401 (invalid/expired token). Network errors keep the session alive.
-      if (e.message && e.message.includes("401")) { logout(); return null; }
-      if (e.message && (e.message.toLowerCase().includes("unauthorized") || e.message.toLowerCase().includes("not authenticated"))) { logout(); return null; }
-      return _user || null; // offline or server sleeping — stay logged in
+      // Log out on 401 only — network errors / sleeping backend keep the session alive
+      if (e.message && (e.message.includes("401") || e.message.toLowerCase().includes("unauthorized") || e.message.toLowerCase().includes("not authenticated"))) {
+        logout(); return null;
+      }
+      // Backend sleeping or offline — decode JWT payload to build a minimal user object
+      // so _onAuthSuccess is still called and the subscribe/push handler gets wired up
+      if (!_user && _token) {
+        try {
+          const payload = JSON.parse(atob(_token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+          _user = { id: payload.sub, name: "Gebruiker", email: "" };
+        } catch (ex) {}
+      }
+      return _user || null;
     }
   }
 
