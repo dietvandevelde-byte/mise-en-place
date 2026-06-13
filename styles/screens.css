@@ -523,6 +523,7 @@ textarea.input { resize: vertical; line-height: 1.5; font-size: var(--fs-13); }
 .gitem__manual { font-size: var(--fs-11); font-weight: 700; color: var(--honey-ink); background: var(--honey-soft); padding: 2px 7px; border-radius: var(--r-pill); }
 .gitem__del { appearance: none; border: 0; background: none; cursor: pointer; color: var(--ink-4); padding: 4px; border-radius: var(--r-1); }
 .gitem__del:hover { color: var(--danger); background: var(--danger-soft); }
+.gitem__qtyinput { border: 1.5px solid var(--line-1); border-radius: var(--r-1); padding: 3px 8px; font-size: var(--fs-12); font-family: inherit; width: 100%; box-sizing: border-box; color: var(--ink); background: var(--surface); }
 
 /* mobile groceries: 2-column item grid for more density */
 .app--mobile .aisle { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }

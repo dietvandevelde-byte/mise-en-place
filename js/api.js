@@ -193,8 +193,15 @@ window.MPAPI = (function () {
           }
         }
       }
-      req("PUT", "/meal-plans/" + mon, { week_start: mon, entries }).catch(e => console.warn("[sync] weekplan push mislukt:", e.message));
+      try {
+        await req("PUT", "/meal-plans/" + mon, { week_start: mon, entries });
+      } catch (e) {
+        console.warn("[sync] weekplan push mislukt:", e.message);
+        localStorage.setItem("mp_sync_dirty", "1");
+        return false;
+      }
     }
+    return true;
   }
 
   // ── Load meal plan from backend → inject into store ───────────────────────
@@ -238,13 +245,10 @@ window.MPAPI = (function () {
               });
             }
           } else {
-            // Hoofdmaaltijden herstellen
-            // Bewaar bestaande lokale entry als de recipe daar al geldig in staat (stabiel lokaal ID)
+            // Hoofdmaaltijden herstellen — backend wint altijd (cross-device sync)
             const slot = MEAL_TO_SLOT[entry.meal_type];
             if (slot === undefined) return;
             const key = `${date}|${slot}`;
-            const existing = state.plan[key];
-            if (existing && existing.recipeId && window.MPStore.sel.recipeById(existing.recipeId)) return;
             state.plan[key] = {
               recipeId: storeRecipe.id,
               portions: 1,
@@ -271,14 +275,18 @@ window.MPAPI = (function () {
       const [date] = key.split("|");
       mondays.add(_isoMonday(date));
     });
+    let allOk = true;
     for (const mon of mondays) {
       const dates = Array.from({length: 7}, (_, i) => {
         const d = new Date(mon + "T12:00:00");
         d.setDate(d.getDate() + i);
         return d.toISOString().slice(0, 10);
       });
-      pushWeekPlan(dates);
+      const ok = await pushWeekPlan(dates);
+      if (!ok) allOk = false;
     }
+    if (allOk) localStorage.removeItem("mp_sync_dirty");
+    return allOk;
   }
 
   // ── Ingredient category guesser (keyword-based fallback) ─────────────────

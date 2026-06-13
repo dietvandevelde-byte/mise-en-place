@@ -225,7 +225,7 @@ function WeekScreen({ layout, openSlot, openSnacks, toast, swap, openShare }) {
             React.createElement("div", { className: "wslot__spine" }),
             React.createElement("div", { className: "wslot__meal" }, "Snacks"),
             has
-              ? React.createElement("div", { className: "wslot__name" }, sum.names.map((n, i) => React.createElement("div", { key: i }, n)))
+              ? React.createElement("div", { className: "wslot__name" }, sum.names.map((n, i) => React.createElement("div", { key: i, className: "mcell__snackitem" }, n)))
               : React.createElement("div", { className: "wslot__name empty" }, "—"),
             has
               ? React.createElement("div", { className: "wslot__kcal" }, sum.kcal)

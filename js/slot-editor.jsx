@@ -428,6 +428,9 @@ function SnacksDaySheet({ date, onClose, toast }) {
       editRecipe && React.createElement("button", { className: "actionrow", onClick: () => { setPortions(editEntry.portions); setMode("portions"); } },
         React.createElement(Icon, { name: "user", size: 20 }),
         React.createElement("div", { className: "actionrow__txt" }, "Porties aanpassen", React.createElement("small", null, `Nu ${fmtPortions(editEntry.portions)}`))),
+      editRecipe && React.createElement("button", { className: "actionrow", onClick: () => setMode("edit") },
+        React.createElement(Icon, { name: "edit", size: 20 }),
+        React.createElement("div", { className: "actionrow__txt" }, "Recept aanpassen", React.createElement("small", null, "Naam, voeding, ingrediënten…"))),
       React.createElement("button", { className: "actionrow", onClick: () => { S.actions.toggleSnackEaten(date, editEntry.id); toast && toast(editEntry.eaten ? "Teruggezet" : "Gegeten ✓"); setMode("list"); } },
         React.createElement(Icon, { name: "check", size: 20 }),
         React.createElement("div", { className: "actionrow__txt" }, editEntry.eaten ? "Terug naar gepland" : "Markeer als gegeten")),
@@ -444,6 +447,13 @@ function SnacksDaySheet({ date, onClose, toast }) {
     foot = React.createElement(React.Fragment, null,
       React.createElement("button", { className: "btn btn--ghost", onClick: () => setMode("entry") }, "Terug"),
       React.createElement("button", { className: "btn btn--block", onClick: () => { S.actions.updateSnack(date, editEntry.id, { portions: Math.max(0.1, Math.round(portions * 10) / 10) }); toast && toast("Porties aangepast"); setMode("list"); } }, "Opslaan"));
+  } else if (mode === "edit" && editRecipe) {
+    titleTxt = "Recept aanpassen";
+    body = React.createElement(window.CreateRecipeForm, {
+      initialRecipe: editRecipe,
+      onCancel: () => setMode("entry"),
+      onSave: () => setMode("entry"),
+    });
   } else {
     // fallback (e.g. edited entry vanished) → list
     body = React.createElement("div", { className: "snackhint" }, "Even niets te tonen.");

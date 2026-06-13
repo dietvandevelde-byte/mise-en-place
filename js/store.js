@@ -446,7 +446,7 @@
         const a = aisleOf(m.cat);
         (byAisle[a] = byAisle[a] || []).push({
           key: "manual|" + m.id, name: m.name, unit: "", qty: null, cat: m.cat,
-          recipeCount: 0, checked: m.checked, manual: true, manualId: m.id,
+          recipeCount: 0, checked: m.checked, manual: true, manualId: m.id, qtyNote: m.qtyNote || "",
         });
       });
       // ordered aisle list — follows the user's configurable shop order
@@ -772,9 +772,12 @@
     addManual(name, cat) {
       set((st) => {
         const id = "m" + Date.now();
-        st.manual = [...st.manual, { id, name, cat, checked: false }];
+        st.manual = [...st.manual, { id, name, cat, checked: false, qtyNote: "" }];
         return { ...st };
       });
+    },
+    updateManual(id, patch) {
+      set((st) => { st.manual = st.manual.map((m) => m.id === id ? { ...m, ...patch } : m); return { ...st }; });
     },
     removeManual(id) {
       set((st) => { st.manual = st.manual.filter((m) => m.id !== id); return { ...st }; });

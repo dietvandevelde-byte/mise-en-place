@@ -198,11 +198,24 @@
     document.getElementById("mp-auth").style.display = "none";
     if (typeof window._mpMountApp === "function") window._mpMountApp();
 
+    // Als er een mislukte push was (backend sliep), probeer nu opnieuw
+    if (localStorage.getItem("mp_sync_dirty")) {
+      window.MPAPI.pushAllPlans().catch(() => {});
+    }
+
     // Auto-sync: sla het weekmenu op bij elke wijziging (debounced 2s)
+    // Bij mislukking (backend slaapt): herprobeert na 30 seconden
     let _pushTimer = null;
+    let _retryTimer = null;
     window.MPStore.subscribe(() => {
       clearTimeout(_pushTimer);
-      _pushTimer = setTimeout(() => window.MPAPI.pushAllPlans(), 2000);
+      clearTimeout(_retryTimer);
+      _pushTimer = setTimeout(async () => {
+        const ok = await window.MPAPI.pushAllPlans();
+        if (!ok) {
+          _retryTimer = setTimeout(() => window.MPAPI.pushAllPlans().catch(() => {}), 30000);
+        }
+      }, 2000);
     });
   }
 

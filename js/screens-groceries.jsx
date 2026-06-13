@@ -78,11 +78,13 @@ function GroceriesScreen({ layout, toast, openShare }) {
         editingItem === it.key
           ? React.createElement("div", { className: "gitem__sub", style: { color: "var(--ink-2)", marginTop: 4 } },
               it.manual
-                ? React.createElement("span", null, "Zelf toegevoegd")
+                ? React.createElement("input", { className: "gitem__qtyinput", placeholder: "Hoeveelheid, bv. 2 stuks", value: it.qtyNote, onChange: (ev) => S.actions.updateManual(it.manualId, { qtyNote: ev.target.value }), onClick: (ev) => ev.stopPropagation(), autoFocus: true })
                 : React.createElement("span", null, `Uit ${it.recipeCount} recept${it.recipeCount > 1 ? "en" : ""} · totaal ${fmtQty(it.qty, it.unit)}`))
           : React.createElement("div", { className: "gitem__sub" },
               it.manual
-                ? React.createElement("span", { className: "gitem__manual" }, "Zelf toegevoegd")
+                ? it.qtyNote
+                  ? React.createElement("span", { className: "gitem__manual" }, it.qtyNote)
+                  : React.createElement("span", { className: "gitem__manual" }, "Zelf toegevoegd")
                 : it.recipeCount > 1 ? `uit ${it.recipeCount} recepten` : "uit 1 recept")),
       it.qty != null && React.createElement("div", { className: "gitem__qty" }, fmtQty(it.qty, it.unit)),
       it.manual && React.createElement("button", { className: "gitem__del", onClick: (e) => { e.stopPropagation(); S.actions.removeManual(it.manualId); } }, React.createElement(Icon, { name: "trash", size: 16 })));
