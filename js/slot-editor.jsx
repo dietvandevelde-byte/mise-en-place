@@ -4,7 +4,7 @@
 
 function RecipePicker({ slot, onPick }) {
   const [q, setQ] = useState("");
-  const [all, setAll] = useState(false);
+  const [all, setAll] = useState(true);
   const [cats, setCats] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
   const recipes = window.MP.RECIPES;
@@ -36,8 +36,6 @@ function RecipePicker({ slot, onPick }) {
       })
     ),
     slot != null && React.createElement("div", { style: { display: "flex", gap: 7, marginBottom: 10, flexWrap: "wrap", alignItems: "center" } },
-      React.createElement("button", { className: "chip", "data-active": all ? 0 : 1, onClick: () => setAll(false) }, "Past bij ", slotMeta.name.toLowerCase()),
-      React.createElement("button", { className: "chip", "data-active": all ? 1 : 0, onClick: () => setAll(true) }, "Alle recepten"),
       React.createElement("button", {
         className: "chip",
         "data-active": (showFilters || cats.length) ? 1 : 0,
@@ -103,7 +101,7 @@ function SlotSheet({ date, slot, onClose, onSwapStart, toast }) {
   const [importing, setImporting] = useState(false);
   const dowLong = cap(S.fmt.fmtDowLong(date));
 
-  function confirmPick(r) { setPendingRecipe(r); setPortions(slot === 4 ? 2 : 1); setMode("confirm"); }
+  function confirmPick(r) { setPendingRecipe(r); setPortions(1); setMode("confirm"); }
   function doAssign() {
     S.actions.assign(date, slot, pendingRecipe.id, portions, { cookDouble });
     toast && toast(cookDouble ? `${pendingRecipe.title} ingepland \u00b7 restje als lunch morgen` : `${pendingRecipe.title} ingepland`);

@@ -11,6 +11,7 @@ function GroceriesScreen({ layout, toast, openShare }) {
 
   const [name, setName] = useState("");
   const [cat, setCat] = useState("Voorraad");
+  const [editingItem, setEditingItem] = useState(null); // key of item being qty-edited
   const [hideChecked, setHideChecked] = useState(false);
   const gdays = S.sel.days();
   const goffset = state.weekOffset || 0;
@@ -92,15 +93,20 @@ function GroceriesScreen({ layout, toast, openShare }) {
         React.createElement("span", { className: "aisle__dot" }),
         React.createElement("div", { className: "aisle__name" }, g.name),
         React.createElement("div", { className: "aisle__count" }, g.items.filter((i) => i.checked).length, "/", groups.find(x => x.cat === g.cat).items.length)),
-      g.items.map((it) => React.createElement("div", { key: it.key, className: "gitem", "data-on": it.checked ? 1 : 0, onClick: () => S.actions.toggleGrocery(it.key) },
-        React.createElement("div", { className: "gcheck" }, React.createElement(Icon, { name: "check", size: 15 })),
-        React.createElement("div", { className: "gitem__body" },
+      g.items.map((it) => React.createElement("div", { key: it.key, className: "gitem", "data-on": it.checked ? 1 : 0 },
+        React.createElement("div", { className: "gcheck", onClick: () => S.actions.toggleGrocery(it.key) }, React.createElement(Icon, { name: "check", size: 15 })),
+        React.createElement("div", { className: "gitem__body", onClick: () => setEditingItem(editingItem === it.key ? null : it.key) },
           React.createElement("div", { className: "gitem__name" }, it.name),
-          React.createElement("div", { className: "gitem__sub" },
-            it.manual
-              ? React.createElement("span", { className: "gitem__manual" }, "Zelf toegevoegd")
-              : it.recipeCount > 1 ? `uit ${it.recipeCount} recepten` : "uit 1 recept")),
-        it.qty != null && React.createElement("div", { className: "gitem__qty" }, fmtQty(it.qty, it.unit)),
+          editingItem === it.key
+            ? React.createElement("div", { className: "gitem__sub", style: { color: "var(--ink-2)", marginTop: 4 } },
+                it.manual
+                  ? React.createElement("span", null, `Zelf toegevoegd`)
+                  : React.createElement("span", null, `Uit ${it.recipeCount} recept${it.recipeCount > 1 ? "en" : ""} · totaal ${fmtQty(it.qty, it.unit)}`))
+            : React.createElement("div", { className: "gitem__sub" },
+                it.manual
+                  ? React.createElement("span", { className: "gitem__manual" }, "Zelf toegevoegd")
+                  : it.recipeCount > 1 ? `uit ${it.recipeCount} recepten` : "uit 1 recept")),
+        it.qty != null && editingItem !== it.key && React.createElement("div", { className: "gitem__qty" }, fmtQty(it.qty, it.unit)),
         it.manual && React.createElement("button", { className: "gitem__del", onClick: (e) => { e.stopPropagation(); S.actions.removeManual(it.manualId); } }, React.createElement(Icon, { name: "trash", size: 16 }))
       ))
     ))

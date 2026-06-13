@@ -331,7 +331,7 @@ function ImportSheet({ onClose, toast }) {
     },
       seg,
       React.createElement("div", { className: "import__hint" }, "Maak een screenshot van een recept en upload het hier. De AI herkent automatisch alle informatie."),
-      React.createElement("input", { type: "file", accept: "image/*", onChange: (e) => { setSelectedFile(e.target.files[0] || null); setErr(null); }, style: { marginTop: 12, width: "100%" } }),
+      React.createElement("input", { type: "file", accept: "image/*", capture: "environment", onChange: (e) => { setSelectedFile(e.target.files[0] || null); setErr(null); }, style: { marginTop: 12, width: "100%" } }),
       React.createElement("input", { className: "input", type: "text", placeholder: "Bron (bijv. Njam, Dagelijkse kost…)", value: screenshotSource, onChange: (e) => setScreenshotSource(e.target.value), style: { marginTop: 10 } }),
       err && React.createElement("div", { className: "import__err" }, err)
     );

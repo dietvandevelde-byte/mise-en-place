@@ -15,6 +15,7 @@ function WeekScreen({ layout, openSlot, openSnacks, toast, swap, openShare }) {
   const [drag, setDrag] = useState(null);
   const [dragOver, setDragOver] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem("mp_onboarded"));
+  const touchDrag = useRef(null); // { date, slot, timer, startX, startY }
 
   function dismissOnboarding() { localStorage.setItem("mp_onboarded", "1"); setShowOnboarding(false); }
   useEffect(() => { if (filled > 0) dismissOnboarding(); }, [filled]);
@@ -127,6 +128,7 @@ function WeekScreen({ layout, openSlot, openSnacks, toast, swap, openShare }) {
     return React.createElement("div", { key, className: "mcell", "data-c": "sage" },
       React.createElement("div", { className: "mcell__card mcell__card--snacks", "data-eaten": sum.eaten ? 1 : 0, onClick: () => openSnacks(date) },
         React.createElement("div", { className: "mcell__snacks" }, sum.names.map((nm, i) => React.createElement("div", { key: i, className: "mcell__snackitem" }, nm))),
+
         React.createElement("div", { className: "mcell__sub" }, sum.kcal, " kcal")));
   }
 
@@ -179,14 +181,37 @@ function WeekScreen({ layout, openSlot, openSnacks, toast, swap, openShare }) {
           const totalKcal = dishes.reduce((a, d) => a + (d.recipeId ? S.entryNutrition(d).kcal : 0), 0);
           const names = dishes.map((d) => { const r = d.recipeId ? S.sel.recipeById(d.recipeId) : null; const st = d.status ? window.MP.statusByKey(d.status) : null; return r ? r.title : st ? st.name : d.manualName; });
           const isSwapSel = swapping && swap.source.date === date && swap.source.slot === meta.i;
-          return React.createElement("div", { key: meta.i, className: "wslot" + (isSwapSel ? " swapsel" : ""), "data-c": meta.color, "data-empty": filledCell ? 0 : 1, onClick: () => cellClick(date, meta.i), style: { opacity: allEaten ? 0.6 : 1 } },
+          const isDragging = touchDrag.current && touchDrag.current.active && touchDrag.current.date === date && touchDrag.current.slot === meta.i;
+          // note inline with status icon when no kcal
+          const nameDisplay = filledCell
+            ? (e && e.note && !totalKcal
+                ? React.createElement("div", { className: "wslot__name" }, names.join(", "), React.createElement("span", { style: { color: "var(--ink-3)", fontSize: 12, marginLeft: 5 } }, "· ", e.note))
+                : React.createElement("div", { className: "wslot__name" }, names.join(", ")))
+            : React.createElement("div", { className: "wslot__name empty" }, "—");
+          return React.createElement("div", {
+            key: meta.i,
+            className: "wslot" + (isSwapSel || isDragging ? " swapsel" : ""),
+            "data-c": meta.color,
+            "data-empty": filledCell ? 0 : 1,
+            style: { opacity: allEaten ? 0.6 : 1 },
+            onClick: () => cellClick(date, meta.i),
+            onTouchStart: filledCell ? (ev) => {
+              const t = ev.touches[0];
+              touchDrag.current = { date, slot: meta.i, active: false, startX: t.clientX, startY: t.clientY,
+                timer: setTimeout(() => { if (touchDrag.current) { touchDrag.current.active = true; swap.start(date, meta.i); } }, 500) };
+            } : undefined,
+            onTouchMove: (ev) => {
+              if (!touchDrag.current) return;
+              const t = ev.touches[0];
+              const dx = Math.abs(t.clientX - touchDrag.current.startX);
+              const dy = Math.abs(t.clientY - touchDrag.current.startY);
+              if (dx > 10 || dy > 10) { clearTimeout(touchDrag.current.timer); touchDrag.current = null; }
+            },
+            onTouchEnd: () => { if (touchDrag.current) { clearTimeout(touchDrag.current.timer); touchDrag.current = null; } },
+          },
             React.createElement("div", { className: "wslot__spine" }),
             React.createElement("div", { className: "wslot__meal" }, meta.short),
-            filledCell
-              ? React.createElement(React.Fragment, null,
-                  React.createElement("div", { className: "wslot__name" }, names.join(", ")),
-                  e && e.note && React.createElement("div", { className: "wslot__note" }, e.note))
-              : React.createElement("div", { className: "wslot__name empty" }, "—"),
+            nameDisplay,
             totalKcal > 0
               ? React.createElement("div", { className: "wslot__kcal" }, totalKcal)
               : filledCell
@@ -200,7 +225,7 @@ function WeekScreen({ layout, openSlot, openSnacks, toast, swap, openShare }) {
             React.createElement("div", { className: "wslot__spine" }),
             React.createElement("div", { className: "wslot__meal" }, "Snacks"),
             has
-              ? React.createElement("div", { className: "wslot__name" }, sum.names.join(", "))
+              ? React.createElement("div", { className: "wslot__name" }, sum.names.map((n, i) => React.createElement("div", { key: i }, n)))
               : React.createElement("div", { className: "wslot__name empty" }, "—"),
             has
               ? React.createElement("div", { className: "wslot__kcal" }, sum.kcal)
