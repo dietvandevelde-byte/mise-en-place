@@ -70,47 +70,87 @@ function GroceriesScreen({ layout, toast, openShare }) {
         React.createElement(Icon, { name: "swap", size: 14 }), "Terugzetten"))
   );
 
-  // checked items naar onderkant, of verbergen als hideChecked actief
-  const visibleGroups = groups.map((g) => {
-    const items = hideChecked
-      ? g.items.filter((it) => !it.checked)
-      : [...g.items.filter((it) => !it.checked), ...g.items.filter((it) => it.checked)];
-    return { ...g, items };
-  }).filter((g) => g.items.length > 0);
+  function renderGItem(it) {
+    return React.createElement("div", { key: it.key, className: "gitem", "data-on": it.checked ? 1 : 0 },
+      React.createElement("div", { className: "gcheck", onClick: () => S.actions.toggleGrocery(it.key) }, React.createElement(Icon, { name: "check", size: 15 })),
+      React.createElement("div", { className: "gitem__body", onClick: () => setEditingItem(editingItem === it.key ? null : it.key) },
+        React.createElement("div", { className: "gitem__name" }, it.name),
+        editingItem === it.key
+          ? React.createElement("div", { className: "gitem__sub", style: { color: "var(--ink-2)", marginTop: 4 } },
+              it.manual
+                ? React.createElement("span", null, "Zelf toegevoegd")
+                : React.createElement("span", null, `Uit ${it.recipeCount} recept${it.recipeCount > 1 ? "en" : ""} · totaal ${fmtQty(it.qty, it.unit)}`))
+          : React.createElement("div", { className: "gitem__sub" },
+              it.manual
+                ? React.createElement("span", { className: "gitem__manual" }, "Zelf toegevoegd")
+                : it.recipeCount > 1 ? `uit ${it.recipeCount} recepten` : "uit 1 recept")),
+      it.qty != null && React.createElement("div", { className: "gitem__qty" }, fmtQty(it.qty, it.unit)),
+      it.manual && React.createElement("button", { className: "gitem__del", onClick: (e) => { e.stopPropagation(); S.actions.removeManual(it.manualId); } }, React.createElement(Icon, { name: "trash", size: 16 })));
+  }
 
-  const aisles = React.createElement("div", { className: layout === "desktop" && groups.length > 0 ? "aislewrap aislewrap--cols" : "aislewrap" },
-    groups.length === 0 && React.createElement("div", { className: "empty" },
-      React.createElement("div", { className: "empty__icon" }, React.createElement(Icon, { name: "cart", size: 26 })),
-      React.createElement("div", { className: "empty__title" }, "Nog niets voor ", grel),
-      React.createElement("div", null, "Er zijn geen maaltijden gepland voor ", S.fmt.fmtDay(gdays[0]), " ", S.fmt.fmtMon(gdays[0]), " – ", S.fmt.fmtDay(gdays[6]), " ", S.fmt.fmtMon(gdays[6]), "."),
-      goffset !== 0 && React.createElement("button", { className: "btn btn--soft", style: { marginTop: 16 }, onClick: () => S.actions.gotoCurrentWeek() }, React.createElement(Icon, { name: "today", size: 17 }), "Naar deze week")),
-    groups.length > 0 && hideChecked && visibleGroups.length === 0 && React.createElement("div", { className: "empty" },
-      React.createElement("div", { className: "empty__icon" }, React.createElement(Icon, { name: "check", size: 26 })),
-      React.createElement("div", { className: "empty__title" }, "Alles afgevinkt!"),
-      React.createElement("div", null, "Alle items zijn in het mandje. Toon ze opnieuw via de knop hierboven.")),
-    visibleGroups.map((g) => React.createElement("div", { key: g.cat, className: "aisle", "data-c": (S.sel.aisleMeta(g.cat) || {}).color || "brand" },
+  function renderAisleEl(g, items) {
+    const color = (S.sel.aisleMeta(g.cat) || {}).color || "brand";
+    const orig = groups.find(x => x.cat === g.cat) || g;
+    return React.createElement("div", { key: g.cat, className: "aisle", "data-c": color },
       React.createElement("div", { className: "aisle__head" },
         React.createElement("span", { className: "aisle__dot" }),
         React.createElement("div", { className: "aisle__name" }, g.name),
-        React.createElement("div", { className: "aisle__count" }, g.items.filter((i) => i.checked).length, "/", groups.find(x => x.cat === g.cat).items.length)),
-      g.items.map((it) => React.createElement("div", { key: it.key, className: "gitem", "data-on": it.checked ? 1 : 0 },
-        React.createElement("div", { className: "gcheck", onClick: () => S.actions.toggleGrocery(it.key) }, React.createElement(Icon, { name: "check", size: 15 })),
-        React.createElement("div", { className: "gitem__body", onClick: () => setEditingItem(editingItem === it.key ? null : it.key) },
-          React.createElement("div", { className: "gitem__name" }, it.name),
-          editingItem === it.key
-            ? React.createElement("div", { className: "gitem__sub", style: { color: "var(--ink-2)", marginTop: 4 } },
-                it.manual
-                  ? React.createElement("span", null, `Zelf toegevoegd`)
-                  : React.createElement("span", null, `Uit ${it.recipeCount} recept${it.recipeCount > 1 ? "en" : ""} · totaal ${fmtQty(it.qty, it.unit)}`))
-            : React.createElement("div", { className: "gitem__sub" },
-                it.manual
-                  ? React.createElement("span", { className: "gitem__manual" }, "Zelf toegevoegd")
-                  : it.recipeCount > 1 ? `uit ${it.recipeCount} recepten` : "uit 1 recept")),
-        it.qty != null && React.createElement("div", { className: "gitem__qty" }, fmtQty(it.qty, it.unit)),
-        it.manual && React.createElement("button", { className: "gitem__del", onClick: (e) => { e.stopPropagation(); S.actions.removeManual(it.manualId); } }, React.createElement(Icon, { name: "trash", size: 16 }))
-      ))
-    ))
-  );
+        React.createElement("div", { className: "aisle__count" }, orig.items.filter(i => i.checked).length, "/", orig.items.length)),
+      items.map(it => renderGItem(it)));
+  }
+
+  const emptyEl = React.createElement("div", { className: "empty" },
+    React.createElement("div", { className: "empty__icon" }, React.createElement(Icon, { name: "cart", size: 26 })),
+    React.createElement("div", { className: "empty__title" }, "Nog niets voor ", grel),
+    React.createElement("div", null, "Er zijn geen maaltijden gepland voor ", S.fmt.fmtDay(gdays[0]), " ", S.fmt.fmtMon(gdays[0]), " – ", S.fmt.fmtDay(gdays[6]), " ", S.fmt.fmtMon(gdays[6]), "."),
+    goffset !== 0 && React.createElement("button", { className: "btn btn--soft", style: { marginTop: 16 }, onClick: () => S.actions.gotoCurrentWeek() }, React.createElement(Icon, { name: "today", size: 17 }), "Naar deze week"));
+
+  const allCheckedEl = React.createElement("div", { className: "empty" },
+    React.createElement("div", { className: "empty__icon" }, React.createElement(Icon, { name: "check", size: 26 })),
+    React.createElement("div", { className: "empty__title" }, "Alles afgevinkt!"),
+    React.createElement("div", null, "Alle items zijn in het mandje. Toon ze opnieuw via de knop hierboven."));
+
+  let aisles;
+  if (groups.length === 0) {
+    aisles = React.createElement("div", { className: "aislewrap" }, emptyEl);
+  } else if (layout === "desktop") {
+    // Desktop: 2 explicit column divs. Within each column, unchecked items stay in
+    // their aisle sections; all checked items from that column aggregate at the very bottom.
+    const renderCol = (colGroups) => {
+      const doneItems = [];
+      const aisleEls = colGroups.map(g => {
+        const undone = g.items.filter(it => !it.checked);
+        if (!hideChecked) g.items.filter(it => it.checked).forEach(it => doneItems.push(it));
+        return undone.length > 0 ? renderAisleEl(g, undone) : null;
+      }).filter(Boolean);
+      return React.createElement("div", { className: "groc__col" },
+        aisleEls,
+        !hideChecked && doneItems.length > 0 && React.createElement("div", { className: "aisle aisle--done", "data-c": "sage" },
+          React.createElement("div", { className: "aisle__head" },
+            React.createElement("span", { className: "aisle__dot" }),
+            React.createElement("div", { className: "aisle__name" }, "Afgevinkt"),
+            React.createElement("div", { className: "aisle__count" }, doneItems.length)),
+          doneItems.map(it => renderGItem(it))));
+    };
+    const visGroups = hideChecked ? groups.filter(g => g.items.some(it => !it.checked)) : groups;
+    if (hideChecked && visGroups.length === 0) {
+      aisles = React.createElement("div", { className: "aislewrap" }, allCheckedEl);
+    } else {
+      const col1 = visGroups.filter((_, i) => i % 2 === 0);
+      const col2 = visGroups.filter((_, i) => i % 2 === 1);
+      aisles = React.createElement("div", { className: "aislewrap aislewrap--cols" }, renderCol(col1), renderCol(col2));
+    }
+  } else {
+    // Mobile: flat aisles, checked items at bottom of each aisle
+    const mobileGroups = groups.map(g => ({
+      ...g,
+      items: hideChecked
+        ? g.items.filter(it => !it.checked)
+        : [...g.items.filter(it => !it.checked), ...g.items.filter(it => it.checked)]
+    })).filter(g => g.items.length > 0);
+    aisles = React.createElement("div", { className: "aislewrap" },
+      hideChecked && mobileGroups.length === 0 ? allCheckedEl : mobileGroups.map(g => renderAisleEl(g, g.items)));
+  }
 
   return React.createElement("div", { className: "wrap screen-anim" },
     React.createElement("div", { className: "shead" },
