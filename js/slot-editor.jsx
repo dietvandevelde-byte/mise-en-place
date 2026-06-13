@@ -114,6 +114,9 @@ function SlotSheet({ date, slot, onClose, onSwapStart, toast }) {
       recipe && React.createElement("button", { className: "actionrow", onClick: () => setMode("view") },
         React.createElement(Icon, { name: "book", size: 20 }),
         React.createElement("div", { className: "actionrow__txt" }, "Recept bekijken", React.createElement("small", null, "Ingredi\u00ebnten & bereiding"))),
+      recipe && React.createElement("button", { className: "actionrow", onClick: () => setMode("edit") },
+        React.createElement(Icon, { name: "edit", size: 20 }),
+        React.createElement("div", { className: "actionrow__txt" }, "Recept aanpassen", React.createElement("small", null, "Naam, voeding, ingredi\u00ebnten\u2026"))),
       React.createElement("button", { className: "actionrow", onClick: () => setMode("pick") },
         React.createElement(Icon, { name: "swap", size: 20 }),
         React.createElement("div", { className: "actionrow__txt" }, recipe ? "Vervangen" : "Iets anders kiezen", React.createElement("small", null, "Recept of andere optie"))),
@@ -174,7 +177,7 @@ function SlotSheet({ date, slot, onClose, onSwapStart, toast }) {
         React.createElement(Icon, { name: "check", size: 18 }), entry.eaten ? "Terug naar gepland" : "Markeer als gegeten"));
   } else if (mode === "edit") {
     body = React.createElement(window.CreateRecipeForm, {
-      init: recipe,
+      initialRecipe: recipe,
       onCancel: () => setMode("view"),
       onSave: () => setMode("view"),
     });
