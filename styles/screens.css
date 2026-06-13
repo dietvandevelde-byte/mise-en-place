@@ -186,6 +186,7 @@ textarea.input { resize: vertical; line-height: 1.5; font-size: var(--fs-13); }
 .mcell__snacks { font-size: 11px; font-weight: 600; color: var(--ink-2); margin-top: 3px; }
 .mcell__snackitem { display: flex; gap: 3px; line-height: 1.3; }
 .mcell__snackitem::before { content: "·"; flex-shrink: 0; }
+.mcell__snacks .mcell__snackitem::before { content: "•"; font-size: 14px; line-height: 1; }
 .mcell__empty { height: 100%; cursor: pointer; border: 1px dashed var(--line-2); border-radius: var(--r-1); display: grid; place-items: center; color: var(--ink-4); background: var(--surface-2); transition: all .12s; }
 .mcell__empty:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-soft); }
 .mcell__empty svg { width: 16px; height: 16px; }
