@@ -77,9 +77,6 @@ function TodayScreen({ layout, openSlot, openSnacks, toast }) {
               allEaten && single.portionsEaten != null
                 ? fmtPortions(single.portionsEaten) + " gegeten"
                 : fmtPortions(single.portions))),
-          single && recipe && React.createElement(React.Fragment, null,
-            React.createElement("span", { className: "dotsep" }),
-            React.createElement("span", null, n.protein, "g eiw")),
           dishes.length > 1 && React.createElement(React.Fragment, null,
             React.createElement("span", { className: "dotsep" }),
             React.createElement("span", null, eatenCount, "/", dishes.length, " gegeten")),
@@ -126,7 +123,7 @@ function TodayScreen({ layout, openSlot, openSnacks, toast }) {
           React.createElement("span", { className: "slot__meal-name" }, "Snacks"),
           React.createElement("span", { className: "slot__time" }, snackSum.count, snackSum.count === 1 ? " item" : " items")),
         React.createElement("div", { className: "slot__title", style: { fontSize: "var(--fs-16)" } },
-          snackSum.names.map((n, i) => React.createElement("div", { key: i }, n))),
+          snackSum.names.map((n, i) => React.createElement("div", { key: i, className: "mcell__snackitem" }, n))),
         React.createElement("div", { className: "slot__meta" },
           React.createElement("span", null, React.createElement("b", null, snackSum.kcal), " kcal"),
           React.createElement("span", { className: "dotsep" }),
