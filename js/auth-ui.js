@@ -62,7 +62,8 @@
     </div>
     <div style="display:flex;gap:8px;margin-bottom:16px;">
       <button onclick="window._scraperMode('url')"        id="stab-url" style="flex:1;padding:8px;border:2px solid #CF6238;border-radius:10px;background:none;cursor:pointer;font-weight:700;font-size:13px;color:#CF6238;">Via URL</button>
-      <button onclick="window._scraperMode('screenshot')" id="stab-ss"  style="flex:1;padding:8px;border:2px solid #DDD7CC;border-radius:10px;background:none;cursor:pointer;font-weight:700;font-size:13px;color:#938A7C;">Via screenshot</button>
+      <button onclick="window._scraperMode('screenshot')" id="stab-ss"  style="flex:1;padding:8px;border:2px solid #DDD7CC;border-radius:10px;background:none;cursor:pointer;font-weight:700;font-size:13px;color:#938A7C;">Schermafb.</button>
+      <button onclick="window._scraperMode('camera')"     id="stab-cam" style="flex:1;padding:8px;border:2px solid #DDD7CC;border-radius:10px;background:none;cursor:pointer;font-weight:700;font-size:13px;color:#938A7C;">📷 Camera</button>
     </div>
     <div id="scraper-url-panel">
       <input id="scraper-url" type="url" placeholder="https://www.ah.nl/allerhande/recept/..." style="width:100%;padding:10px 13px;border:1.5px solid #DDD7CC;border-radius:10px;font-size:14px;font-family:inherit;box-sizing:border-box;margin-bottom:12px;" />
@@ -71,6 +72,15 @@
     <div id="scraper-ss-panel" style="display:none">
       <input id="scraper-file" type="file" accept="image/*" style="width:100%;margin-bottom:12px;" />
       <button onclick="window._scraperRun()" id="scraper-go2" style="width:100%;padding:11px;border-radius:10px;border:none;background:#CF6238;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">Importeren</button>
+    </div>
+    <div id="scraper-cam-panel" style="display:none">
+      <label for="scraper-cam-file" style="display:block;cursor:pointer;border:2px dashed #DDD7CC;border-radius:10px;padding:20px 16px;text-align:center;margin-bottom:12px;">
+        <div style="font-size:32px;margin-bottom:6px;">📷</div>
+        <div style="font-weight:700;color:#6B655C;font-size:14px;">Tik om foto te maken</div>
+        <div id="scraper-cam-name" style="font-size:12px;color:#938A7C;margin-top:4px;min-height:16px;"></div>
+      </label>
+      <input id="scraper-cam-file" type="file" accept="image/*" capture="environment" style="display:none;" onchange="document.getElementById('scraper-cam-name').textContent = this.files[0]?.name || '';" />
+      <button onclick="window._scraperRun()" id="scraper-go3" style="width:100%;padding:11px;border-radius:10px;border:none;background:#CF6238;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">Importeren</button>
     </div>
     <div id="scraper-status" style="margin-top:12px;font-size:13px;color:#6B655C;min-height:20px;"></div>
     <div id="scraper-preview" style="display:none;margin-top:12px;background:#F0F7F3;border-radius:10px;padding:14px;font-size:13px;color:#211E1A;"></div>
@@ -298,6 +308,10 @@
     document.getElementById("scraper-preview").style.display = "none";
     document.getElementById("scraper-save").style.display = "none";
     document.getElementById("scraper-url").value = "";
+    document.getElementById("scraper-file").value = "";
+    document.getElementById("scraper-cam-file").value = "";
+    document.getElementById("scraper-cam-name").textContent = "";
+    window._scraperMode("url");
     document.getElementById("mp-scraper").style.display = "flex";
   };
 
@@ -307,16 +321,19 @@
 
   window._scraperMode = function (mode) {
     _scraperMode_current = mode;
-    document.getElementById("stab-url").style.borderColor = mode === "url" ? "#CF6238" : "#DDD7CC";
-    document.getElementById("stab-url").style.color       = mode === "url" ? "#CF6238" : "#938A7C";
-    document.getElementById("stab-ss").style.borderColor  = mode === "screenshot" ? "#CF6238" : "#DDD7CC";
-    document.getElementById("stab-ss").style.color        = mode === "screenshot" ? "#CF6238" : "#938A7C";
+    ["url", "ss", "cam"].forEach(k => {
+      const m = k === "ss" ? "screenshot" : k === "cam" ? "camera" : "url";
+      document.getElementById("stab-" + k).style.borderColor = mode === m ? "#CF6238" : "#DDD7CC";
+      document.getElementById("stab-" + k).style.color       = mode === m ? "#CF6238" : "#938A7C";
+    });
     document.getElementById("scraper-url-panel").style.display = mode === "url"        ? "" : "none";
     document.getElementById("scraper-ss-panel").style.display  = mode === "screenshot" ? "" : "none";
+    document.getElementById("scraper-cam-panel").style.display = mode === "camera"     ? "" : "none";
   };
 
   window._scraperRun = async function () {
-    const btn = document.getElementById(_scraperMode_current === "url" ? "scraper-go" : "scraper-go2");
+    const btnId = _scraperMode_current === "url" ? "scraper-go" : _scraperMode_current === "camera" ? "scraper-go3" : "scraper-go2";
+    const btn = document.getElementById(btnId);
     btn.textContent = "Bezig…"; btn.disabled = true;
     document.getElementById("scraper-status").textContent = "🤖 Claude analyseert het recept…";
     document.getElementById("scraper-preview").style.display = "none";
@@ -329,8 +346,9 @@
         if (!url) throw new Error("Vul een URL in");
         result = await window.MPAPI.scrapeUrl(url);
       } else {
-        const file = document.getElementById("scraper-file").files[0];
-        if (!file) throw new Error("Kies een afbeelding");
+        const fileId = _scraperMode_current === "camera" ? "scraper-cam-file" : "scraper-file";
+        const file = document.getElementById(fileId).files[0];
+        if (!file) throw new Error(_scraperMode_current === "camera" ? "Maak eerst een foto" : "Kies een afbeelding");
         result = await window.MPAPI.scrapeScreenshot(file);
       }
       _scraped = result.recipe;
