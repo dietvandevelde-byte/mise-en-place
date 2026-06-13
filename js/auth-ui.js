@@ -172,7 +172,14 @@
 
     await window.MPAPI.loadUserRecipes();
 
+    // Als er een mislukte push was: eerst lokale data pushen (voordat we van backend laden)
+    // zodat lokaal geplande maaltijden niet verloren gaan
+    if (localStorage.getItem("mp_sync_dirty")) {
+      await window.MPAPI.pushAllPlans().catch(() => {});
+    }
+
     // Laad het weekmenu van de backend (vereist dat recepten al geladen zijn)
+    // loadWeekPlan wist eerst alle weken die de backend kent, dan herbouwt vanuit backend
     await window.MPAPI.loadWeekPlan();
     window.MPStore.touch(); // trigger React re-render after plan is loaded
 
@@ -207,11 +214,6 @@
 
     document.getElementById("mp-auth").style.display = "none";
     if (typeof window._mpMountApp === "function") window._mpMountApp();
-
-    // Als er een mislukte push was (backend sliep), probeer nu opnieuw
-    if (localStorage.getItem("mp_sync_dirty")) {
-      window.MPAPI.pushAllPlans().catch(() => {});
-    }
 
     // Auto-sync: sla het weekmenu op bij elke wijziging (debounced 2s)
     // Bij mislukking (backend slaapt): herprobeert na 30 seconden

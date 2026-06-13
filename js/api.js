@@ -213,6 +213,22 @@ window.MPAPI = (function () {
     try {
       const plans = await req("GET", "/meal-plans/");
       const state = window.MPStore.getState();
+
+      // Collect all weeks the backend has data for (by ISO Monday)
+      const backendMondays = new Set(plans.map(p => p.week_start));
+
+      // Clear local plan + snack entries for those weeks so removed/changed meals
+      // from other devices are not kept (backend is the single source of truth)
+      Object.keys(state.plan).forEach(key => {
+        const [date] = key.split("|");
+        if (backendMondays.has(_isoMonday(date))) delete state.plan[key];
+      });
+      if (!state.snacks) state.snacks = {};
+      Object.keys(state.snacks).forEach(date => {
+        if (backendMondays.has(_isoMonday(date))) delete state.snacks[date];
+      });
+
+      // Rebuild plan + snacks from backend data
       plans.forEach(plan => {
         (plan.entries || []).forEach(entry => {
           const offset = DAY_OFFSETS[entry.day];
@@ -220,32 +236,20 @@ window.MPAPI = (function () {
           const d = new Date(plan.week_start + "T12:00:00");
           d.setDate(d.getDate() + offset);
           const date = d.toISOString().slice(0, 10);
-          // Find recipe in store by backend UUID
           const storeRecipe = window.MP.RECIPES.find(r => r._backendId === entry.recipe.id);
           if (!storeRecipe) return;
 
           if (entry.meal_type === "snack") {
-            // Snacks herstellen — skip als de snack al lokaal aanwezig is (stabiel lokaal ID bewaren)
-            if (!state.snacks) state.snacks = {};
             if (!state.snacks[date]) state.snacks[date] = [];
-            const alreadyHas = state.snacks[date].some(s => {
-              const r = window.MPStore.sel.recipeById(s.recipeId);
-              return r && (r._backendId === entry.recipe.id || s.recipeId === storeRecipe.id);
+            state.snacks[date].push({
+              id: "bs_" + Math.random().toString(36).slice(2),
+              recipeId: storeRecipe.id,
+              portions: 1,
+              eaten: !!entry.eaten,
+              portionsEaten: entry.portions_eaten != null ? entry.portions_eaten : null,
+              manualName: null, status: null, note: null,
             });
-            if (!alreadyHas) {
-              state.snacks[date].push({
-                id: "bs_" + Math.random().toString(36).slice(2),
-                recipeId: storeRecipe.id,
-                portions: 1,
-                eaten: !!entry.eaten,
-                portionsEaten: entry.portions_eaten != null ? entry.portions_eaten : null,
-                manualName: null,
-                status: null,
-                note: null,
-              });
-            }
           } else {
-            // Hoofdmaaltijden herstellen — backend wint altijd (cross-device sync)
             const slot = MEAL_TO_SLOT[entry.meal_type];
             if (slot === undefined) return;
             const key = `${date}|${slot}`;
@@ -254,9 +258,7 @@ window.MPAPI = (function () {
               portions: 1,
               eaten: !!entry.eaten,
               portionsEaten: entry.portions_eaten != null ? entry.portions_eaten : null,
-              manualName: null,
-              status: null,
-              note: null,
+              manualName: null, status: null, note: null,
             };
           }
         });
