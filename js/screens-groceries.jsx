@@ -72,7 +72,9 @@ function GroceriesScreen({ layout, toast, openShare }) {
 
   // checked items naar onderkant, of verbergen als hideChecked actief
   const visibleGroups = groups.map((g) => {
-    const items = hideChecked ? g.items.filter((it) => !it.checked) : g.items;
+    const items = hideChecked
+      ? g.items.filter((it) => !it.checked)
+      : [...g.items.filter((it) => !it.checked), ...g.items.filter((it) => it.checked)];
     return { ...g, items };
   }).filter((g) => g.items.length > 0);
 

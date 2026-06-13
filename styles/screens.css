@@ -486,11 +486,11 @@ textarea.input { resize: vertical; line-height: 1.5; font-size: var(--fs-13); }
 .grocadd__name { flex: 1 1 auto; }
 .grocadd__cat { flex: 0 0 190px; }
 .grocadd .btn { flex-shrink: 0; }
-/* three-column aisle flow */
-.aislewrap--cols { column-count: 3; column-gap: 18px; }
-.aislewrap--cols .aisle { break-inside: avoid; -webkit-column-break-inside: avoid; margin-bottom: 18px; }
-.aislewrap--cols .aisle + .aisle { margin-top: 0; }
-@media (max-width: 1180px) { .aislewrap--cols { column-count: 2; } }
+/* three-column aisle grid — CSS Grid keeps each aisle in a fixed column position
+   so checking/reordering items within an aisle never shifts other aisles */
+.aislewrap--cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; align-items: start; }
+.aislewrap--cols .aisle { margin-bottom: 0; }
+@media (max-width: 1180px) { .aislewrap--cols { grid-template-columns: repeat(2, 1fr); } }
 .groc__progress { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-3); padding: 16px 18px; box-shadow: var(--sh-1); }
 .app--desktop .groc__rail { position: sticky; top: 8px; display: flex; flex-direction: column; gap: 16px; }
 .groc__progress-top { display: flex; align-items: baseline; justify-content: space-between; }
