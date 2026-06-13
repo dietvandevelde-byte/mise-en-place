@@ -70,7 +70,12 @@ window.MPAPI = (function () {
   async function me() {
     if (!_token) return null;
     try { _user = await req("GET", "/auth/me"); return _user; }
-    catch { logout(); return null; }
+    catch (e) {
+      // Only log out on 401 (invalid/expired token). Network errors keep the session alive.
+      if (e.message && e.message.includes("401")) { logout(); return null; }
+      if (e.message && (e.message.toLowerCase().includes("unauthorized") || e.message.toLowerCase().includes("not authenticated"))) { logout(); return null; }
+      return _user || null; // offline or server sleeping — stay logged in
+    }
   }
 
   async function updateProfile(data) {
