@@ -156,66 +156,45 @@
     if (user && storedUserId !== user.id) {
       localStorage.removeItem("mp_state_v3");
       localStorage.setItem("mp_user_id", user.id);
-      // Herinitialiseer de store met lege planning
       try {
         const st = window.MPStore.getState();
-        st.plan    = {};
-        st.snacks  = {};
-        st.extras  = {};
-        st.manual  = [];
-        st.checked = {};
-        st.customRecipes = [];
-        // Trigger store subscribers
+        st.plan = {}; st.snacks = {}; st.extras = {}; st.manual = []; st.checked = {}; st.customRecipes = [];
         window.MPStore.actions.gotoCurrentWeek();
       } catch(e) {}
     }
 
+    // ── Stap 1: laad recepten van backend ────────────────────────────────────
     await window.MPAPI.loadUserRecipes();
 
-    // Push lokale data naar backend vóór we laden.
-    // onlyLocalData=true: pusht ALLEEN weken met echte lokale entries, nooit een lege week.
-    // Dit voorkomt dat een toestel zonder data (bijv. desktop bij eerste gebruik) de
-    // backend-data van een ander toestel (bijv. "Uit eten" op mobiel) overschrijft.
-    await window.MPAPI.pushAllPlans({ onlyLocalData: true }).catch(() => {});
-
-    // Laad het weekmenu van de backend (vereist dat recepten al geladen zijn)
+    // ── Stap 2: laad weekmenu van backend (GEEN push vóór de load) ───────────
+    // Correcte volgorde: EERST laden, DAN pas pushen.
+    // Een startup-push vóór de load stuurt de lokale staat (zonder de andere-
+    // toestel-data) naar de backend en wist zo wat het andere toestel had gepushed.
     await window.MPAPI.loadWeekPlan();
-    window.MPStore.touch(); // trigger React re-render after plan is loaded
+    window.MPStore.touch();
 
-    // Sync householdSize vanuit het gebruikersprofiel
+    // ── Stap 3: sync huishoudengrootte ───────────────────────────────────────
     if (user && user.household_size != null) {
       window.MPStore.actions.setHouseholdSize(user.household_size);
     }
 
-    // Push eventuele lokale recepten die nog niet in de backend staan
-    // (bijv. aangemaakt op een ander apparaat vóór sync, of na een mislukte save)
-    // Correctie: customRecipes bestaat niet als store-veld — recepten zitten in window.MP.RECIPES
+    // ── Stap 4: push lokale recepten die nog niet in backend staan ───────────
     const localRecipes = (window.MP.RECIPES || []).filter(r => r.custom || r.imported);
     for (const r of localRecipes) {
-      if (!window.MPAPI._idMap[r.id]) {
-        await window.MPAPI.saveNewRecipe(r);
-      }
+      if (!window.MPAPI._idMap[r.id]) await window.MPAPI.saveNewRecipe(r);
     }
 
-    // Patch store om nieuwe recepten ook naar backend te sturen
+    // ── Stap 5: patch store zodat nieuwe recepten ook naar backend gaan ──────
     const origCreate = window.MPStore.actions.createRecipe;
-    window.MPStore.actions.createRecipe = function (obj) {
-      const r = origCreate(obj);
-      window.MPAPI.saveNewRecipe(r);
-      return r;
-    };
+    window.MPStore.actions.createRecipe = function (obj) { const r = origCreate(obj); window.MPAPI.saveNewRecipe(r); return r; };
     const origImport = window.MPStore.actions.importRecipe;
-    window.MPStore.actions.importRecipe = function (obj) {
-      const r = origImport(obj);
-      window.MPAPI.saveNewRecipe(r);
-      return r;
-    };
+    window.MPStore.actions.importRecipe = function (obj) { const r = origImport(obj); window.MPAPI.saveNewRecipe(r); return r; };
 
+    // ── Stap 6: toon app ─────────────────────────────────────────────────────
     document.getElementById("mp-auth").style.display = "none";
     if (typeof window._mpMountApp === "function") window._mpMountApp();
 
-    // Auto-sync: sla het weekmenu op bij elke wijziging (debounced 2s)
-    // Bij mislukking (backend slaapt): herprobeert na 30 seconden
+    // ── Stap 7: auto-sync bij elke gebruikerswijziging (debounced 2s) ────────
     let _pushTimer = null;
     let _retryTimer = null;
     window.MPStore.subscribe(() => {
@@ -228,6 +207,29 @@
         }
       }, 2000);
     });
+
+    // ── Stap 8: uitgestelde push na de load ──────────────────────────────────
+    // De state bevat nu de backend-data (loadWeekPlan heeft alles gemerged).
+    // Een push nu is altijd veilig: hij stuurt de GEMENGDE staat terug naar de
+    // backend en kan niets overschrijven wat een ander toestel al heeft gepushed.
+    //
+    // Dit lost twee problemen op:
+    // A) manualName-entries ("Uit eten", "Restje" …) die nog nooit naar de backend
+    //    gepushed zijn — éénmalige sync via mp_manual_synced_v131
+    // B) Retry van een mislukte push (mp_sync_dirty flag < 1u oud)
+    const _dirtyTs  = localStorage.getItem("mp_sync_dirty");
+    const _stNow    = window.MPStore.getState();
+    const _hasManualUnsynced = !localStorage.getItem("mp_manual_synced_v131") &&
+                               Object.values(_stNow.plan || {}).some(e => e && e.manualName);
+    const _hasDirty = _dirtyTs && (Date.now() - Number(_dirtyTs)) < 3600000;
+
+    if (_hasManualUnsynced || _hasDirty) {
+      const ok = await window.MPAPI.pushAllPlans().catch(() => false);
+      // Zet de flag alleen bij succes — bij mislukking opnieuw proberen bij volgende startup
+      if (_hasManualUnsynced && ok !== false) {
+        localStorage.setItem("mp_manual_synced_v131", "1");
+      }
+    }
   }
 
   window._showForgotPassword = function () {

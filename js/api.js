@@ -343,29 +343,25 @@ window.MPAPI = (function () {
   }
 
   // Push ALL relevant weeks to backend.
-  // opts.onlyLocalData=true: sla de huidige week over als die leeg is (voor startup-push,
-  // om te vermijden dat een toestel zonder data de backend-data van een ander toestel wist).
-  // Standaard (false): pusht altijd de huidige week zodat verwijderingen de backend bereiken.
-  async function pushAllPlans(opts) {
-    const onlyLocalData = opts && opts.onlyLocalData;
+  // Altijd de huidige week meesturen zodat verwijderingen de backend bereiken.
+  // Roep dit ALLEEN aan na loadWeekPlan(), zodat de lokale state al de backend-data
+  // bevat — dan kan deze push nooit data van een ander toestel overschrijven.
+  async function pushAllPlans() {
     if (!_token) return;
     const state = window.MPStore.getState();
     const mondays = new Set();
-    // Weken met plan-entries
+    // Always push current week so cleared meals reach the backend
+    const today = state.today || new Date().toISOString().slice(0, 10);
+    mondays.add(_isoMonday(today));
+    // Weeks with plan entries
     Object.keys(state.plan).forEach(key => {
       const [date] = key.split("|");
       mondays.add(_isoMonday(date));
     });
-    // Weken met snack-entries
+    // Weeks with snack entries
     Object.keys(state.snacks || {}).forEach(date => {
       mondays.add(_isoMonday(date));
     });
-    // Pusht altijd de huidige week zodat verwijderingen de backend bereiken —
-    // maar NIET bij startup (onlyLocalData) om lege push te vermijden.
-    if (!onlyLocalData) {
-      const today = state.today || new Date().toISOString().slice(0, 10);
-      mondays.add(_isoMonday(today));
-    }
     let allOk = true;
     for (const mon of mondays) {
       const dates = Array.from({length: 7}, (_, i) => {
