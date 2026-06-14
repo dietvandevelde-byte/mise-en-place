@@ -221,13 +221,18 @@ function sourceLabel(r) {
 window.sourceLabel = sourceLabel;
 
 function ImportSheet({ onClose, toast }) {
-  const [tab, setTab] = useState("url");     // url | screenshot | tekst | json
+  const isMobile = window._mpPlatform === "mobile";
+  const [tab, setTab] = useState(isMobile ? "screenshot" : "url");
   const [txt, setTxt] = useState("");
   const [url, setUrl] = useState("");
   const [img, setImg] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [screenshotSource, setScreenshotSource] = useState("");
   const [tekstSource, setTekstSource] = useState("");
+  const fileInputRef = React.useRef(null);
+  React.useEffect(() => {
+    if (tab === "screenshot" && isMobile && fileInputRef.current) fileInputRef.current.click();
+  }, [tab]);
   const [err, setErr] = useState(null);
   const [busy, setBusy] = useState(false);
 
@@ -313,9 +318,9 @@ function ImportSheet({ onClose, toast }) {
 
   const seg = React.createElement("div", { className: "seg", style: { marginBottom: 16 } },
     React.createElement("button", { "data-active": tab === "url"        ? 1 : 0, onClick: () => { setTab("url");        setErr(null); } }, "URL"),
-    React.createElement("button", { "data-active": tab === "screenshot" ? 1 : 0, onClick: () => { setTab("screenshot"); setErr(null); } }, "Screenshot"),
-    React.createElement("button", { "data-active": tab === "tekst"      ? 1 : 0, onClick: () => { setTab("tekst");      setErr(null); } }, "Tekst"),
-    React.createElement("button", { "data-active": tab === "json"       ? 1 : 0, onClick: () => { setTab("json");       setErr(null); } }, "JSON"));
+    React.createElement("button", { "data-active": tab === "screenshot" ? 1 : 0, onClick: () => { setTab("screenshot"); setErr(null); } }, isMobile ? "📷 Foto" : "Screenshot"),
+    !isMobile && React.createElement("button", { "data-active": tab === "tekst" ? 1 : 0, onClick: () => { setTab("tekst"); setErr(null); } }, "Tekst"),
+    !isMobile && React.createElement("button", { "data-active": tab === "json"  ? 1 : 0, onClick: () => { setTab("json");  setErr(null); } }, "JSON"));
 
   if (tab === "url") {
     return React.createElement(Sheet, {
@@ -339,9 +344,9 @@ function ImportSheet({ onClose, toast }) {
              : React.createElement(React.Fragment, null, React.createElement(Icon, { name: "spark", size: 18 }), "Importeren met AI")),
     },
       seg,
-      React.createElement("div", { className: "import__hint" }, "Maak een screenshot van een recept en upload het hier. De AI herkent automatisch alle informatie."),
-      React.createElement("input", { type: "file", accept: "image/*", capture: "environment", onChange: (e) => { setSelectedFile(e.target.files[0] || null); setErr(null); }, style: { marginTop: 12, width: "100%" } }),
-      React.createElement("input", { className: "input", type: "text", placeholder: "Bron (bijv. Njam, Dagelijkse kost…)", value: screenshotSource, onChange: (e) => setScreenshotSource(e.target.value), style: { marginTop: 10 } }),
+      React.createElement("div", { className: "import__hint" }, isMobile ? "Maak een foto van een recept. De AI herkent automatisch alle informatie." : "Maak een screenshot van een recept en upload het hier. De AI herkent automatisch alle informatie."),
+      React.createElement("input", { ref: fileInputRef, type: "file", accept: "image/*", capture: "environment", onChange: (e) => { setSelectedFile(e.target.files[0] || null); setErr(null); }, style: { marginTop: 12, width: "100%" } }),
+      !isMobile && React.createElement("input", { className: "input", type: "text", placeholder: "Bron (bijv. Njam, Dagelijkse kost…)", value: screenshotSource, onChange: (e) => setScreenshotSource(e.target.value), style: { marginTop: 10 } }),
       err && React.createElement("div", { className: "import__err" }, err)
     );
   }
