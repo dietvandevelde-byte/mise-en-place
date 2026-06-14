@@ -160,6 +160,7 @@ class MealPlanEntry(Base):
     meal_type = Column(SAEnum(MealType), nullable=False, default=MealType.dinner)
     servings_override = Column(Integer, nullable=True)  # afwijkend aantal porties voor dit plan
     notes = Column(Text, nullable=True)
+    manual_name = Column(String(255), nullable=True)
     eaten = Column(Boolean, default=False, nullable=False)
     portions_eaten = Column(Float, nullable=True)  # hoeveel porties de gebruiker zelf heeft gegeten (null = niet gelogd)
 

@@ -46,6 +46,14 @@ with engine.connect() as conn:
         conn.commit()
     except Exception:
         pass
+    # manual_name op meal_plan_entries (voor "Uit eten" etc.)
+    try:
+        conn.execute(text(
+            "ALTER TABLE meal_plan_entries ADD COLUMN IF NOT EXISTS manual_name VARCHAR(255) NULL"
+        ))
+        conn.commit()
+    except Exception:
+        pass
 
 app = FastAPI(
     title="Mise en Place API",

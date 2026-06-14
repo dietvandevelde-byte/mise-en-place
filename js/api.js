@@ -1,5 +1,5 @@
 /* =========================================================================
-   MISE EN PLACE — Backend API bridge
+   MISE EN PLACE — Backend API bridge v126
    Handles auth, recipe sync, meal plan sync and AI scraper.
    ========================================================================= */
 window.MPAPI = (function () {
@@ -151,10 +151,12 @@ window.MPAPI = (function () {
     for (const [mon, dates] of Object.entries(byMon)) {
       const entries = [];
       for (const date of dates) {
+        const dayName = DAY_NAMES[new Date(date + "T12:00:00").getDay()];
         // Hoofdmaaltijden (ontbijt, lunch, diner)
         for (const slot of [0, 2, 4]) {
           const e = state.plan[`${date}|${slot}`];
-          if (e && e.recipeId) {
+          if (!e) continue;
+          if (e.recipeId) {
             let backendId = _idMap[e.recipeId];
             if (!backendId) {
               const recipe = window.MP.RECIPES.find(r => r.id === e.recipeId);
@@ -162,13 +164,23 @@ window.MPAPI = (function () {
             }
             if (backendId) {
               entries.push({
-                day: DAY_NAMES[new Date(date + "T12:00:00").getDay()],
+                day: dayName,
                 meal_type: SLOT_TO_MEAL[slot],
                 recipe_id: backendId,
                 eaten: !!e.eaten,
                 portions_eaten: e.portionsEaten != null ? e.portionsEaten : null,
               });
             }
+          } else if (e.manualName) {
+            entries.push({
+              day: dayName,
+              meal_type: SLOT_TO_MEAL[slot],
+              recipe_id: null,
+              manual_name: e.manualName,
+              notes: e.note || null,
+              eaten: !!e.eaten,
+              portions_eaten: e.portionsEaten != null ? e.portionsEaten : null,
+            });
           }
         }
         // Snacks
@@ -183,7 +195,7 @@ window.MPAPI = (function () {
             }
             if (backendId) {
               entries.push({
-                day: DAY_NAMES[new Date(date + "T12:00:00").getDay()],
+                day: dayName,
                 meal_type: "snack",
                 recipe_id: backendId,
                 eaten: !!snack.eaten,
@@ -225,14 +237,31 @@ window.MPAPI = (function () {
       plans.forEach(plan => {
         (plan.entries || []).forEach(entry => {
           const offset = DAY_OFFSETS[entry.day];
-          if (offset === undefined || !entry.recipe) return;
+          if (offset === undefined) return;
+          // Skip entries with neither a recipe nor a manual name
+          if (!entry.recipe && !entry.manual_name) return;
+
           const d = new Date(plan.week_start + "T12:00:00");
           d.setDate(d.getDate() + offset);
           const date = d.toISOString().slice(0, 10);
-          const storeRecipe = window.MP.RECIPES.find(r => r._backendId === entry.recipe.id);
-          if (!storeRecipe) return;
 
           if (entry.meal_type === "snack") {
+            // Snacks are always recipe-based
+            if (!entry.recipe) return;
+            // Try exact backendId match first, then fall back to name match (fixes orphaned seed recipes)
+            let storeRecipe = window.MP.RECIPES.find(r => r._backendId === entry.recipe.id);
+            if (!storeRecipe) {
+              const nameLower = (entry.recipe.name || "").toLowerCase();
+              storeRecipe = window.MP.RECIPES.find(r => r.title && r.title.toLowerCase() === nameLower);
+              if (storeRecipe) {
+                storeRecipe._backendId = entry.recipe.id;
+                _idMap[storeRecipe.id] = entry.recipe.id; _saveIdMap();
+              }
+            }
+            if (!storeRecipe) {
+              console.warn("[sync] Snack-recept niet gevonden, backendId:", entry.recipe.id, "naam:", entry.recipe.name);
+              return;
+            }
             if (!newSnackEntries[date]) newSnackEntries[date] = [];
             newSnackEntries[date].push({
               id: "bs_" + Math.random().toString(36).slice(2),
@@ -247,26 +276,53 @@ window.MPAPI = (function () {
             if (slot === undefined) return;
             const key = `${date}|${slot}`;
             const existing = state.plan[key];
-            newPlanEntries[key] = {
-              recipeId: storeRecipe.id,
-              portions: 1,
-              eaten: !!entry.eaten,
-              portionsEaten: entry.portions_eaten != null ? entry.portions_eaten : null,
-              manualName: null, status: null,
-              // Preserve note when the same recipe stays in the same slot
-              note: (existing && existing.recipeId === storeRecipe.id) ? (existing.note || null) : null,
-            };
+
+            if (entry.manual_name) {
+              // "Uit eten" / handmatig ingetypt eetmoment
+              newPlanEntries[key] = {
+                recipeId: null,
+                portions: 1,
+                eaten: !!entry.eaten,
+                portionsEaten: entry.portions_eaten != null ? entry.portions_eaten : null,
+                manualName: entry.manual_name,
+                status: null,
+                note: entry.notes || null,
+              };
+            } else {
+              // Recipe-based entry
+              let storeRecipe = window.MP.RECIPES.find(r => r._backendId === entry.recipe.id);
+              if (!storeRecipe) {
+                const nameLower = (entry.recipe.name || "").toLowerCase();
+                storeRecipe = window.MP.RECIPES.find(r => r.title && r.title.toLowerCase() === nameLower);
+                if (storeRecipe) {
+                  storeRecipe._backendId = entry.recipe.id;
+                  _idMap[storeRecipe.id] = entry.recipe.id; _saveIdMap();
+                }
+              }
+              if (!storeRecipe) {
+                console.warn("[sync] Recept niet gevonden, backendId:", entry.recipe.id, "naam:", entry.recipe.name);
+                return;
+              }
+              newPlanEntries[key] = {
+                recipeId: storeRecipe.id,
+                portions: 1,
+                eaten: !!entry.eaten,
+                portionsEaten: entry.portions_eaten != null ? entry.portions_eaten : null,
+                manualName: null, status: null,
+                // Preserve note when the same recipe stays in the same slot
+                note: (existing && existing.recipeId === storeRecipe.id) ? (existing.note || null) : null,
+              };
+            }
           }
         });
       });
 
-      // Remove recipe-based local entries that the backend no longer has
-      // (i.e. the meal was removed on another device).
-      // manualName entries ("Uit eten" etc.) are local-only — never touch them.
+      // Remove local entries that the backend no longer has for known weeks
+      // (meal was removed on another device). This now covers both recipe and manualName entries.
       Object.keys(state.plan).forEach(key => {
         const [date] = key.split("|");
         const entry = state.plan[key];
-        if (backendMondays.has(_isoMonday(date)) && entry && entry.recipeId && !newPlanEntries[key]) {
+        if (backendMondays.has(_isoMonday(date)) && entry && (entry.recipeId || entry.manualName) && !newPlanEntries[key]) {
           delete state.plan[key];
         }
       });

@@ -153,6 +153,7 @@ class MealPlanEntryCreate(BaseModel):
     meal_type: MealType = MealType.dinner
     servings_override: Optional[int] = None
     notes: Optional[str] = None
+    manual_name: Optional[str] = None
     eaten: bool = False
     portions_eaten: Optional[float] = None  # hoeveel porties de gebruiker persoonlijk at
 
@@ -164,6 +165,7 @@ class MealPlanEntryOut(BaseModel):
     meal_type: MealType
     servings_override: Optional[int] = None
     notes: Optional[str] = None
+    manual_name: Optional[str] = None
     eaten: bool = False
     portions_eaten: Optional[float] = None
     recipe: Optional[RecipeOut] = None
