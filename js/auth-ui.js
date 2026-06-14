@@ -172,17 +172,11 @@
 
     await window.MPAPI.loadUserRecipes();
 
-    // Push lokale wijzigingen naar backend vóór we laden, in twee gevallen:
-    // 1. Eerste keer na v128 deploy (éénmalige migratie-push om manualName-entries
-    //    te synchroniseren die vóór v126 nooit gepushed werden)
-    // 2. Recente mislukte push (dirty flag < 24u)
-    const dirtyTs = localStorage.getItem("mp_sync_dirty");
-    const needsMigrationPush = !localStorage.getItem("mp_manual_synced");
-    if (needsMigrationPush || (dirtyTs && (Date.now() - Number(dirtyTs)) < 86400000)) {
-      await window.MPAPI.pushAllPlans().catch(() => {});
-      if (needsMigrationPush) localStorage.setItem("mp_manual_synced", "1");
-    }
-    localStorage.removeItem("mp_sync_dirty");
+    // Push lokale data naar backend vóór we laden.
+    // onlyLocalData=true: pusht ALLEEN weken met echte lokale entries, nooit een lege week.
+    // Dit voorkomt dat een toestel zonder data (bijv. desktop bij eerste gebruik) de
+    // backend-data van een ander toestel (bijv. "Uit eten" op mobiel) overschrijft.
+    await window.MPAPI.pushAllPlans({ onlyLocalData: true }).catch(() => {});
 
     // Laad het weekmenu van de backend (vereist dat recepten al geladen zijn)
     await window.MPAPI.loadWeekPlan();
