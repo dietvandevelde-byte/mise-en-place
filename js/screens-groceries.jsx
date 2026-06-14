@@ -71,34 +71,52 @@ function GroceriesScreen({ layout, toast, openShare }) {
   );
 
   function renderGItem(it) {
+    const isEditing = editingItem === it.key;
     return React.createElement("div", { key: it.key, className: "gitem", "data-on": it.checked ? 1 : 0 },
       React.createElement("div", { className: "gcheck", onClick: () => S.actions.toggleGrocery(it.key) }, React.createElement(Icon, { name: "check", size: 15 })),
-      React.createElement("div", { className: "gitem__body", onClick: () => setEditingItem(editingItem === it.key ? null : it.key) },
+      React.createElement("div", { className: "gitem__body", onClick: () => setEditingItem(isEditing ? null : it.key) },
         React.createElement("div", { className: "gitem__name" }, it.name),
-        editingItem === it.key
-          ? React.createElement("div", { className: "gitem__sub", style: { color: "var(--ink-2)", marginTop: 4 } },
-              it.manual
-                ? React.createElement("input", { className: "gitem__qtyinput", placeholder: "Hoeveelheid, bv. 2 stuks", value: it.qtyNote, onChange: (ev) => S.actions.updateManual(it.manualId, { qtyNote: ev.target.value }), onClick: (ev) => ev.stopPropagation(), autoFocus: true })
-                : React.createElement("span", null, `Uit ${it.recipeCount} recept${it.recipeCount > 1 ? "en" : ""} · totaal ${fmtQty(it.qty, it.unit)}`))
+        isEditing
+          ? React.createElement("input", {
+              className: "gitem__qtyinput",
+              placeholder: it.qty > 0 ? fmtQty(it.qty, it.unit) : "Hoeveelheid",
+              value: it.qtyNote || "",
+              onChange: (ev) => it.manual
+                ? S.actions.updateManual(it.manualId, { qtyNote: ev.target.value })
+                : S.actions.setGroceryNote(it.key, ev.target.value),
+              onClick: (ev) => ev.stopPropagation(),
+              autoFocus: true,
+              style: { marginTop: 4 },
+            })
           : React.createElement("div", { className: "gitem__sub" },
               it.manual
-                ? it.qtyNote
-                  ? React.createElement("span", { className: "gitem__manual" }, it.qtyNote)
-                  : React.createElement("span", { className: "gitem__manual" }, "Zelf toegevoegd")
-                : it.recipeCount > 1 ? `uit ${it.recipeCount} recepten` : "uit 1 recept")),
-      it.qty != null && it.qty > 0 && React.createElement("div", { className: "gitem__qty" }, fmtQty(it.qty, it.unit)),
+                ? (it.qtyNote ? React.createElement("span", { className: "gitem__manual" }, it.qtyNote) : React.createElement("span", { className: "gitem__manual" }, "Zelf toegevoegd"))
+                : (it.recipeCount > 1 ? `uit ${it.recipeCount} recepten` : "uit 1 recept"))),
+      it.qtyNote
+        ? React.createElement("div", { className: "gitem__qty" }, it.qtyNote)
+        : (it.qty != null && it.qty > 0 && React.createElement("div", { className: "gitem__qty" }, fmtQty(it.qty, it.unit))),
       it.manual && React.createElement("button", { className: "gitem__del", onClick: (e) => { e.stopPropagation(); S.actions.removeManual(it.manualId); } }, React.createElement(Icon, { name: "trash", size: 16 })));
   }
 
-  function renderAisleEl(g, items) {
+  function renderAisleEl(g, items, twoCol) {
     const color = (S.sel.aisleMeta(g.cat) || {}).color || "brand";
     const orig = groups.find(x => x.cat === g.cat) || g;
+    let content;
+    if (twoCol && items.length > 1) {
+      const sorted = [...items.filter(it => !it.checked), ...items.filter(it => it.checked)];
+      const half = Math.ceil(sorted.length / 2);
+      content = React.createElement("div", { style: { display: "flex", gap: 4 } },
+        React.createElement("div", { style: { flex: 1, minWidth: 0 } }, sorted.slice(0, half).map(renderGItem)),
+        React.createElement("div", { style: { flex: 1, minWidth: 0 } }, sorted.slice(half).map(renderGItem)));
+    } else {
+      content = items.map(renderGItem);
+    }
     return React.createElement("div", { key: g.cat, className: "aisle", "data-c": color },
       React.createElement("div", { className: "aisle__head" },
         React.createElement("span", { className: "aisle__dot" }),
         React.createElement("div", { className: "aisle__name" }, g.name),
         React.createElement("div", { className: "aisle__count" }, orig.items.filter(i => i.checked).length, "/", orig.items.length)),
-      items.map(it => renderGItem(it)));
+      content);
   }
 
   const emptyEl = React.createElement("div", { className: "empty" },
@@ -143,15 +161,19 @@ function GroceriesScreen({ layout, toast, openShare }) {
       aisles = React.createElement("div", { className: "aislewrap aislewrap--cols" }, renderCol(col1), renderCol(col2));
     }
   } else {
-    // Mobile: flat aisles, checked items at bottom of each aisle
-    const mobileGroups = groups.map(g => ({
-      ...g,
-      items: hideChecked
-        ? g.items.filter(it => !it.checked)
-        : [...g.items.filter(it => !it.checked), ...g.items.filter(it => it.checked)]
-    })).filter(g => g.items.length > 0);
-    aisles = React.createElement("div", { className: "aislewrap" },
-      hideChecked && mobileGroups.length === 0 ? allCheckedEl : mobileGroups.map(g => renderAisleEl(g, g.items)));
+    // Mobile: 2 columns within each aisle, checked items sink to bottom of their column
+    const mobileGroups = hideChecked
+      ? groups.filter(g => g.items.some(it => !it.checked))
+      : groups;
+    if (hideChecked && mobileGroups.length === 0) {
+      aisles = React.createElement("div", { className: "aislewrap" }, allCheckedEl);
+    } else {
+      aisles = React.createElement("div", { className: "aislewrap" },
+        mobileGroups.map(g => {
+          const displayItems = hideChecked ? g.items.filter(it => !it.checked) : g.items;
+          return renderAisleEl(g, displayItems, true);
+        }));
+    }
   }
 
   return React.createElement("div", { className: "wrap screen-anim" },

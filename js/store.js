@@ -438,6 +438,7 @@
         it.qty = Math.round(it.qty * 100) / 100;
         it.recipeCount = it.recipes.size;
         it.checked = !!state.checked[it.key];
+        it.qtyNote = (state.groceryNotes || {})[it.key] || "";
         const a = aisleOf(it.cat);
         (byAisle[a] = byAisle[a] || []).push(it);
       });
@@ -778,6 +779,13 @@
     },
     updateManual(id, patch) {
       set((st) => { st.manual = st.manual.map((m) => m.id === id ? { ...m, ...patch } : m); return { ...st }; });
+    },
+    setGroceryNote(key, note) {
+      set((st) => {
+        const groceryNotes = { ...(st.groceryNotes || {}) };
+        if (note) groceryNotes[key] = note; else delete groceryNotes[key];
+        return { ...st, groceryNotes };
+      });
     },
     removeManual(id) {
       set((st) => { st.manual = st.manual.filter((m) => m.id !== id); return { ...st }; });
