@@ -222,19 +222,19 @@ window.sourceLabel = sourceLabel;
 
 function ImportSheet({ onClose, toast }) {
   const isMobile = window._mpPlatform === "mobile";
-  const [tab, setTab] = useState(isMobile ? "screenshot" : "url");
+  const [tab, setTab] = useState("url");
   const [txt, setTxt] = useState("");
   const [url, setUrl] = useState("");
   const [img, setImg] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [screenshotSource, setScreenshotSource] = useState("");
   const [tekstSource, setTekstSource] = useState("");
-  const fileInputRef = React.useRef(null);
-  React.useEffect(() => {
-    if (tab === "screenshot" && isMobile && fileInputRef.current) fileInputRef.current.click();
-  }, [tab]);
   const [err, setErr] = useState(null);
   const [busy, setBusy] = useState(false);
+  const cameraRef = React.useRef(null);
+  const filesRef  = React.useRef(null);
+  function triggerCamera() { if (cameraRef.current) cameraRef.current.click(); }
+  function triggerFiles()  { if (filesRef.current)  filesRef.current.click(); }
 
   async function _saveRecipe(result, overrideSource) {
     const r = result.recipe;
@@ -316,68 +316,89 @@ function ImportSheet({ onClose, toast }) {
     } catch (e) { setErr("Kon JSON niet lezen: " + e.message); }
   }
 
-  const seg = React.createElement("div", { className: "seg", style: { marginBottom: 16 } },
-    React.createElement("button", { "data-active": tab === "url"        ? 1 : 0, onClick: () => { setTab("url");        setErr(null); } }, "URL"),
-    React.createElement("button", { "data-active": tab === "screenshot" ? 1 : 0, onClick: () => { setTab("screenshot"); setErr(null); } }, isMobile ? "📷 Foto" : "Screenshot"),
-    !isMobile && React.createElement("button", { "data-active": tab === "tekst" ? 1 : 0, onClick: () => { setTab("tekst"); setErr(null); } }, "Tekst"),
-    !isMobile && React.createElement("button", { "data-active": tab === "json"  ? 1 : 0, onClick: () => { setTab("json");  setErr(null); } }, "JSON"));
+  // Twee verborgen inputs altijd in de DOM zodat refs beschikbaar zijn wanneer de tab-knop wordt gedrukt
+  const hiddenInputs = isMobile && React.createElement(React.Fragment, null,
+    React.createElement("input", { ref: cameraRef, type: "file", accept: "image/*", capture: "environment", style: { display: "none" }, onChange: (e) => { setSelectedFile(e.target.files[0] || null); setErr(null); } }),
+    React.createElement("input", { ref: filesRef,  type: "file", accept: "image/*",                          style: { display: "none" }, onChange: (e) => { setSelectedFile(e.target.files[0] || null); setErr(null); } }));
 
+  const seg = isMobile
+    ? React.createElement("div", { className: "seg", style: { marginBottom: 16 } },
+        React.createElement("button", { "data-active": tab === "url"      ? 1 : 0, onClick: () => { setTab("url");     setErr(null); } }, "URL"),
+        React.createElement("button", { "data-active": tab === "foto"     ? 1 : 0, onClick: () => { setTab("foto");    setErr(null); setSelectedFile(null); triggerCamera(); } }, "📷 Foto"),
+        React.createElement("button", { "data-active": tab === "bestand"  ? 1 : 0, onClick: () => { setTab("bestand"); setErr(null); setSelectedFile(null); triggerFiles(); } }, "📁 Bestand"))
+    : React.createElement("div", { className: "seg", style: { marginBottom: 16 } },
+        React.createElement("button", { "data-active": tab === "url"        ? 1 : 0, onClick: () => { setTab("url");        setErr(null); } }, "URL"),
+        React.createElement("button", { "data-active": tab === "screenshot" ? 1 : 0, onClick: () => { setTab("screenshot"); setErr(null); } }, "Screenshot"),
+        React.createElement("button", { "data-active": tab === "tekst"      ? 1 : 0, onClick: () => { setTab("tekst");      setErr(null); } }, "Tekst"),
+        React.createElement("button", { "data-active": tab === "json"       ? 1 : 0, onClick: () => { setTab("json");       setErr(null); } }, "JSON"));
+
+  const importBtn = (onClick) => React.createElement("button", { className: "btn btn--block", onClick, disabled: busy },
+    busy ? React.createElement(React.Fragment, null, React.createElement("span", { className: "spinner" }), "Bezig…")
+         : React.createElement(React.Fragment, null, React.createElement(Icon, { name: "spark", size: 18 }), "Importeren met AI"));
+
+  // ── Mobiel: Foto tab ──────────────────────────────────────────────────────
+  if (isMobile && tab === "foto") {
+    return React.createElement(Sheet, { eyebrow: "Recept importeren", eyebrowColor: "teal", title: "Via foto", onClose, wide: true, foot: importBtn(doScreenshot) },
+      hiddenInputs, seg,
+      selectedFile
+        ? React.createElement("div", { className: "import__hint", style: { color: "var(--brand)", fontWeight: 600 } }, "✓ Foto geselecteerd: ", selectedFile.name)
+        : React.createElement("div", { className: "import__hint" }, "Camera opent automatisch. Maak een foto van het recept."),
+      React.createElement("button", { className: "btn btn--ghost btn--block", style: { marginTop: 12 }, onClick: triggerCamera }, "📷 Opnieuw foto maken"),
+      err && React.createElement("div", { className: "import__err" }, err));
+  }
+
+  // ── Mobiel: Bestand tab ───────────────────────────────────────────────────
+  if (isMobile && tab === "bestand") {
+    return React.createElement(Sheet, { eyebrow: "Recept importeren", eyebrowColor: "teal", title: "Via bestand", onClose, wide: true, foot: importBtn(doScreenshot) },
+      hiddenInputs, seg,
+      selectedFile
+        ? React.createElement("div", { className: "import__hint", style: { color: "var(--brand)", fontWeight: 600 } }, "✓ Geselecteerd: ", selectedFile.name)
+        : React.createElement("div", { className: "import__hint" }, "Kies een afbeelding van een recept uit je bestanden."),
+      React.createElement("button", { className: "btn btn--ghost btn--block", style: { marginTop: 12 }, onClick: triggerFiles }, "📁 Bestand kiezen"),
+      err && React.createElement("div", { className: "import__err" }, err));
+  }
+
+  // ── URL tab (mobiel en desktop) ───────────────────────────────────────────
   if (tab === "url") {
-    return React.createElement(Sheet, {
-      eyebrow: "Recept importeren", eyebrowColor: "teal", title: "Via URL", onClose, wide: true,
-      foot: React.createElement("button", { className: "btn btn--block", onClick: doUrl, disabled: busy },
-        busy ? React.createElement(React.Fragment, null, React.createElement("span", { className: "spinner" }), "Bezig…")
-             : React.createElement(React.Fragment, null, React.createElement(Icon, { name: "spark", size: 18 }), "Importeren met AI")),
-    },
-      seg,
+    return React.createElement(Sheet, { eyebrow: "Recept importeren", eyebrowColor: "teal", title: "Via URL", onClose, wide: true, foot: importBtn(doUrl) },
+      hiddenInputs, seg,
       React.createElement("div", { className: "import__hint" }, "Plak de link van een recept. De AI leest het recept automatisch in, inclusief ingrediënten, voedingswaarden en bereiding."),
       React.createElement("input", { className: "input", type: "url", placeholder: "https://www.ah.nl/allerhande/recept/...", value: url, onChange: (e) => { setUrl(e.target.value); setErr(null); }, style: { marginTop: 12 } }),
-      err && React.createElement("div", { className: "import__err" }, err)
-    );
+      err && React.createElement("div", { className: "import__err" }, err));
   }
 
+  // ── Desktop: Screenshot tab ───────────────────────────────────────────────
   if (tab === "screenshot") {
-    return React.createElement(Sheet, {
-      eyebrow: "Recept importeren", eyebrowColor: "teal", title: "Via screenshot", onClose, wide: true,
-      foot: React.createElement("button", { className: "btn btn--block", onClick: doScreenshot, disabled: busy },
-        busy ? React.createElement(React.Fragment, null, React.createElement("span", { className: "spinner" }), "Bezig…")
-             : React.createElement(React.Fragment, null, React.createElement(Icon, { name: "spark", size: 18 }), "Importeren met AI")),
-    },
+    return React.createElement(Sheet, { eyebrow: "Recept importeren", eyebrowColor: "teal", title: "Via screenshot", onClose, wide: true, foot: importBtn(doScreenshot) },
       seg,
-      React.createElement("div", { className: "import__hint" }, isMobile ? "Maak een foto van een recept. De AI herkent automatisch alle informatie." : "Maak een screenshot van een recept en upload het hier. De AI herkent automatisch alle informatie."),
-      React.createElement("input", { ref: fileInputRef, type: "file", accept: "image/*", capture: "environment", onChange: (e) => { setSelectedFile(e.target.files[0] || null); setErr(null); }, style: { marginTop: 12, width: "100%" } }),
-      !isMobile && React.createElement("input", { className: "input", type: "text", placeholder: "Bron (bijv. Njam, Dagelijkse kost…)", value: screenshotSource, onChange: (e) => setScreenshotSource(e.target.value), style: { marginTop: 10 } }),
-      err && React.createElement("div", { className: "import__err" }, err)
-    );
+      React.createElement("div", { className: "import__hint" }, "Maak een screenshot van een recept en upload het hier. De AI herkent automatisch alle informatie."),
+      React.createElement("input", { type: "file", accept: "image/*", onChange: (e) => { setSelectedFile(e.target.files[0] || null); setErr(null); }, style: { marginTop: 12, width: "100%" } }),
+      React.createElement("input", { className: "input", type: "text", placeholder: "Bron (bijv. Njam, Dagelijkse kost…)", value: screenshotSource, onChange: (e) => setScreenshotSource(e.target.value), style: { marginTop: 10 } }),
+      err && React.createElement("div", { className: "import__err" }, err));
   }
 
+  // ── Desktop: Tekst tab ────────────────────────────────────────────────────
   if (tab === "tekst") {
-    return React.createElement(Sheet, {
-      eyebrow: "Recept importeren", eyebrowColor: "teal", title: "Via tekst", onClose, wide: true,
+    return React.createElement(Sheet, { eyebrow: "Recept importeren", eyebrowColor: "teal", title: "Via tekst", onClose, wide: true,
       foot: React.createElement("button", { className: "btn btn--block", onClick: doTekst, disabled: busy },
         busy ? React.createElement(React.Fragment, null, React.createElement("span", { className: "spinner" }), "Bezig…")
-             : React.createElement(React.Fragment, null, React.createElement(Icon, { name: "spark", size: 18 }), "Vul in met AI")),
-    },
+             : React.createElement(React.Fragment, null, React.createElement(Icon, { name: "spark", size: 18 }), "Vul in met AI")) },
       seg,
       React.createElement("div", { className: "import__hint" }, "Plak de tekst van een recept. De AI haalt er automatisch de titel, porties, voedingswaarden, ingrediënten en bereiding uit."),
       React.createElement("input", { className: "input", type: "text", placeholder: "Bron (bijv. Njam, Dagelijkse kost…)", value: tekstSource, onChange: (e) => setTekstSource(e.target.value), style: { marginTop: 12 } }),
       React.createElement("textarea", { className: "input", rows: 7, placeholder: "Plak hier de recepttekst…", value: txt, onChange: (e) => { setTxt(e.target.value); setErr(null); }, style: { marginTop: 8 } }),
-      err && React.createElement("div", { className: "import__err" }, err)
-    );
+      err && React.createElement("div", { className: "import__err" }, err));
   }
 
-  return React.createElement(Sheet, {
-    eyebrow: "Recept importeren", eyebrowColor: "teal", title: "Plak JSON", onClose, wide: true,
+  // ── Desktop: JSON tab ─────────────────────────────────────────────────────
+  return React.createElement(Sheet, { eyebrow: "Recept importeren", eyebrowColor: "teal", title: "Plak JSON", onClose, wide: true,
     foot: React.createElement(React.Fragment, null,
       React.createElement("button", { className: "btn btn--ghost", onClick: () => { setTxt(EXAMPLE_JSON); setErr(null); } }, "Voorbeeld"),
-      React.createElement("button", { className: "btn btn--block", onClick: doImportJSON, disabled: !txt.trim() }, React.createElement(Icon, { name: "clipboard", size: 18 }), "Importeren")),
-  },
+      React.createElement("button", { className: "btn btn--block", onClick: doImportJSON, disabled: !txt.trim() }, React.createElement(Icon, { name: "clipboard", size: 18 }), "Importeren")) },
     seg,
-    React.createElement("div", { className: "import__hint" },
-      "Plak een recept in JSON-formaat volgens onderstaand voorbeeld."),
+    React.createElement("div", { className: "import__hint" }, "Plak een recept in JSON-formaat volgens onderstaand voorbeeld."),
     React.createElement("textarea", { className: "input", rows: 11, placeholder: "{ \"title\": ... }", value: txt, onChange: (e) => { setTxt(e.target.value); setErr(null); }, style: { marginTop: 12 } }),
-    err && React.createElement("div", { className: "import__err" }, err)
-  );
+    err && React.createElement("div", { className: "import__err" }, err));
 }
 window.ImportSheet = ImportSheet;
 
