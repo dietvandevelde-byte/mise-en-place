@@ -217,18 +217,11 @@ window.MPAPI = (function () {
       // Collect all weeks the backend has data for (by ISO Monday)
       const backendMondays = new Set(plans.map(p => p.week_start));
 
-      // Clear local plan + snack entries for those weeks so removed/changed meals
-      // from other devices are not kept (backend is the single source of truth)
-      Object.keys(state.plan).forEach(key => {
-        const [date] = key.split("|");
-        if (backendMondays.has(_isoMonday(date))) delete state.plan[key];
-      });
-      if (!state.snacks) state.snacks = {};
-      Object.keys(state.snacks).forEach(date => {
-        if (backendMondays.has(_isoMonday(date))) delete state.snacks[date];
-      });
+      // Build new plan entries from backend FIRST (before touching state),
+      // so we can safely read existing local entries (e.g. to preserve notes)
+      const newPlanEntries = {};
+      const newSnackEntries = {};
 
-      // Rebuild plan + snacks from backend data
       plans.forEach(plan => {
         (plan.entries || []).forEach(entry => {
           const offset = DAY_OFFSETS[entry.day];
@@ -240,8 +233,8 @@ window.MPAPI = (function () {
           if (!storeRecipe) return;
 
           if (entry.meal_type === "snack") {
-            if (!state.snacks[date]) state.snacks[date] = [];
-            state.snacks[date].push({
+            if (!newSnackEntries[date]) newSnackEntries[date] = [];
+            newSnackEntries[date].push({
               id: "bs_" + Math.random().toString(36).slice(2),
               recipeId: storeRecipe.id,
               portions: 1,
@@ -253,16 +246,40 @@ window.MPAPI = (function () {
             const slot = MEAL_TO_SLOT[entry.meal_type];
             if (slot === undefined) return;
             const key = `${date}|${slot}`;
-            state.plan[key] = {
+            const existing = state.plan[key];
+            newPlanEntries[key] = {
               recipeId: storeRecipe.id,
               portions: 1,
               eaten: !!entry.eaten,
               portionsEaten: entry.portions_eaten != null ? entry.portions_eaten : null,
-              manualName: null, status: null, note: null,
+              manualName: null, status: null,
+              // Preserve note when the same recipe stays in the same slot
+              note: (existing && existing.recipeId === storeRecipe.id) ? (existing.note || null) : null,
             };
           }
         });
       });
+
+      // Remove recipe-based local entries that the backend no longer has
+      // (i.e. the meal was removed on another device).
+      // manualName entries ("Uit eten" etc.) are local-only — never touch them.
+      Object.keys(state.plan).forEach(key => {
+        const [date] = key.split("|");
+        const entry = state.plan[key];
+        if (backendMondays.has(_isoMonday(date)) && entry && entry.recipeId && !newPlanEntries[key]) {
+          delete state.plan[key];
+        }
+      });
+      // Overlay backend recipe entries (overwrites any local recipe or manualName for same slot)
+      Object.assign(state.plan, newPlanEntries);
+
+      // Snacks are always recipe-based: fully replace for backend-known dates
+      if (!state.snacks) state.snacks = {};
+      Object.keys(state.snacks).forEach(date => {
+        if (backendMondays.has(_isoMonday(date))) delete state.snacks[date];
+      });
+      Object.assign(state.snacks, newSnackEntries);
+
     } catch (e) {
       console.warn("Kon weekmenu niet laden:", e.message);
     }
