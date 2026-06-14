@@ -402,7 +402,7 @@
         fat: _scraped.fat || 0,
         instructions: (_scraped.instructions || []).map(s => s.text || "").join("\n\n"),
         ingredients: (_scraped.ingredients || []).map(i => ({
-          name: i.name, qty: i.amount || 0, unit: i.unit || "", cat: "Voorraad"
+          name: i.name, qty: i.amount || 0, unit: i.unit || "", cat: i.cat || "Voorraad"
         })),
         image: null,
         cats: [],

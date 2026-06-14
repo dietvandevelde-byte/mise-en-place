@@ -86,7 +86,7 @@ function GroceriesScreen({ layout, toast, openShare }) {
                   ? React.createElement("span", { className: "gitem__manual" }, it.qtyNote)
                   : React.createElement("span", { className: "gitem__manual" }, "Zelf toegevoegd")
                 : it.recipeCount > 1 ? `uit ${it.recipeCount} recepten` : "uit 1 recept")),
-      it.qty != null && React.createElement("div", { className: "gitem__qty" }, fmtQty(it.qty, it.unit)),
+      it.qty != null && it.qty > 0 && React.createElement("div", { className: "gitem__qty" }, fmtQty(it.qty, it.unit)),
       it.manual && React.createElement("button", { className: "gitem__del", onClick: (e) => { e.stopPropagation(); S.actions.removeManual(it.manualId); } }, React.createElement(Icon, { name: "trash", size: 16 })));
   }
 
