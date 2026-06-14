@@ -213,12 +213,19 @@ function WeekScreen({ layout, openSlot, openSnacks, toast, swap, openShare }) {
             onClick: () => { if (!mobileDragKey) cellClick(date, meta.i); },
             onTouchStart: filledCell ? (ev) => {
               const t0 = ev.touches[0];
-              touchDrag.current = { date, slot: meta.i, active: false, startX: t0.clientX, startY: t0.clientY,
+              const startX = t0.clientX, startY = t0.clientY;
+              const dragText = names.join(', ');
+              touchDrag.current = { date, slot: meta.i, active: false, startX, startY,
                 timer: setTimeout(() => {
                   if (touchDrag.current) {
                     touchDrag.current.active = true;
                     setMobileDragKey(slotDragKey);
                     if (navigator.vibrate) navigator.vibrate(30);
+                    // Zwevend label aanmaken dat de vinger volgt
+                    const g = document.createElement('div');
+                    g.id = 'mp-drag-ghost'; g.className = 'drag-ghost'; g.textContent = dragText;
+                    g.style.left = startX + 'px'; g.style.top = startY + 'px';
+                    document.body.appendChild(g);
                   }
                 }, 450) };
             } : undefined,
@@ -234,6 +241,9 @@ function WeekScreen({ layout, openSlot, openSnacks, toast, swap, openShare }) {
               const el = document.elementFromPoint(t0.clientX, t0.clientY);
               const target = el && el.closest('[data-drag-key]');
               setMobileDragOver(target ? target.getAttribute('data-drag-key') : null);
+              // Label meebewegens met de vinger
+              const g = document.getElementById('mp-drag-ghost');
+              if (g) { g.style.left = t0.clientX + 'px'; g.style.top = t0.clientY + 'px'; }
             },
             onTouchEnd: (ev) => {
               if (!touchDrag.current) return;
@@ -242,6 +252,7 @@ function WeekScreen({ layout, openSlot, openSnacks, toast, swap, openShare }) {
               touchDrag.current = null;
               setMobileDragKey(null);
               setMobileDragOver(null);
+              document.getElementById('mp-drag-ghost')?.remove();
               if (!active) return;
               const t0 = ev.changedTouches[0];
               const el = document.elementFromPoint(t0.clientX, t0.clientY);
@@ -255,6 +266,7 @@ function WeekScreen({ layout, openSlot, openSnacks, toast, swap, openShare }) {
             onTouchCancel: () => {
               if (touchDrag.current) { clearTimeout(touchDrag.current.timer); touchDrag.current = null; }
               setMobileDragKey(null); setMobileDragOver(null);
+              document.getElementById('mp-drag-ghost')?.remove();
             },
           },
             React.createElement("div", { className: "wslot__spine" }),

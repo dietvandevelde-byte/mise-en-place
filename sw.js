@@ -1,5 +1,5 @@
-/* Mise en Place — Service Worker v128 */
-const CACHE = "mep-v128";
+/* Mise en Place — Service Worker v129 */
+const CACHE = "mep-v129";
 const OFFLINE_URL = "/app-mobile.html";
 
 const PRECACHE = [
@@ -7,7 +7,7 @@ const PRECACHE = [
   "/app-desktop.html",
   "/styles/tokens.css?v=96",
   "/styles/app.css?v=96",
-  "/styles/screens.css?v=122",
+  "/styles/screens.css?v=129",
   "/js/api.js?v=128",
   "/js/data.js?v=96",
   "/js/store.js?v=119",
@@ -15,7 +15,7 @@ const PRECACHE = [
   "/js/components.jsx?v=96",
   "/js/slot-editor.jsx?v=119",
   "/js/screens-today.jsx?v=118",
-  "/js/screens-week.jsx?v=127",
+  "/js/screens-week.jsx?v=129",
   "/js/screens-groceries.jsx?v=119",
   "/js/screens-recipes.jsx?v=127",
   "/js/screens-profile.jsx?v=96",
