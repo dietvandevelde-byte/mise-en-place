@@ -98,25 +98,15 @@ function GroceriesScreen({ layout, toast, openShare }) {
       it.manual && React.createElement("button", { className: "gitem__del", onClick: (e) => { e.stopPropagation(); S.actions.removeManual(it.manualId); } }, React.createElement(Icon, { name: "trash", size: 16 })));
   }
 
-  function renderAisleEl(g, items, twoCol) {
+  function renderAisleEl(g, items) {
     const color = (S.sel.aisleMeta(g.cat) || {}).color || "brand";
     const orig = groups.find(x => x.cat === g.cat) || g;
-    let content;
-    if (twoCol && items.length > 1) {
-      const sorted = [...items.filter(it => !it.checked), ...items.filter(it => it.checked)];
-      const half = Math.ceil(sorted.length / 2);
-      content = React.createElement("div", { style: { display: "flex", gap: 4 } },
-        React.createElement("div", { style: { flex: 1, minWidth: 0 } }, sorted.slice(0, half).map(renderGItem)),
-        React.createElement("div", { style: { flex: 1, minWidth: 0 } }, sorted.slice(half).map(renderGItem)));
-    } else {
-      content = items.map(renderGItem);
-    }
     return React.createElement("div", { key: g.cat, className: "aisle", "data-c": color },
       React.createElement("div", { className: "aisle__head" },
         React.createElement("span", { className: "aisle__dot" }),
         React.createElement("div", { className: "aisle__name" }, g.name),
         React.createElement("div", { className: "aisle__count" }, orig.items.filter(i => i.checked).length, "/", orig.items.length)),
-      content);
+      items.map(it => renderGItem(it)));
   }
 
   const emptyEl = React.createElement("div", { className: "empty" },
@@ -161,19 +151,15 @@ function GroceriesScreen({ layout, toast, openShare }) {
       aisles = React.createElement("div", { className: "aislewrap aislewrap--cols" }, renderCol(col1), renderCol(col2));
     }
   } else {
-    // Mobile: 2 columns within each aisle, checked items sink to bottom of their column
-    const mobileGroups = hideChecked
-      ? groups.filter(g => g.items.some(it => !it.checked))
-      : groups;
-    if (hideChecked && mobileGroups.length === 0) {
-      aisles = React.createElement("div", { className: "aislewrap" }, allCheckedEl);
-    } else {
-      aisles = React.createElement("div", { className: "aislewrap" },
-        mobileGroups.map(g => {
-          const displayItems = hideChecked ? g.items.filter(it => !it.checked) : g.items;
-          return renderAisleEl(g, displayItems, true);
-        }));
-    }
+    // Mobile: flat aisles, checked items at bottom of each aisle
+    const mobileGroups = groups.map(g => ({
+      ...g,
+      items: hideChecked
+        ? g.items.filter(it => !it.checked)
+        : [...g.items.filter(it => !it.checked), ...g.items.filter(it => it.checked)]
+    })).filter(g => g.items.length > 0);
+    aisles = React.createElement("div", { className: "aislewrap" },
+      hideChecked && mobileGroups.length === 0 ? allCheckedEl : mobileGroups.map(g => renderAisleEl(g, g.items)));
   }
 
   return React.createElement("div", { className: "wrap screen-anim" },
