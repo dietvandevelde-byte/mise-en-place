@@ -171,12 +171,12 @@ window.MPAPI = (function () {
                 portions_eaten: e.portionsEaten != null ? e.portionsEaten : null,
               });
             }
-          } else if (e.manualName) {
+          } else if (e.manualName || e.status) {
             entries.push({
               day: dayName,
               meal_type: SLOT_TO_MEAL[slot],
               recipe_id: null,
-              manual_name: e.manualName,
+              manual_name: e.status || e.manualName,
               notes: e.note || null,
               eaten: !!e.eaten,
               portions_eaten: e.portionsEaten != null ? e.portionsEaten : null,
@@ -278,14 +278,14 @@ window.MPAPI = (function () {
             const existing = state.plan[key];
 
             if (entry.manual_name) {
-              // "Uit eten" / handmatig ingetypt eetmoment
+              const knownStatus = window.MP.STATUSES && window.MP.STATUSES.find(s => s.key === entry.manual_name);
               newPlanEntries[key] = {
                 recipeId: null,
                 portions: 1,
                 eaten: !!entry.eaten,
                 portionsEaten: entry.portions_eaten != null ? entry.portions_eaten : null,
-                manualName: entry.manual_name,
-                status: null,
+                status: knownStatus ? entry.manual_name : null,
+                manualName: knownStatus ? null : entry.manual_name,
                 note: entry.notes || null,
               };
             } else {

@@ -339,7 +339,7 @@
       return p ? [{ primary: true, exId: null, e: p }] : [];
     },
     slotFilled: (date, slot) => sel.mealEntries(date, slot).some((e) => e && (e.recipeId || e.manualName || e.status)),
-    slotKcal: (date, slot) => sel.mealEntries(date, slot).reduce((a, e) => a + (e.recipeId ? entryNutrition(e).kcal : 0), 0),
+    slotKcal: (date, slot) => sel.mealEntries(date, slot).reduce((a, e) => a + entryNutrition(e).kcal + (e.estimatedKcal || 0), 0),
     dayEntries(date, { eatenOnly = false, recipeOnly = true, onlyVisible = false } = {}) {
       const out = [];
       for (const s of [0, 2, 4]) {
@@ -501,12 +501,12 @@
         return { ...st, plan: { ...st.plan } };
       });
     },
-    setStatus(date, slot, status, note) {
+    setStatus(date, slot, status, note, estimatedKcal) {
       set((st) => {
         const k = `${date}|${slot}`;
         const prev = st.plan[k] || {};
         if (slot === 4) { const lk = `${addDays(date, 1)}|2`; if (st.plan[lk] && st.plan[lk].leftoverOf === k) delete st.plan[lk]; }
-        st.plan[k] = { recipeId: null, portions: 1, eaten: false, manualName: null, status, note: note != null ? note : (prev.note || null) };
+        st.plan[k] = { recipeId: null, portions: 1, eaten: false, manualName: null, status, note: note != null ? note : (prev.note || null), estimatedKcal: estimatedKcal || prev.estimatedKcal || 0 };
         return { ...st, plan: { ...st.plan } };
       });
     },

@@ -62,8 +62,8 @@
     </div>
     <div style="display:flex;gap:8px;margin-bottom:16px;">
       <button onclick="window._scraperMode('url')"        id="stab-url" style="flex:1;padding:8px;border:2px solid #CF6238;border-radius:10px;background:none;cursor:pointer;font-weight:700;font-size:13px;color:#CF6238;">Via URL</button>
-      <button onclick="window._scraperMode('screenshot')" id="stab-ss"  style="flex:1;padding:8px;border:2px solid #DDD7CC;border-radius:10px;background:none;cursor:pointer;font-weight:700;font-size:13px;color:#938A7C;">Schermafb.</button>
-      <button onclick="window._scraperMode('camera')"     id="stab-cam" style="flex:1;padding:8px;border:2px solid #DDD7CC;border-radius:10px;background:none;cursor:pointer;font-weight:700;font-size:13px;color:#938A7C;">📷 Camera</button>
+      <button onclick="window._scraperMode('screenshot')" id="stab-ss"  style="flex:1;padding:8px;border:2px solid #DDD7CC;border-radius:10px;background:none;cursor:pointer;font-weight:700;font-size:13px;color:#938A7C;${window._mpPlatform==='mobile'?'display:none':''}">Schermafb.</button>
+      <button onclick="window._scraperMode('camera')"     id="stab-cam" style="flex:1;padding:8px;border:2px solid #DDD7CC;border-radius:10px;background:none;cursor:pointer;font-weight:700;font-size:13px;color:#938A7C;">${window._mpPlatform==='mobile'?'📷 Foto':'📷 Camera'}</button>
     </div>
     <div id="scraper-url-panel">
       <input id="scraper-url" type="url" placeholder="https://www.ah.nl/allerhande/recept/..." style="width:100%;padding:10px 13px;border:1.5px solid #DDD7CC;border-radius:10px;font-size:14px;font-family:inherit;box-sizing:border-box;margin-bottom:12px;" />
@@ -229,7 +229,7 @@
     const _dirtyTs = localStorage.getItem("mp_sync_dirty");
     const _stNow   = window.MPStore.getState();
     const _hasDirty = _dirtyTs && (Date.now() - Number(_dirtyTs)) < 86400000; // 24u
-    const _hasManualEntries = Object.values(_stNow.plan || {}).some(e => e && e.manualName);
+    const _hasManualEntries = Object.values(_stNow.plan || {}).some(e => e && (e.manualName || e.status));
     if (_hasDirty || _hasManualEntries) {
       window.MPAPI.pushAllPlans().catch(() => {});
     }
@@ -317,12 +317,7 @@
     document.getElementById("scraper-file").value = "";
     document.getElementById("scraper-cam-file").value = "";
     document.getElementById("scraper-cam-name").textContent = "";
-    // Mobiel: verberg screenshot-tab, hernoem camera-knop naar "Foto"
-    if (window._mpPlatform === "mobile") {
-      document.getElementById("stab-ss").style.display = "none";
-      document.getElementById("stab-cam").textContent = "📷 Foto";
-    }
-    window._scraperMode("url");
+    window._scraperMode(window._mpPlatform === "mobile" ? "camera" : "url");
     document.getElementById("mp-scraper").style.display = "flex";
   };
 

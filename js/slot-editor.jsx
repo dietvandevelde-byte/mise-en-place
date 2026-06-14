@@ -25,7 +25,7 @@ function RecipePicker({ slot, onPick }) {
     });
   }, [q, all, cats, slot, recipes.length]);
 
-  const toggleCat = (key) => setCats(prev => prev === key ? "" : key);
+  const toggleCat = (key) => { setCats(prev => prev === key ? "" : key); setShowFilters(false); };
 
   return React.createElement(React.Fragment, null,
     React.createElement("div", { className: "picker__search" },
@@ -99,6 +99,8 @@ function SlotSheet({ date, slot, onClose, onSwapStart, toast }) {
   const [note, setNote] = useState(entry && entry.note ? entry.note : "");
   const [cookDouble, setCookDouble] = useState(entry ? !!entry.cookDouble : false);
   const [importing, setImporting] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState(null);
+  const [manualKcal, setManualKcal] = useState("");
   const dowLong = cap(S.fmt.fmtDowLong(date));
 
   function confirmPick(r) { setPendingRecipe(r); setPortions(1); setMode("confirm"); }
@@ -120,6 +122,9 @@ function SlotSheet({ date, slot, onClose, onSwapStart, toast }) {
       React.createElement("button", { className: "actionrow", onClick: () => setMode("pick") },
         React.createElement(Icon, { name: "swap", size: 20 }),
         React.createElement("div", { className: "actionrow__txt" }, recipe ? "Vervangen" : "Iets anders kiezen", React.createElement("small", null, "Recept of andere optie"))),
+      entry && entry.status && React.createElement("button", { className: "actionrow", onClick: () => { setPendingStatus(window.MP.statusByKey(entry.status)); setManualKcal(entry.estimatedKcal ? String(entry.estimatedKcal) : ""); setMode("statusKcal"); } },
+        React.createElement(Icon, { name: "note", size: 20 }),
+        React.createElement("div", { className: "actionrow__txt" }, "Calorieën aanpassen", React.createElement("small", null, entry.estimatedKcal ? `${entry.estimatedKcal} kcal geschat` : "Nog niet ingesteld"))),
       recipe && React.createElement("button", { className: "actionrow", onClick: () => setMode("portions") },
         React.createElement(Icon, { name: "user", size: 20 }),
         React.createElement("div", { className: "actionrow__txt" }, "Porties aanpassen", React.createElement("small", null, `Nu ${fmtPortions(entry.portions)}`))),
@@ -159,9 +164,31 @@ function SlotSheet({ date, slot, onClose, onSwapStart, toast }) {
       React.createElement("div", { style: { marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--line)" } },
         React.createElement("div", { className: "section-label" }, "Geen recept? Andere opties"),
         React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
-          window.MP.STATUSES.map((s) => React.createElement("button", { key: s.key, className: "optbtn", onClick: () => { S.actions.setStatus(date, slot, s.key, note.trim() || null); toast && toast(`${s.name} ingepland`); onClose(); } },
+          window.MP.STATUSES.map((s) => React.createElement("button", { key: s.key, className: "optbtn", onClick: () => { setPendingStatus(s); setManualKcal(""); setMode("statusKcal"); } },
             React.createElement(Icon, { name: s.icon, size: 17 }), s.name)))));
     foot = filled ? React.createElement("button", { className: "btn btn--ghost btn--block", onClick: () => setMode("menu") }, "Terug") : null;
+  } else if (mode === "statusKcal" && pendingStatus) {
+    body = React.createElement("div", { style: { padding: "10px 0" } },
+      React.createElement("div", { style: { fontSize: 17, fontWeight: 700, marginBottom: 16, color: "var(--ink-1)", textAlign: "center" } },
+        React.createElement(Icon, { name: pendingStatus.icon, size: 20 }), " ", pendingStatus.name),
+      React.createElement("div", { className: "section-label" }, "Geschatte calorieën"),
+      React.createElement("input", {
+        type: "number", className: "input",
+        placeholder: "bv. 650",
+        value: manualKcal,
+        onChange: (e) => setManualKcal(e.target.value),
+        autoFocus: true,
+        style: { textAlign: "center", fontSize: 22, fontWeight: 700, marginBottom: 6 },
+      }),
+      React.createElement("div", { style: { fontSize: 12, color: "var(--ink-3)", marginTop: 4 } }, "Optioneel — laat leeg als je het niet weet"));
+    foot = React.createElement(React.Fragment, null,
+      React.createElement("button", { className: "btn btn--ghost", onClick: () => setMode(filled ? "menu" : "pick") }, "Terug"),
+      React.createElement("button", { className: "btn btn--block", onClick: () => {
+        const kcal = parseInt(manualKcal, 10) || 0;
+        S.actions.setStatus(date, slot, pendingStatus.key, note.trim() || null, kcal);
+        toast && toast(`${pendingStatus.name} ingepland`);
+        onClose();
+      }}, React.createElement(Icon, { name: "check", size: 18 }), "Inplannen"));
   } else if (mode === "create") {
     body = React.createElement(window.CreateRecipeForm, {
       slot,
@@ -232,7 +259,7 @@ function SlotSheet({ date, slot, onClose, onSwapStart, toast }) {
   }
 
   const baseTitle = recipe ? recipe.title : status ? status.name : (entry && entry.manualName) ? entry.manualName : slotMeta.name;
-  const titleTxt = mode === "pick" ? `${slotMeta.name} inplannen` : mode === "create" ? "Nieuw recept" : mode === "edit" ? "Recept bewerken" : mode === "note" ? "Notitie" : mode === "view" ? (recipe ? recipe.title : slotMeta.name) : mode === "confirm" ? "Inplannen" : mode === "portions" ? "Porties" : mode === "eatenPortions" ? "Gegeten porties" : baseTitle;
+  const titleTxt = mode === "pick" ? `${slotMeta.name} inplannen` : mode === "create" ? "Nieuw recept" : mode === "edit" ? "Recept bewerken" : mode === "note" ? "Notitie" : mode === "view" ? (recipe ? recipe.title : slotMeta.name) : mode === "confirm" ? "Inplannen" : mode === "portions" ? "Porties" : mode === "eatenPortions" ? "Gegeten porties" : mode === "statusKcal" ? (pendingStatus ? pendingStatus.name : "Inplannen") : baseTitle;
   return React.createElement(React.Fragment, null,
     React.createElement(Sheet, {
       eyebrow: `${dowLong} \u00b7 ${slotMeta.name}`, eyebrowColor: slotMeta.color,
