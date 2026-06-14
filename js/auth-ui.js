@@ -314,6 +314,11 @@
     document.getElementById("scraper-file").value = "";
     document.getElementById("scraper-cam-file").value = "";
     document.getElementById("scraper-cam-name").textContent = "";
+    // Mobiel: verberg screenshot-tab, hernoem camera-knop naar "Foto"
+    if (window._mpPlatform === "mobile") {
+      document.getElementById("stab-ss").style.display = "none";
+      document.getElementById("stab-cam").textContent = "📷 Foto";
+    }
     window._scraperMode("url");
     document.getElementById("mp-scraper").style.display = "flex";
   };
@@ -324,14 +329,21 @@
 
   window._scraperMode = function (mode) {
     _scraperMode_current = mode;
+    const isMobile = window._mpPlatform === "mobile";
     ["url", "ss", "cam"].forEach(k => {
+      const el = document.getElementById("stab-" + k);
+      if (!el || (isMobile && k === "ss")) return; // screenshot-tab verborgen op mobiel
       const m = k === "ss" ? "screenshot" : k === "cam" ? "camera" : "url";
-      document.getElementById("stab-" + k).style.borderColor = mode === m ? "#CF6238" : "#DDD7CC";
-      document.getElementById("stab-" + k).style.color       = mode === m ? "#CF6238" : "#938A7C";
+      el.style.borderColor = mode === m ? "#CF6238" : "#DDD7CC";
+      el.style.color       = mode === m ? "#CF6238" : "#938A7C";
     });
     document.getElementById("scraper-url-panel").style.display = mode === "url"        ? "" : "none";
     document.getElementById("scraper-ss-panel").style.display  = mode === "screenshot" ? "" : "none";
     document.getElementById("scraper-cam-panel").style.display = mode === "camera"     ? "" : "none";
+    // Mobiel: klik op "Foto"-tab → start camera onmiddellijk
+    if (isMobile && mode === "camera") {
+      setTimeout(() => { const fi = document.getElementById("scraper-cam-file"); if (fi) fi.click(); }, 50);
+    }
   };
 
   window._scraperRun = async function () {
