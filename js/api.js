@@ -317,12 +317,13 @@ window.MPAPI = (function () {
         });
       });
 
-      // Remove local entries that the backend no longer has for known weeks
-      // (meal was removed on another device). This now covers both recipe and manualName entries.
+      // Remove recipe-based local entries the backend no longer has (meal removed on another device).
+      // manualName entries are kept in local state — they're overlaid by the backend version via
+      // Object.assign below, so cross-device push handles correctness without deleting local copies.
       Object.keys(state.plan).forEach(key => {
         const [date] = key.split("|");
         const entry = state.plan[key];
-        if (backendMondays.has(_isoMonday(date)) && entry && (entry.recipeId || entry.manualName) && !newPlanEntries[key]) {
+        if (backendMondays.has(_isoMonday(date)) && entry && entry.recipeId && !newPlanEntries[key]) {
           delete state.plan[key];
         }
       });

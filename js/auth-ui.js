@@ -172,12 +172,15 @@
 
     await window.MPAPI.loadUserRecipes();
 
-    // Als er een recente mislukte push was (< 24u), eerst lokale wijzigingen pushen
-    // zodat bijv. gewiste snacks alsnog de backend bereiken vóór we laden.
-    // Oude dirty-flags (> 24u) worden genegeerd — dan is de backend al gezaghebbend.
+    // Push lokale wijzigingen naar backend vóór we laden, in twee gevallen:
+    // 1. Eerste keer na v128 deploy (éénmalige migratie-push om manualName-entries
+    //    te synchroniseren die vóór v126 nooit gepushed werden)
+    // 2. Recente mislukte push (dirty flag < 24u)
     const dirtyTs = localStorage.getItem("mp_sync_dirty");
-    if (dirtyTs && (Date.now() - Number(dirtyTs)) < 86400000) {
+    const needsMigrationPush = !localStorage.getItem("mp_manual_synced");
+    if (needsMigrationPush || (dirtyTs && (Date.now() - Number(dirtyTs)) < 86400000)) {
       await window.MPAPI.pushAllPlans().catch(() => {});
+      if (needsMigrationPush) localStorage.setItem("mp_manual_synced", "1");
     }
     localStorage.removeItem("mp_sync_dirty");
 
