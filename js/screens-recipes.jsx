@@ -197,11 +197,20 @@ function repairTruncatedJSON(s) {
   return t + close;
 }
 
+// Known hostnames → display label (for sites where auto-detection gives poor results)
+const SOURCE_NAMES = {
+  'dagelijksekost.vrt.be': 'Dagelijkse kost - VRT',
+  'lekkervanbijons.be': 'Lekker van bij ons',
+};
+
 function sourceLabel(r) {
   if (r.source && r.source.startsWith("http")) {
     try {
       const host = new URL(r.source).hostname.replace(/^www\./, "");
+      if (SOURCE_NAMES[host]) return SOURCE_NAMES[host];
       const parts = host.split(".");
+      // Subdomain case (3+ parts, non-www): "sub.domain.tld" → "sub - DOMAIN"
+      if (parts.length >= 3) return `${parts[0]} - ${parts[parts.length - 2].toUpperCase()}`;
       // "njam.tv" → "njam", "leukerecepten.nl" → "leukerecepten"
       return parts.length >= 2 ? parts[parts.length - 2] : parts[0];
     } catch(e) {}
@@ -544,8 +553,8 @@ function RecipesScreen({ toast }) {
   const [q, setQ] = useState("");
   const [typeFilter, setTypeFilter] = useState("gerecht"); // "gerecht"|"snack"|"alle"
   const [meal, setMeal] = useState("alle");  // alle|0|2|4|snack
-  const [selCats, setSelCats] = useState([]);  // multi-select soort filter ([] = alle)
-  function toggleSoort(k) { if (k === "alle") { setSelCats([]); return; } setSelCats((p) => p.includes(k) ? p.filter((x) => x !== k) : [...p, k]); }
+  const [selCats, setSelCats] = useState([]);  // single-select soort filter ([] = alle)
+  function toggleSoort(k) { if (k === "alle") { setSelCats([]); return; } setSelCats((p) => p.length === 1 && p[0] === k ? [] : [k]); }
   function setType(t) { setTypeFilter(t); setMeal("alle"); setSelCats([]); }
   const [detail, setDetail] = useState(null);
   const [importing, setImporting] = useState(false);
@@ -667,9 +676,7 @@ function RecipesScreen({ toast }) {
       React.createElement("div", { className: "section-label" }, "Wanneer"),
       React.createElement("div", { className: "chiprow", style: { marginBottom: 18 } },
         MEALS.map(([k, l]) => React.createElement("button", { key: k, className: "chip", "data-active": meal === k ? 1 : 0, onClick: () => setMeal(k) }, l))),
-      React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 } },
-        React.createElement("div", { className: "section-label", style: { marginBottom: 0 } }, "Soort"),
-        React.createElement("span", { className: "field__hint" }, "Meerdere tegelijk mogelijk")),
+      React.createElement("div", { className: "section-label", style: { marginBottom: 8 } }, "Soort"),
       React.createElement("div", { className: "chiprow", style: { marginBottom: 4 } },
         React.createElement("button", { key: "alle", className: "chip", "data-active": selCats.length === 0 ? 1 : 0, onClick: () => toggleSoort("alle") }, "Alle"),
         CATS.slice(1).map(([k, l]) => React.createElement("button", { key: k, className: "chip chip--toggle", "data-active": selCats.includes(k) ? 1 : 0, onClick: () => toggleSoort(k) },

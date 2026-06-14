@@ -15,7 +15,19 @@ function WeekScreen({ layout, openSlot, openSnacks, toast, swap, openShare }) {
   const [drag, setDrag] = useState(null);
   const [dragOver, setDragOver] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem("mp_onboarded"));
-  const touchDrag = useRef(null); // { date, slot, timer, startX, startY }
+  const touchDrag = useRef(null); // { date, slot, timer, startX, startY, active }
+  const [mobileDragKey, setMobileDragKey] = useState(null);   // "date|slot" being dragged on mobile
+  const [mobileDragOver, setMobileDragOver] = useState(null); // "date|slot" being hovered over
+  const weekdaysRef = useRef(null);
+
+  // Non-passive touchmove listener so we can preventDefault() and prevent scroll during drag
+  useEffect(() => {
+    const el = weekdaysRef.current;
+    if (!el) return;
+    const onMove = (ev) => { if (touchDrag.current && touchDrag.current.active) ev.preventDefault(); };
+    el.addEventListener('touchmove', onMove, { passive: false });
+    return () => el.removeEventListener('touchmove', onMove);
+  }, []);
 
   function dismissOnboarding() { localStorage.setItem("mp_onboarded", "1"); setShowOnboarding(false); }
   useEffect(() => { if (filled > 0) dismissOnboarding(); }, [filled]);
@@ -180,8 +192,8 @@ function WeekScreen({ layout, openSlot, openSnacks, toast, swap, openShare }) {
           const allEaten = filledCell && dishes.every((d) => d.eaten);
           const totalKcal = dishes.reduce((a, d) => a + (d.recipeId ? S.entryNutrition(d).kcal : 0), 0);
           const names = dishes.map((d) => { const r = d.recipeId ? S.sel.recipeById(d.recipeId) : null; const st = d.status ? window.MP.statusByKey(d.status) : null; return r ? r.title : st ? st.name : d.manualName; });
+          const slotDragKey = `${date}|${meta.i}`;
           const isSwapSel = swapping && swap.source.date === date && swap.source.slot === meta.i;
-          const isDragging = touchDrag.current && touchDrag.current.active && touchDrag.current.date === date && touchDrag.current.slot === meta.i;
           // note inline with status icon when no kcal
           const nameDisplay = filledCell
             ? (e && e.note && !totalKcal
@@ -190,24 +202,60 @@ function WeekScreen({ layout, openSlot, openSnacks, toast, swap, openShare }) {
             : React.createElement("div", { className: "wslot__name empty" }, "—");
           return React.createElement("div", {
             key: meta.i,
-            className: "wslot" + (isSwapSel || isDragging ? " swapsel" : ""),
+            className: "wslot"
+              + (isSwapSel ? " swapsel" : "")
+              + (mobileDragKey === slotDragKey ? " dragging" : "")
+              + (mobileDragOver === slotDragKey ? " dragover" : ""),
+            "data-drag-key": slotDragKey,
             "data-c": meta.color,
             "data-empty": filledCell ? 0 : 1,
             style: { opacity: allEaten ? 0.6 : 1 },
-            onClick: () => cellClick(date, meta.i),
+            onClick: () => { if (!mobileDragKey) cellClick(date, meta.i); },
             onTouchStart: filledCell ? (ev) => {
-              const t = ev.touches[0];
-              touchDrag.current = { date, slot: meta.i, active: false, startX: t.clientX, startY: t.clientY,
-                timer: setTimeout(() => { if (touchDrag.current) { touchDrag.current.active = true; swap.start(date, meta.i); } }, 500) };
+              const t0 = ev.touches[0];
+              touchDrag.current = { date, slot: meta.i, active: false, startX: t0.clientX, startY: t0.clientY,
+                timer: setTimeout(() => {
+                  if (touchDrag.current) {
+                    touchDrag.current.active = true;
+                    setMobileDragKey(slotDragKey);
+                    if (navigator.vibrate) navigator.vibrate(30);
+                  }
+                }, 450) };
             } : undefined,
             onTouchMove: (ev) => {
               if (!touchDrag.current) return;
-              const t = ev.touches[0];
-              const dx = Math.abs(t.clientX - touchDrag.current.startX);
-              const dy = Math.abs(t.clientY - touchDrag.current.startY);
-              if (dx > 10 || dy > 10) { clearTimeout(touchDrag.current.timer); touchDrag.current = null; }
+              const t0 = ev.touches[0];
+              if (!touchDrag.current.active) {
+                const dx = Math.abs(t0.clientX - touchDrag.current.startX);
+                const dy = Math.abs(t0.clientY - touchDrag.current.startY);
+                if (dx > 10 || dy > 10) { clearTimeout(touchDrag.current.timer); touchDrag.current = null; }
+                return;
+              }
+              const el = document.elementFromPoint(t0.clientX, t0.clientY);
+              const target = el && el.closest('[data-drag-key]');
+              setMobileDragOver(target ? target.getAttribute('data-drag-key') : null);
             },
-            onTouchEnd: () => { if (touchDrag.current) { clearTimeout(touchDrag.current.timer); touchDrag.current = null; } },
+            onTouchEnd: (ev) => {
+              if (!touchDrag.current) return;
+              clearTimeout(touchDrag.current.timer);
+              const { date: srcDate, slot: srcSlot, active } = touchDrag.current;
+              touchDrag.current = null;
+              setMobileDragKey(null);
+              setMobileDragOver(null);
+              if (!active) return;
+              const t0 = ev.changedTouches[0];
+              const el = document.elementFromPoint(t0.clientX, t0.clientY);
+              const target = el && el.closest('[data-drag-key]');
+              if (target) {
+                const [tDate, tSlotStr] = target.getAttribute('data-drag-key').split('|');
+                const tSlot = Number(tSlotStr);
+                if (!(srcDate === tDate && srcSlot === tSlot)) { S.actions.swap(srcDate, srcSlot, tDate, tSlot); toast("Gewisseld"); }
+              }
+            },
+            onTouchCancel: () => {
+              if (touchDrag.current) { clearTimeout(touchDrag.current.timer); touchDrag.current = null; }
+              setMobileDragKey(null); setMobileDragOver(null);
+            },
           },
             React.createElement("div", { className: "wslot__spine" }),
             React.createElement("div", { className: "wslot__meal" }, meta.short),
@@ -294,7 +342,7 @@ function WeekScreen({ layout, openSlot, openSnacks, toast, swap, openShare }) {
           React.createElement("div", null, React.createElement("b", null, "Doe boodschappen"), React.createElement("br"), "Je boodschappenlijst wordt automatisch aangemaakt"))),
       React.createElement("button", { className: "btn btn--soft", style: { marginTop: 16 }, onClick: dismissOnboarding }, "Begrepen, toon niet meer")),
     aibar,
-    layout === "desktop" ? matrix : React.createElement("div", { className: "weekdays" }, days.map(MobileDay)),
+    layout === "desktop" ? matrix : React.createElement("div", { className: "weekdays", ref: weekdaysRef }, days.map(MobileDay)),
     weeklimits,
     layout === "desktop" && React.createElement("div", { style: { marginTop: 14, fontSize: 13, color: "var(--ink-3)", display: "flex", alignItems: "center", gap: 8 } },
       React.createElement(Icon, { name: "grip", size: 16 }), "Tip: sleep een gerecht naar een ander vakje om te wisselen."),

@@ -479,6 +479,9 @@ textarea.input { resize: vertical; line-height: 1.5; font-size: var(--fs-13); }
 .swapbar { display: flex; align-items: center; gap: 10px; padding: 11px 14px; background: var(--honey-soft); border: 1px solid #ecd7a6; border-radius: var(--r-2); margin-bottom: 14px; font-size: var(--fs-13); font-weight: 600; color: var(--honey-ink); }
 .swapbar svg { width: 18px; height: 18px; }
 .mcell__card.swapsel, .wslot.swapsel { outline: 2px solid var(--honey); outline-offset: -2px; }
+.wslot { user-select: none; -webkit-user-select: none; }
+.wslot.dragging { opacity: .4; }
+.wslot.dragover { background: var(--brand-soft); border-radius: var(--r-1); }
 
 /* ---------------------------------------------------------------- GROCERIES */
 .groc { display: flex; flex-direction: column; gap: 18px; }
