@@ -458,8 +458,9 @@ function CreateRecipeForm({ slot, onCancel, onSave, initialRecipe }) {
         window.MPAPI.updateRecipe(window.MPAPI._idMap[init.id], {
           name: f.title, servings: f.portions, prep_time: f.prepTime,
           kcal: f.kcal, protein: f.protein, carbs: f.carbs, fat: f.fat,
+          tags: f.cats || [],
           instructions: f.instructions ? f.instructions.split("\n\n").map((t,i)=>({step:i+1,text:t.trim()})).filter(s=>s.text) : [],
-          ingredients: ings.map(i=>({name:i.name, amount:Number(i.qty)||null, unit:i.unit||null})),
+          ingredients: ings.map(i=>({name:i.name, amount:Number(i.qty)||null, unit:i.unit||null, cat:i.cat||null})),
         }).catch(() => {});
       }
       onSave(init);

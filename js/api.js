@@ -449,10 +449,10 @@ window.MPAPI = (function () {
         name: i.name || "",
         qty: i.amount || 0,
         unit: i.unit || "",
-        cat: i.cat || _guessCat(i.name),  // keyword-guesser als fallback
+        cat: i.cat || _guessCat(i.name),
       })),
+      cats: r.tags || [],
       image: r.image_url || null,
-      cats: [],
       custom: true,
       imported: !!r.source_url,
     };
@@ -475,20 +475,19 @@ window.MPAPI = (function () {
       Object.entries(_idMap).forEach(([localId, backendId]) => { backendToLocal[backendId] = Number(localId); });
 
       recipes.forEach((r) => {
-        // Already loaded from backend (has _backendId field)
+        // Already loaded from backend (has _backendId field) — refresh all fields
         const existsByBackendId = RECIPES.find(x => x._backendId === r.id);
         if (existsByBackendId) {
           _idMap[existsByBackendId.id] = r.id; _saveIdMap();
-          if (r.image_url) existsByBackendId.image = r.image_url;
+          Object.assign(existsByBackendId, _toStoreRecipe(r, existsByBackendId.id));
           return;
         }
-        // Already exists locally (created on this device, tracked via _idMap)
+        // Already exists locally (created on this device, tracked via _idMap) — refresh all fields
         const localId = backendToLocal[r.id];
         if (localId != null) {
           const localRecipe = RECIPES.find(x => x.id === localId);
           if (localRecipe) {
-            localRecipe._backendId = r.id;
-            if (r.image_url) localRecipe.image = r.image_url;
+            Object.assign(localRecipe, _toStoreRecipe(r, localRecipe.id));
             return;
           }
         }

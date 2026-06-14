@@ -184,11 +184,18 @@
       if (!window.MPAPI._idMap[r.id]) await window.MPAPI.saveNewRecipe(r);
     }
 
-    // ── Stap 5: patch store zodat nieuwe recepten ook naar backend gaan ──────
+    // ── Stap 5: patch store zodat nieuwe/gewijzigde recepten ook naar backend gaan ──
     const origCreate = window.MPStore.actions.createRecipe;
     window.MPStore.actions.createRecipe = function (obj) { const r = origCreate(obj); window.MPAPI.saveNewRecipe(r); return r; };
     const origImport = window.MPStore.actions.importRecipe;
     window.MPStore.actions.importRecipe = function (obj) { const r = origImport(obj); window.MPAPI.saveNewRecipe(r); return r; };
+    // Patch setRecipeCats zodat categorie-wijzigingen naar backend gaan
+    const origSetCats = window.MPStore.actions.setRecipeCats;
+    window.MPStore.actions.setRecipeCats = function (id, cats) {
+      origSetCats(id, cats);
+      const backendId = window.MPAPI._idMap[id];
+      if (backendId) window.MPAPI.updateRecipe(backendId, { tags: cats }).catch(() => {});
+    };
 
     // ── Stap 6: toon app ─────────────────────────────────────────────────────
     document.getElementById("mp-auth").style.display = "none";
@@ -208,27 +215,23 @@
       }, 2000);
     });
 
-    // ── Stap 8: uitgestelde push na de load ──────────────────────────────────
-    // De state bevat nu de backend-data (loadWeekPlan heeft alles gemerged).
-    // Een push nu is altijd veilig: hij stuurt de GEMENGDE staat terug naar de
-    // backend en kan niets overschrijven wat een ander toestel al heeft gepushed.
-    //
-    // Dit lost twee problemen op:
-    // A) manualName-entries ("Uit eten", "Restje" …) die nog nooit naar de backend
-    //    gepushed zijn — éénmalige sync via mp_manual_synced_v131
-    // B) Retry van een mislukte push (mp_sync_dirty flag < 1u oud)
-    const _dirtyTs  = localStorage.getItem("mp_sync_dirty");
-    const _stNow    = window.MPStore.getState();
-    const _hasManualUnsynced = !localStorage.getItem("mp_manual_synced_v131") &&
-                               Object.values(_stNow.plan || {}).some(e => e && e.manualName);
-    const _hasDirty = _dirtyTs && (Date.now() - Number(_dirtyTs)) < 3600000;
+    // ── Stap 7b: periodieke refresh (elk ander toestel ziet wijzigingen ≤5 min later) ─
+    setInterval(async () => {
+      await window.MPAPI.loadWeekPlan();
+      window.MPStore.touch();
+    }, 5 * 60 * 1000);
 
-    if (_hasManualUnsynced || _hasDirty) {
-      const ok = await window.MPAPI.pushAllPlans().catch(() => false);
-      // Zet de flag alleen bij succes — bij mislukking opnieuw proberen bij volgende startup
-      if (_hasManualUnsynced && ok !== false) {
-        localStorage.setItem("mp_manual_synced_v131", "1");
-      }
+    // ── Stap 8: uitgestelde push na de load ──────────────────────────────────
+    // Altijd pushen als er manualName-entries zijn ("Uit eten", "Restje" …) of
+    // als een vorige push mislukt is (dirty flag, window van 24u).
+    // Veilig omdat loadWeekPlan() al gedraaid heeft: de state is de GEMENGDE
+    // versie en een push kan nooit data van een ander toestel overschrijven.
+    const _dirtyTs = localStorage.getItem("mp_sync_dirty");
+    const _stNow   = window.MPStore.getState();
+    const _hasDirty = _dirtyTs && (Date.now() - Number(_dirtyTs)) < 86400000; // 24u
+    const _hasManualEntries = Object.values(_stNow.plan || {}).some(e => e && e.manualName);
+    if (_hasDirty || _hasManualEntries) {
+      window.MPAPI.pushAllPlans().catch(() => {});
     }
   }
 
