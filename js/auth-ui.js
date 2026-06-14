@@ -172,10 +172,16 @@
 
     await window.MPAPI.loadUserRecipes();
 
-    // Laad het weekmenu van de backend (vereist dat recepten al geladen zijn)
-    // loadWeekPlan wist eerst alle weken die de backend kent, dan herbouwt vanuit backend
-    // (nooit eerst lokaal pushen: dat zou gewijzigde data van een ander toestel overschrijven)
+    // Als er een recente mislukte push was (< 24u), eerst lokale wijzigingen pushen
+    // zodat bijv. gewiste snacks alsnog de backend bereiken vóór we laden.
+    // Oude dirty-flags (> 24u) worden genegeerd — dan is de backend al gezaghebbend.
+    const dirtyTs = localStorage.getItem("mp_sync_dirty");
+    if (dirtyTs && (Date.now() - Number(dirtyTs)) < 86400000) {
+      await window.MPAPI.pushAllPlans().catch(() => {});
+    }
     localStorage.removeItem("mp_sync_dirty");
+
+    // Laad het weekmenu van de backend (vereist dat recepten al geladen zijn)
     await window.MPAPI.loadWeekPlan();
     window.MPStore.touch(); // trigger React re-render after plan is loaded
 

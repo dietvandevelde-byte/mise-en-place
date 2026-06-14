@@ -197,7 +197,7 @@ window.MPAPI = (function () {
         await req("PUT", "/meal-plans/" + mon, { week_start: mon, entries });
       } catch (e) {
         console.warn("[sync] weekplan push mislukt:", e.message);
-        localStorage.setItem("mp_sync_dirty", "1");
+        localStorage.setItem("mp_sync_dirty", String(Date.now()));
         return false;
       }
     }
@@ -285,13 +285,21 @@ window.MPAPI = (function () {
     }
   }
 
-  // Push ALL weeks that have plan entries to backend
+  // Push ALL relevant weeks to backend (incl. current week even if empty, to sync removals)
   async function pushAllPlans() {
     if (!_token) return;
     const state = window.MPStore.getState();
     const mondays = new Set();
+    // Always push current week so cleared meals reach the backend
+    const today = state.today || new Date().toISOString().slice(0, 10);
+    mondays.add(_isoMonday(today));
+    // Weeks with plan entries
     Object.keys(state.plan).forEach(key => {
       const [date] = key.split("|");
+      mondays.add(_isoMonday(date));
+    });
+    // Weeks with snack entries (might differ from plan weeks)
+    Object.keys(state.snacks || {}).forEach(date => {
       mondays.add(_isoMonday(date));
     });
     let allOk = true;
