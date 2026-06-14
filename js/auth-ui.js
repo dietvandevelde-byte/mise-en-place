@@ -172,14 +172,10 @@
 
     await window.MPAPI.loadUserRecipes();
 
-    // Als er een mislukte push was: eerst lokale data pushen (voordat we van backend laden)
-    // zodat lokaal geplande maaltijden niet verloren gaan
-    if (localStorage.getItem("mp_sync_dirty")) {
-      await window.MPAPI.pushAllPlans().catch(() => {});
-    }
-
     // Laad het weekmenu van de backend (vereist dat recepten al geladen zijn)
     // loadWeekPlan wist eerst alle weken die de backend kent, dan herbouwt vanuit backend
+    // (nooit eerst lokaal pushen: dat zou gewijzigde data van een ander toestel overschrijven)
+    localStorage.removeItem("mp_sync_dirty");
     await window.MPAPI.loadWeekPlan();
     window.MPStore.touch(); // trigger React re-render after plan is loaded
 

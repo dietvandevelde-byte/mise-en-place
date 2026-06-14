@@ -1,5 +1,5 @@
-/* Mise en Place — Service Worker v122 */
-const CACHE = "mep-v122";
+/* Mise en Place — Service Worker v123 */
+const CACHE = "mep-v123";
 const OFFLINE_URL = "/app-mobile.html";
 
 const PRECACHE = [
@@ -21,7 +21,7 @@ const PRECACHE = [
   "/js/screens-profile.jsx?v=96",
   "/js/share.jsx?v=96",
   "/js/app.jsx?v=105",
-  "/js/auth-ui.js?v=122",
+  "/js/auth-ui.js?v=123",
   "/favicon.svg",
 ];
 
