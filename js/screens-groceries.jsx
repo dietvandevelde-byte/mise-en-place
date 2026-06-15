@@ -98,15 +98,32 @@ function GroceriesScreen({ layout, toast, openShare }) {
       it.manual && React.createElement("button", { className: "gitem__del", onClick: (e) => { e.stopPropagation(); S.actions.removeManual(it.manualId); } }, React.createElement(Icon, { name: "trash", size: 16 })));
   }
 
-  function renderAisleEl(g, items) {
+  function renderAisleEl(g, items, twoCol) {
     const color = (S.sel.aisleMeta(g.cat) || {}).color || "brand";
     const orig = groups.find(x => x.cat === g.cat) || g;
+    let content;
+    if (twoCol && g.items.length > 1) {
+      // Vaste kolom-indeling: split op basis van de volledige gesorteerde itemlijst.
+      // Items wisselen NOOIT van kolom — binnen elke kolom zakken aangevinkte items naar onder.
+      const half = Math.ceil(g.items.length / 2);
+      const prepCol = (col) => {
+        const visible = hideChecked ? col.filter(it => !it.checked) : col;
+        return [...visible.filter(it => !it.checked), ...visible.filter(it => it.checked)];
+      };
+      const c1 = prepCol(g.items.slice(0, half));
+      const c2 = prepCol(g.items.slice(half));
+      content = React.createElement("div", { style: { display: "flex", gap: 4 } },
+        React.createElement("div", { style: { flex: 1, minWidth: 0 } }, c1.map(renderGItem)),
+        React.createElement("div", { style: { flex: 1, minWidth: 0 } }, c2.map(renderGItem)));
+    } else {
+      content = items.map(renderGItem);
+    }
     return React.createElement("div", { key: g.cat, className: "aisle", "data-c": color },
       React.createElement("div", { className: "aisle__head" },
         React.createElement("span", { className: "aisle__dot" }),
         React.createElement("div", { className: "aisle__name" }, g.name),
         React.createElement("div", { className: "aisle__count" }, orig.items.filter(i => i.checked).length, "/", orig.items.length)),
-      items.map(it => renderGItem(it)));
+      content);
   }
 
   const emptyEl = React.createElement("div", { className: "empty" },
@@ -151,15 +168,14 @@ function GroceriesScreen({ layout, toast, openShare }) {
       aisles = React.createElement("div", { className: "aislewrap aislewrap--cols" }, renderCol(col1), renderCol(col2));
     }
   } else {
-    // Mobile: flat aisles, checked items at bottom of each aisle
-    const mobileGroups = groups.map(g => ({
-      ...g,
-      items: hideChecked
-        ? g.items.filter(it => !it.checked)
-        : [...g.items.filter(it => !it.checked), ...g.items.filter(it => it.checked)]
-    })).filter(g => g.items.length > 0);
-    aisles = React.createElement("div", { className: "aislewrap" },
-      hideChecked && mobileGroups.length === 0 ? allCheckedEl : mobileGroups.map(g => renderAisleEl(g, g.items)));
+    // Mobile: 2 vaste kolommen per categorie — items wisselen nooit van kolom
+    const mobileGroups = hideChecked ? groups.filter(g => g.items.some(it => !it.checked)) : groups;
+    if (hideChecked && mobileGroups.length === 0) {
+      aisles = React.createElement("div", { className: "aislewrap" }, allCheckedEl);
+    } else {
+      aisles = React.createElement("div", { className: "aislewrap" },
+        mobileGroups.map(g => renderAisleEl(g, g.items, true)));
+    }
   }
 
   return React.createElement("div", { className: "wrap screen-anim" },
