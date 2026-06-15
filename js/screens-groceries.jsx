@@ -88,6 +88,7 @@ function GroceriesScreen({ layout, toast, openShare }) {
                 ? S.actions.updateManual(it.manualId, { qtyNote: ev.target.value })
                 : S.actions.setGroceryNote(it.key, ev.target.value),
               onClick: (ev) => ev.stopPropagation(),
+              onBlur: () => setEditingItem(null),
               autoFocus: true,
               style: { marginTop: 4 },
             })
@@ -96,7 +97,7 @@ function GroceriesScreen({ layout, toast, openShare }) {
                 ? React.createElement("span", { className: "gitem__manual" }, "Zelf toegevoegd")
                 : (it.recipeCount > 1 ? `uit ${it.recipeCount} recepten` : "uit 1 recept"))),
       !isEditing && qtyDisplay && React.createElement("div", { className: "gitem__qty" }, qtyDisplay),
-      isEditing && it.manual && React.createElement("button", { className: "gitem__del", onClick: (e) => { e.stopPropagation(); S.actions.removeManual(it.manualId); } }, React.createElement(Icon, { name: "trash", size: 16 })));
+      isEditing && it.manual && React.createElement("button", { className: "gitem__del", onMouseDown: (e) => e.preventDefault(), onClick: (e) => { e.stopPropagation(); S.actions.removeManual(it.manualId); setEditingItem(null); } }, React.createElement(Icon, { name: "trash", size: 16 })));
   }
 
   function renderAisleEl(g, items, twoCol) {
