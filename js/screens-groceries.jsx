@@ -70,9 +70,10 @@ function GroceriesScreen({ layout, toast, openShare }) {
         React.createElement(Icon, { name: "swap", size: 14 }), "Terugzetten"))
   );
 
-  function renderGItem(it) {
+  function renderGItem(it, gridCol) {
     const isEditing = editingItem === it.key;
-    return React.createElement("div", { key: it.key, className: "gitem", "data-on": it.checked ? 1 : 0 },
+    const colStyle = gridCol ? { gridColumn: gridCol } : undefined;
+    return React.createElement("div", { key: it.key, className: "gitem", "data-on": it.checked ? 1 : 0, style: colStyle },
       React.createElement("div", { className: "gcheck", onClick: () => S.actions.toggleGrocery(it.key) }, React.createElement(Icon, { name: "check", size: 15 })),
       React.createElement("div", { className: "gitem__body", onClick: () => setEditingItem(isEditing ? null : it.key) },
         React.createElement("div", { className: "gitem__name" }, it.name),
@@ -103,20 +104,18 @@ function GroceriesScreen({ layout, toast, openShare }) {
     const orig = groups.find(x => x.cat === g.cat) || g;
     let content;
     if (twoCol && g.items.length > 1) {
-      // Vaste kolom-indeling: split op basis van de volledige gesorteerde itemlijst.
-      // Items wisselen NOOIT van kolom — binnen elke kolom zakken aangevinkte items naar onder.
+      // Stable 2-column layout: the CSS on .app--mobile .aisle already applies
+      // display:grid with 2 columns. Items get explicit gridColumn so they never
+      // switch columns; within each column, checked items sink to the bottom.
       const half = Math.ceil(g.items.length / 2);
-      const prepCol = (col) => {
+      const prepCol = (col, gridCol) => {
         const visible = hideChecked ? col.filter(it => !it.checked) : col;
-        return [...visible.filter(it => !it.checked), ...visible.filter(it => it.checked)];
+        return [...visible.filter(it => !it.checked), ...visible.filter(it => it.checked)]
+          .map(it => renderGItem(it, gridCol));
       };
-      const c1 = prepCol(g.items.slice(0, half));
-      const c2 = prepCol(g.items.slice(half));
-      content = React.createElement("div", { style: { display: "flex", gap: 4 } },
-        React.createElement("div", { style: { flex: 1, minWidth: 0 } }, c1.map(renderGItem)),
-        React.createElement("div", { style: { flex: 1, minWidth: 0 } }, c2.map(renderGItem)));
+      content = [...prepCol(g.items.slice(0, half), 1), ...prepCol(g.items.slice(half), 2)];
     } else {
-      content = items.map(renderGItem);
+      content = items.map(it => renderGItem(it));
     }
     return React.createElement("div", { key: g.cat, className: "aisle", "data-c": color },
       React.createElement("div", { className: "aisle__head" },
