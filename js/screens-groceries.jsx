@@ -73,6 +73,9 @@ function GroceriesScreen({ layout, toast, openShare }) {
   function renderGItem(it, gridCol) {
     const isEditing = editingItem === it.key;
     const colStyle = gridCol ? { gridColumn: gridCol } : undefined;
+    // In 2-col (compact) mode: qty shown below name as sub text, not as right badge
+    const compact = !!gridCol;
+    const qtyDisplay = it.qtyNote || (it.qty != null && it.qty > 0 ? fmtQty(it.qty, it.unit) : null);
     return React.createElement("div", { key: it.key, className: "gitem", "data-on": it.checked ? 1 : 0, style: colStyle },
       React.createElement("div", { className: "gcheck", onClick: () => S.actions.toggleGrocery(it.key) }, React.createElement(Icon, { name: "check", size: 15 })),
       React.createElement("div", { className: "gitem__body", onClick: () => setEditingItem(isEditing ? null : it.key) },
@@ -91,11 +94,13 @@ function GroceriesScreen({ layout, toast, openShare }) {
             })
           : React.createElement("div", { className: "gitem__sub" },
               it.manual
-                ? (it.qtyNote ? React.createElement("span", { className: "gitem__manual" }, it.qtyNote) : React.createElement("span", { className: "gitem__manual" }, "Zelf toegevoegd"))
-                : (it.recipeCount > 1 ? `uit ${it.recipeCount} recepten` : "uit 1 recept"))),
-      it.qtyNote
+                ? (it.qtyNote ? React.createElement("span", { className: "gitem__manual" }, it.qtyNote) : React.createElement("span", { className: "gitem__manual" }, "Zelf"))
+                : compact
+                  ? (qtyDisplay || (it.recipeCount > 1 ? `${it.recipeCount}×` : ""))
+                  : (it.recipeCount > 1 ? `uit ${it.recipeCount} recepten` : "uit 1 recept"))),
+      !compact && (it.qtyNote
         ? React.createElement("div", { className: "gitem__qty" }, it.qtyNote)
-        : (it.qty != null && it.qty > 0 && React.createElement("div", { className: "gitem__qty" }, fmtQty(it.qty, it.unit))),
+        : (it.qty != null && it.qty > 0 && React.createElement("div", { className: "gitem__qty" }, fmtQty(it.qty, it.unit)))),
       it.manual && React.createElement("button", { className: "gitem__del", onClick: (e) => { e.stopPropagation(); S.actions.removeManual(it.manualId); } }, React.createElement(Icon, { name: "trash", size: 16 })));
   }
 
