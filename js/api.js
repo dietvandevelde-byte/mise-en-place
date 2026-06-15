@@ -1,5 +1,5 @@
 /* =========================================================================
-   MISE EN PLACE — Backend API bridge v126
+   MISE EN PLACE — Backend API bridge v136
    Handles auth, recipe sync, meal plan sync and AI scraper.
    ========================================================================= */
 window.MPAPI = (function () {
@@ -539,7 +539,7 @@ window.MPAPI = (function () {
       const payload = {
         name: storeRecipe.title,
         description: null,
-        image_url: storeRecipe.image || null,
+        image_url: (storeRecipe.image && !storeRecipe.image.startsWith("data:")) ? storeRecipe.image : null,
         prep_time: storeRecipe.prepTime || null,
         cook_time: null,
         total_time: null,
@@ -565,6 +565,23 @@ window.MPAPI = (function () {
     }
   }
 
+  // Upload a data URL image to Supabase Storage via the backend.
+  // Returns the Supabase public URL on success, null on failure.
+  async function uploadRecipeImage(backendId, dataUrl) {
+    if (!_token || !backendId || !dataUrl || !dataUrl.startsWith("data:")) return null;
+    try {
+      const fetchRes = await fetch(dataUrl);
+      const blob = await fetchRes.blob();
+      const fd = new FormData();
+      fd.append("file", blob, "recipe.jpg");
+      const result = await req("POST", "/recipes/" + backendId + "/image", fd, true);
+      return result && result.image_url;
+    } catch (e) {
+      console.warn("[sync] Afbeelding upload mislukt:", e.message);
+      return null;
+    }
+  }
+
   return {
     get token() { return _token; },
     get user() { return _user; },
@@ -573,5 +590,6 @@ window.MPAPI = (function () {
     getRecipes, createRecipe, updateRecipe, deleteRecipe,
     scrapeUrl, scrapeScreenshot, scrapeText, calculateNutrition,
     loadUserRecipes, saveNewRecipe, pushWeekPlan, pushAllPlans, loadWeekPlan,
+    uploadRecipeImage,
   };
 })();

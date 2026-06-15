@@ -55,6 +55,15 @@ with engine.connect() as conn:
     except Exception:
         pass
 
+# Ensure recipe-images bucket is public (idempotent on every deploy)
+try:
+    if settings.SUPABASE_URL and settings.SUPABASE_SERVICE_KEY:
+        from supabase import create_client as _sb_create
+        _sb = _sb_create(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_KEY)
+        _sb.storage.update_bucket("recipe-images", options={"public": True})
+except Exception:
+    pass
+
 app = FastAPI(
     title="Mise en Place API",
     description="Backend voor de weekmenu-planner Mise en Place",

@@ -164,9 +164,20 @@ function RecipeDetail({ recipe, onClose, toast }) {
           React.createElement("div", { className: "field__row" },
             React.createElement("div", { className: "field__label" }, "Porties"),
             React.createElement(Stepper, { value: portions, onChange: setPortions, step: 0.1, min: 0.1, max: 20, editable: true })))
-      : React.createElement(RecipeView, { recipe, portions: recipe.portions, editable: true, onImageChange: (v) => {
+      : React.createElement(RecipeView, { recipe, portions: recipe.portions, editable: true, onImageChange: async (v) => {
           S.actions.setRecipeImage(recipe.id, v);
-          toast && toast(v ? "Foto opgeslagen" : "Foto verwijderd");
+          toast && toast(v ? "Foto wordt opgeslagen…" : "Foto verwijderd");
+          if (v && v.startsWith("data:") && window.MPAPI) {
+            let backendId = window.MPAPI._idMap[recipe.id] || recipe._backendId;
+            if (!backendId) {
+              await window.MPAPI.saveNewRecipe(recipe);
+              backendId = window.MPAPI._idMap[recipe.id];
+            }
+            if (backendId) {
+              const url = await window.MPAPI.uploadRecipeImage(backendId, v);
+              if (url) S.actions.setRecipeImage(recipe.id, url);
+            }
+          }
         } });
 
   const title = editing ? `Bewerken: ${recipe.title}` : recipe.title;

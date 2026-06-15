@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from sqlalchemy.orm import Session
 from database import get_db
 from auth import get_current_user
@@ -86,6 +86,36 @@ def toggle_favorite(
     db.commit()
     db.refresh(recipe)
     return recipe
+
+
+@router.post("/{recipe_id}/image", response_model=schemas.RecipeOut)
+async def upload_recipe_image(
+    recipe_id: str,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    user: models.User = Depends(get_current_user),
+):
+    from config import settings
+    if not settings.SUPABASE_URL or not settings.SUPABASE_SERVICE_KEY:
+        raise HTTPException(status_code=503, detail="Afbeeldingsopslag niet geconfigureerd")
+    recipe = _get_owned(recipe_id, user.id, db)
+    try:
+        from supabase import create_client
+        supabase = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_KEY)
+        content = await file.read()
+        path = f"{user.id}/{recipe_id}.jpg"
+        supabase.storage.from_("recipe-images").upload(
+            path=path,
+            file=content,
+            file_options={"content-type": "image/jpeg", "upsert": "true"},
+        )
+        public_url = supabase.storage.from_("recipe-images").get_public_url(path)
+        recipe.image_url = public_url
+        db.commit()
+        db.refresh(recipe)
+        return recipe
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Upload mislukt: {str(e)}")
 
 
 def _get_owned(recipe_id: str, user_id: str, db: Session) -> models.Recipe:

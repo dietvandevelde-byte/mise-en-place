@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic_settings import BaseSettings
 
 
@@ -7,6 +8,8 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 525600  # 365 days
     ANTHROPIC_API_KEY: str
     ALLOWED_ORIGINS: str = "http://localhost:5500,http://127.0.0.1:5500"
+    SUPABASE_URL: Optional[str] = None
+    SUPABASE_SERVICE_KEY: Optional[str] = None
 
     @property
     def origins(self) -> list[str]:
