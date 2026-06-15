@@ -215,11 +215,24 @@
       }, 2000);
     });
 
-    // ── Stap 7b: periodieke refresh (elk ander toestel ziet wijzigingen ≤5 min later) ─
-    setInterval(async () => {
+    // ── Stap 7b: periodieke refresh + foreground-sync ────────────────────────
+    // loadUserRecipes() moet vóór loadWeekPlan() zodat nieuw geïmporteerde recepten
+    // al in window.MP.RECIPES zitten als de planner ze opzoekt.
+    let _lastSync = Date.now();
+    async function _doSync() {
+      await window.MPAPI.loadUserRecipes();
       await window.MPAPI.loadWeekPlan();
       window.MPStore.touch();
-    }, 5 * 60 * 1000);
+      _lastSync = Date.now();
+    }
+    setInterval(_doSync, 5 * 60 * 1000);
+    // Op mobiel wordt de app vaak even op de achtergrond gezet en daarna heropend.
+    // Sync zodra de gebruiker terugkeert, maar max 1x per minuut.
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && Date.now() - _lastSync > 60_000) {
+        _doSync().catch(() => {});
+      }
+    });
 
     // ── Stap 8: uitgestelde push na de load ──────────────────────────────────
     // Altijd pushen als er manualName-entries zijn ("Uit eten", "Restje" …) of
