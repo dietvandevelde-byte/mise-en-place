@@ -109,16 +109,23 @@ function GroceriesScreen({ layout, toast, openShare }) {
     const orig = groups.find(x => x.cat === g.cat) || g;
     let content;
     if (twoCol && g.items.length > 1) {
-      // Stable 2-column layout: the CSS on .app--mobile .aisle already applies
-      // display:grid with 2 columns. Items get explicit gridColumn so they never
-      // switch columns; within each column, checked items sink to the bottom.
+      // Stable 2-column layout using the CSS grid on .app--mobile .aisle.
+      // Items are interleaved [c1[0], c2[0], c1[1], c2[1], ...] so the grid
+      // auto-placement cursor advances correctly and both columns fill from the top.
+      // explicit gridColumn keeps each item in its assigned column permanently.
       const half = Math.ceil(g.items.length / 2);
       const prepCol = (col, gridCol) => {
         const visible = hideChecked ? col.filter(it => !it.checked) : col;
         return [...visible.filter(it => !it.checked), ...visible.filter(it => it.checked)]
           .map(it => renderGItem(it, gridCol));
       };
-      content = [...prepCol(g.items.slice(0, half), 1), ...prepCol(g.items.slice(half), 2)];
+      const c1 = prepCol(g.items.slice(0, half), 1);
+      const c2 = prepCol(g.items.slice(half), 2);
+      content = [];
+      for (let i = 0; i < Math.max(c1.length, c2.length); i++) {
+        if (i < c1.length) content.push(c1[i]);
+        if (i < c2.length) content.push(c2[i]);
+      }
     } else {
       content = items.map(it => renderGItem(it));
     }
