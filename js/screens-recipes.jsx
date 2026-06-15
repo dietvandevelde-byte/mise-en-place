@@ -168,15 +168,13 @@ function RecipeDetail({ recipe, onClose, toast }) {
           S.actions.setRecipeImage(recipe.id, v);
           toast && toast(v ? "Foto wordt opgeslagen…" : "Foto verwijderd");
           if (v && v.startsWith("data:") && window.MPAPI) {
-            let backendId = window.MPAPI._idMap[recipe.id] || recipe._backendId;
-            if (!backendId) {
-              await window.MPAPI.saveNewRecipe(recipe);
-              backendId = window.MPAPI._idMap[recipe.id];
-            }
+            const backendId = window.MPAPI._idMap[recipe.id] || recipe._backendId;
             if (backendId) {
               const url = await window.MPAPI.uploadRecipeImage(backendId, v);
               if (url) S.actions.setRecipeImage(recipe.id, url);
             }
+            // Als backendId niet bekend is, blijft de foto lokaal bewaard — geen saveNewRecipe
+            // want dat maakt duplicaten aan en breekt de weekplanner-sync.
           }
         } });
 
