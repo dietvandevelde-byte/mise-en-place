@@ -35,6 +35,7 @@ class UserOut(BaseModel):
     name: str
     avatar_url: Optional[str] = None
     household_size: int = 1
+    is_admin: bool = False
     created_at: datetime
 
     class Config:
@@ -137,7 +138,85 @@ class RecipeOut(BaseModel):
     instructions: list[dict[str, Any]] = []
     source_url: Optional[str] = None
     source_type: SourceType = SourceType.manual
+    catalog_recipe_id: Optional[str] = None
     is_favorite: bool = False
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# ── Catalog ───────────────────────────────────────────────────────────────────
+
+class CatalogRecipeCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+    prep_time: Optional[int] = None
+    cook_time: Optional[int] = None
+    total_time: Optional[int] = None
+    servings: int = 4
+    kcal: Optional[int] = None
+    protein: Optional[float] = None
+    carbs: Optional[float] = None
+    fat: Optional[float] = None
+    fiber: Optional[float] = None
+    category: Optional[RecipeCategory] = RecipeCategory.dinner
+    cuisine: Optional[str] = None
+    difficulty: Optional[Difficulty] = Difficulty.medium
+    tags: list[str] = []
+    ingredients: list[dict[str, Any]] = []
+    instructions: list[dict[str, Any]] = []
+    source_url: Optional[str] = None
+    is_healthy: bool = False
+
+
+class CatalogRecipeUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+    prep_time: Optional[int] = None
+    cook_time: Optional[int] = None
+    total_time: Optional[int] = None
+    servings: Optional[int] = None
+    kcal: Optional[int] = None
+    protein: Optional[float] = None
+    carbs: Optional[float] = None
+    fat: Optional[float] = None
+    fiber: Optional[float] = None
+    category: Optional[RecipeCategory] = None
+    cuisine: Optional[str] = None
+    difficulty: Optional[Difficulty] = None
+    tags: Optional[list[str]] = None
+    ingredients: Optional[list[dict[str, Any]]] = None
+    instructions: Optional[list[dict[str, Any]]] = None
+    source_url: Optional[str] = None
+    is_healthy: Optional[bool] = None
+
+
+class CatalogRecipeOut(BaseModel):
+    id: str
+    name: str
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+    prep_time: Optional[int] = None
+    cook_time: Optional[int] = None
+    total_time: Optional[int] = None
+    servings: int = 4
+    kcal: Optional[int] = None
+    protein: Optional[float] = None
+    carbs: Optional[float] = None
+    fat: Optional[float] = None
+    fiber: Optional[float] = None
+    category: Optional[RecipeCategory] = None
+    cuisine: Optional[str] = None
+    difficulty: Optional[Difficulty] = None
+    tags: list[str] = []
+    ingredients: list[dict[str, Any]] = []
+    instructions: list[dict[str, Any]] = []
+    source_url: Optional[str] = None
+    is_healthy: bool = False
     created_at: datetime
     updated_at: datetime
 

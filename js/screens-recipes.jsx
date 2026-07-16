@@ -144,6 +144,20 @@ function RecipeDetail({ recipe, onClose, toast }) {
             } } },
             React.createElement(Icon, { name: "trash", size: 19 })),
           React.createElement("button", { className: "btn btn--ghost", style: { display: "flex", alignItems: "center", gap: 6 }, onClick: () => setEditing(true) }, React.createElement(Icon, { name: "edit", size: 18 }), "Bewerken"),
+          window.MPAPI && window.MPAPI.user && window.MPAPI.user.is_admin && !recipe._catalogId &&
+            React.createElement("button", { className: "btn btn--ghost", style: { display: "flex", alignItems: "center", gap: 6 }, onClick: async () => {
+              const backendId = recipe._backendId || (window.MPAPI._idMap && window.MPAPI._idMap[recipe.id]);
+              if (!backendId) { toast && toast("Sla het recept eerst op"); return; }
+              try {
+                await window.MPAPI.promoteToCatalog(backendId);
+                await window.MPAPI.loadUserRecipes();
+                window.MPStore.touch();
+                toast && toast(`${recipe.title} toegevoegd aan de catalogus`);
+                onClose();
+              } catch (e) { toast && toast("Fout: " + e.message); }
+            } }, React.createElement(Icon, { name: "book", size: 18 }), "Naar catalogus"),
+          recipe._catalogId && React.createElement("span", { style: { fontSize: 12, color: "var(--brand)", fontWeight: 700, padding: "8px 0" } },
+            React.createElement(Icon, { name: "check", size: 13 }), " In catalogus"),
           React.createElement("button", { className: "btn btn--block", onClick: () => setPlanning(true) }, React.createElement(Icon, { name: "plus", size: 18 }), "In de week plannen"));
 
   const body = editing
@@ -596,6 +610,7 @@ function RecipesScreen({ toast }) {
   const [importing, setImporting] = useState(false);
   const [creating, setCreating] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [catalogOpen, setCatalogOpen] = useState(false);
   const [favsOnly, setFavsOnly] = useState(false);
   const [ownOnly, setOwnOnly] = useState(false);
   const activeFilters = (meal !== "alle" ? 1 : 0) + selCats.length;
@@ -630,8 +645,9 @@ function RecipesScreen({ toast }) {
         React.createElement("h1", { className: "shead__title" }, "Recepten"),
         React.createElement("div", { className: "shead__sub" }, React.createElement("b", null, recipes.length), " recepten in je bibliotheek")),
       React.createElement("div", { style: { display: "flex", gap: 8 } },
+        React.createElement("button", { className: "btn btn--ghost", onClick: () => setCatalogOpen(true) }, React.createElement(Icon, { name: "book", size: 18 }), "Catalogus"),
         React.createElement("button", { className: "btn btn--ghost", onClick: () => setImporting(true) }, React.createElement(Icon, { name: "clipboard", size: 18 }), "Importeer"),
-        React.createElement("button", { className: "btn", onClick: () => setCreating(true) }, React.createElement(Icon, { name: "plus", size: 18 }), "Nieuw recept"))),
+        React.createElement("button", { className: "btn", onClick: () => setCreating(true) }, React.createElement(Icon, { name: "plus", size: 18 }), "Nieuw"))),
     React.createElement("div", { className: "rectypebar" },
       [["gerecht", "Gerechten"], ["snack", "Snacks"], ["alle", "Alles"]].map(([k, l]) =>
         React.createElement("button", { key: k, className: "rectype", "data-active": typeFilter === k ? 1 : 0, onClick: () => setType(k) }, l)),
@@ -718,7 +734,8 @@ function RecipesScreen({ toast }) {
         CATS.slice(1).map(([k, l]) => React.createElement("button", { key: k, className: "chip chip--toggle", "data-active": selCats.includes(k) ? 1 : 0, onClick: () => toggleSoort(k) },
           selCats.includes(k) && React.createElement(Icon, { name: "check", size: 12 }), l)))),
     importing && React.createElement(ImportSheet, { onClose: () => setImporting(false), toast }),
-    creating && React.createElement(CreateRecipeSheet, { onClose: () => setCreating(false), toast })
+    creating && React.createElement(CreateRecipeSheet, { onClose: () => setCreating(false), toast }),
+    catalogOpen && React.createElement(window.CatalogScreen, { onClose: () => setCatalogOpen(false), toast })
   );
 }
 window.RecipesScreen = RecipesScreen;

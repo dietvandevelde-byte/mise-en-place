@@ -63,12 +63,42 @@ class User(Base):
     password_hash = Column(String(255), nullable=False)
     avatar_url = Column(String(512), nullable=True)
     is_active = Column(Boolean, default=True)
+    is_admin = Column(Boolean, default=False, nullable=False)
     household_size = Column(Integer, default=1, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     recipes = relationship("Recipe", back_populates="user", cascade="all, delete-orphan")
     meal_plans = relationship("MealPlan", back_populates="user", cascade="all, delete-orphan")
+
+
+class CatalogRecipe(Base):
+    """Gedeelde receptencatalogus, beheerd door admins."""
+    __tablename__ = "catalog_recipes"
+
+    id = Column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    image_url = Column(String(512), nullable=True)
+    prep_time = Column(Integer, nullable=True)
+    cook_time = Column(Integer, nullable=True)
+    total_time = Column(Integer, nullable=True)
+    servings = Column(Integer, nullable=False, default=4)
+    kcal = Column(Integer, nullable=True)
+    protein = Column(Float, nullable=True)
+    carbs = Column(Float, nullable=True)
+    fat = Column(Float, nullable=True)
+    fiber = Column(Float, nullable=True)
+    category = Column(SAEnum(RecipeCategory), nullable=True, default=RecipeCategory.dinner)
+    cuisine = Column(String(100), nullable=True)
+    difficulty = Column(SAEnum(Difficulty), nullable=True, default=Difficulty.medium)
+    tags = Column(JSON, nullable=False, default=list)
+    ingredients = Column(JSON, nullable=False, default=list)
+    instructions = Column(JSON, nullable=False, default=list)
+    source_url = Column(String(512), nullable=True)
+    is_healthy = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 class Recipe(Base):
@@ -110,6 +140,9 @@ class Recipe(Base):
     # Bron
     source_url = Column(String(512), nullable=True)
     source_type = Column(SAEnum(SourceType), nullable=False, default=SourceType.manual)
+
+    # Koppeling met de gedeelde catalogus (null = persoonlijk recept)
+    catalog_recipe_id = Column(UUID(as_uuid=False), nullable=True)
 
     # Gebruikersmarkering
     is_favorite = Column(Boolean, default=False)

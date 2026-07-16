@@ -1,5 +1,5 @@
 /* =========================================================================
-   MISE EN PLACE — Backend API bridge v137
+   MISE EN PLACE — Backend API bridge v138
    Handles auth, recipe sync, meal plan sync and AI scraper.
    ========================================================================= */
 window.MPAPI = (function () {
@@ -477,6 +477,7 @@ window.MPAPI = (function () {
       })),
       cats: r.tags || [],
       image: r.image_url || null,
+      _catalogId: r.catalog_recipe_id || null,
       custom: true,
       imported: !!r.source_url,
     };
@@ -589,6 +590,28 @@ window.MPAPI = (function () {
     }
   }
 
+  // ── Catalogus ──────────────────────────────────────────────────────────────
+  async function loadCatalog() {
+    if (!_token) return [];
+    return req("GET", "/catalog/");
+  }
+
+  async function adoptCatalogRecipe(catalogId) {
+    return req("POST", "/catalog/" + catalogId + "/adopt");
+  }
+
+  async function promoteToCatalog(recipeBackendId) {
+    return req("POST", "/catalog/from-recipe/" + recipeBackendId);
+  }
+
+  async function updateCatalogRecipe(catalogId, data) {
+    return req("PUT", "/catalog/" + catalogId, data);
+  }
+
+  async function deleteCatalogRecipe(catalogId) {
+    return req("DELETE", "/catalog/" + catalogId);
+  }
+
   // Upload a data URL image to Supabase Storage via the backend.
   // Returns the Supabase public URL on success, null on failure.
   async function uploadRecipeImage(backendId, dataUrl) {
@@ -615,5 +638,6 @@ window.MPAPI = (function () {
     scrapeUrl, scrapeScreenshot, scrapeText, calculateNutrition,
     loadUserRecipes, saveNewRecipe, pushWeekPlan, pushAllPlans, loadWeekPlan,
     uploadRecipeImage,
+    loadCatalog, adoptCatalogRecipe, promoteToCatalog, updateCatalogRecipe, deleteCatalogRecipe,
   };
 })();

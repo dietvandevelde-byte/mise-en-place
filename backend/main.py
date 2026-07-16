@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from config import settings
 from database import Base, engine
-from routers import auth, recipes, meal_plans, scraper
+from routers import auth, recipes, meal_plans, scraper, catalog
 
 # Maak tabellen aan als ze nog niet bestaan
 Base.metadata.create_all(bind=engine)
@@ -54,6 +54,30 @@ with engine.connect() as conn:
         conn.commit()
     except Exception:
         pass
+    # is_admin op users
+    try:
+        conn.execute(text(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE"
+        ))
+        conn.commit()
+    except Exception:
+        pass
+    # Maak Dieter admin
+    try:
+        conn.execute(text(
+            "UPDATE users SET is_admin = TRUE WHERE email = 'dietvandevelde@gmail.com'"
+        ))
+        conn.commit()
+    except Exception:
+        pass
+    # catalog_recipe_id op recipes (FK naar catalog_recipes, geen constraint om migratie eenvoudig te houden)
+    try:
+        conn.execute(text(
+            "ALTER TABLE recipes ADD COLUMN IF NOT EXISTS catalog_recipe_id UUID NULL"
+        ))
+        conn.commit()
+    except Exception:
+        pass
 
 # Ensure recipe-images bucket is public (idempotent on every deploy)
 try:
@@ -82,6 +106,7 @@ app.include_router(auth.router)
 app.include_router(recipes.router)
 app.include_router(meal_plans.router)
 app.include_router(scraper.router)
+app.include_router(catalog.router)
 
 
 @app.get("/health")
