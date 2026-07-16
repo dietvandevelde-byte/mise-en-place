@@ -1,67 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import text
 from config import settings
 from database import Base, engine
 from routers import auth, recipes, meal_plans, scraper, catalog
 
-# Maak tabellen aan als ze nog niet bestaan
+# Maak nieuwe tabellen aan als ze nog niet bestaan (bestaande tabellen worden niet gewijzigd)
 Base.metadata.create_all(bind=engine)
-
-# Voeg nieuwe kolommen toe die in bestaande tabellen ontbreken (lightweight migratie)
-with engine.connect() as conn:
-    try:
-        conn.execute(text(
-            "ALTER TABLE meal_plan_entries ADD COLUMN IF NOT EXISTS eaten BOOLEAN NOT NULL DEFAULT FALSE"
-        ))
-        conn.commit()
-    except Exception:
-        pass
-    try:
-        conn.execute(text("""
-            CREATE TABLE IF NOT EXISTS password_reset_tokens (
-                id TEXT PRIMARY KEY,
-                user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                token TEXT UNIQUE NOT NULL,
-                expires_at TIMESTAMP NOT NULL,
-                used BOOLEAN NOT NULL DEFAULT FALSE
-            )
-        """))
-        conn.commit()
-    except Exception:
-        pass
-    # household_size op users
-    try:
-        conn.execute(text(
-            "ALTER TABLE users ADD COLUMN IF NOT EXISTS household_size INTEGER NOT NULL DEFAULT 1"
-        ))
-        conn.commit()
-    except Exception:
-        pass
-    # portions_eaten op meal_plan_entries
-    try:
-        conn.execute(text(
-            "ALTER TABLE meal_plan_entries ADD COLUMN IF NOT EXISTS portions_eaten FLOAT NULL"
-        ))
-        conn.commit()
-    except Exception:
-        pass
-    # manual_name op meal_plan_entries (voor "Uit eten" etc.)
-    try:
-        conn.execute(text(
-            "ALTER TABLE meal_plan_entries ADD COLUMN IF NOT EXISTS manual_name VARCHAR(255) NULL"
-        ))
-        conn.commit()
-    except Exception:
-        pass
-    # catalog_recipe_id op recipes (FK naar catalog_recipes, geen constraint om migratie eenvoudig te houden)
-    try:
-        conn.execute(text(
-            "ALTER TABLE recipes ADD COLUMN IF NOT EXISTS catalog_recipe_id UUID NULL"
-        ))
-        conn.commit()
-    except Exception:
-        pass
 
 # Ensure recipe-images bucket is public (idempotent on every deploy)
 try:
