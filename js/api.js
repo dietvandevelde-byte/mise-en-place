@@ -1,12 +1,36 @@
 /* =========================================================================
-   MISE EN PLACE — Backend API bridge v136
+   MISE EN PLACE — Backend API bridge v137
    Handles auth, recipe sync, meal plan sync and AI scraper.
    ========================================================================= */
 window.MPAPI = (function () {
   "use strict";
 
   const BASE = "https://mise-en-place-api-3ah7.onrender.com";
-  let _token = localStorage.getItem("mp_jwt") || null;
+
+  // JWT wordt opgeslagen in zowel localStorage als een cookie zodat iOS Safari
+  // de sessie niet wist na 7 dagen inactiviteit.
+  function _readToken() {
+    const ls = localStorage.getItem("mp_jwt");
+    if (ls) return ls;
+    const m = document.cookie.match(/(?:^|; )mp_jwt=([^;]*)/);
+    if (m && m[1]) {
+      const t = decodeURIComponent(m[1]);
+      localStorage.setItem("mp_jwt", t);
+      return t;
+    }
+    return null;
+  }
+  function _saveToken(t) {
+    if (t) {
+      localStorage.setItem("mp_jwt", t);
+      document.cookie = "mp_jwt=" + encodeURIComponent(t) + "; max-age=31536000; path=/; SameSite=Lax";
+    } else {
+      localStorage.removeItem("mp_jwt");
+      document.cookie = "mp_jwt=; max-age=0; path=/; SameSite=Lax";
+    }
+  }
+
+  let _token = _readToken();
   let _user  = null;
 
   // id map: store numeric id → backend UUID — persistent over sessies
@@ -43,7 +67,7 @@ window.MPAPI = (function () {
   async function login(email, password) {
     const res = await req("POST", "/auth/login", { email, password });
     _token = res.access_token;
-    localStorage.setItem("mp_jwt", _token);
+    _saveToken(_token);
     _user = await req("GET", "/auth/me");
     return _user;
   }
@@ -51,7 +75,7 @@ window.MPAPI = (function () {
   function logout() {
     _token = null;
     _user = null;
-    localStorage.removeItem("mp_jwt");
+    _saveToken(null);
     // Wis de ID-map zodat een andere gebruiker niet de recepten-koppelingen erft
     Object.keys(_idMap).forEach(k => delete _idMap[k]);
     localStorage.removeItem("mp_idmap");
