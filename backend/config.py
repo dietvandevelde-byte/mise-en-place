@@ -10,6 +10,11 @@ class Settings(BaseSettings):
     ALLOWED_ORIGINS: str = "http://localhost:5500,http://127.0.0.1:5500"
     SUPABASE_URL: Optional[str] = None
     SUPABASE_SERVICE_KEY: Optional[str] = None
+    ADMIN_EMAILS: str = "dietvandevelde@gmail.com"
+
+    @property
+    def admin_email_list(self) -> list[str]:
+        return [e.strip().lower() for e in self.ADMIN_EMAILS.split(",")]
 
     @property
     def origins(self) -> list[str]:

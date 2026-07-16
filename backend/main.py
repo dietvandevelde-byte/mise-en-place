@@ -54,22 +54,6 @@ with engine.connect() as conn:
         conn.commit()
     except Exception:
         pass
-    # is_admin op users
-    try:
-        conn.execute(text(
-            "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE"
-        ))
-        conn.commit()
-    except Exception:
-        pass
-    # Maak Dieter admin
-    try:
-        conn.execute(text(
-            "UPDATE users SET is_admin = TRUE WHERE email = 'dietvandevelde@gmail.com'"
-        ))
-        conn.commit()
-    except Exception:
-        pass
     # catalog_recipe_id op recipes (FK naar catalog_recipes, geen constraint om migratie eenvoudig te houden)
     try:
         conn.execute(text(

@@ -6,6 +6,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
+from sqlalchemy.ext.hybrid import hybrid_property
 from database import Base
 import enum
 
@@ -63,8 +64,12 @@ class User(Base):
     password_hash = Column(String(255), nullable=False)
     avatar_url = Column(String(512), nullable=True)
     is_active = Column(Boolean, default=True)
-    is_admin = Column(Boolean, default=False, nullable=False)
     household_size = Column(Integer, default=1, nullable=False)
+
+    @hybrid_property
+    def is_admin(self) -> bool:
+        from config import settings
+        return self.email.lower() in settings.admin_email_list
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
