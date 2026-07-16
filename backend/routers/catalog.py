@@ -112,6 +112,21 @@ def adopt_catalog_recipe(
     return recipe
 
 
+@router.post("/batch", response_model=list[schemas.CatalogRecipeOut], status_code=201)
+def create_catalog_recipes_batch(
+    data: list[schemas.CatalogRecipeCreate],
+    db: Session = Depends(get_db),
+    admin: models.User = Depends(_require_admin),
+):
+    """Voeg meerdere catalogusrecepten tegelijk toe (admin only)."""
+    recipes = [models.CatalogRecipe(**r.model_dump()) for r in data]
+    db.add_all(recipes)
+    db.commit()
+    for r in recipes:
+        db.refresh(r)
+    return recipes
+
+
 @router.post("/from-recipe/{recipe_id}", response_model=schemas.CatalogRecipeOut, status_code=201)
 def promote_to_catalog(
     recipe_id: str,
